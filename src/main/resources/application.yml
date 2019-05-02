@@ -63,7 +63,14 @@ management:
         health: health
 
 kafka:
-  subscribe-topic: tdsync
+  subscribe-topic: membership-updates
 
-
+redis:
+  membershipConnection: redis://core-dev-redis-1.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  membershipTTL: 7776000
+  partnerConnection: redis://core-dev-redis-0.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  partnerTTL: 7776000
+  requestTimeoutSeconds: 10
+  topologyRefreshHours: 1
+  clientShutdownSeconds: 10
 

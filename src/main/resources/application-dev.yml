@@ -3,7 +3,7 @@ spring:
     active: dev
   kafka:
     consumer:
-      group-id: membership-consumer-dev2
+      group-id: membership-consumer-dev
 
 logging:
   level:
@@ -14,3 +14,6 @@ redis:
   membershipTTL: 7776000
   partnerConnection: redis://0.0.0.0:6379/0
   partnerTTL: 7776000
+  requestTimeoutSeconds: 10
+  topologyRefreshHours: 1
+  clientShutdownSeconds: 10

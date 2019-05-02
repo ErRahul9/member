@@ -31,7 +31,7 @@ resources:
 env:
   - name: SPRING_PROFILES_ACTIVE
     value: qa
-imagePullSecrets: codefresh-generated-docker.io-dockerhub-qa-pixel
+imagePullSecrets: codefresh-generated-docker.io-dockerhub-qa-targeting
 istio:
   enabled: false
 
