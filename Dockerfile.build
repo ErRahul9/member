@@ -1,0 +1,30 @@
+FROM anapsix/alpine-java:8_jdk
+# gradle 4.4.1
+
+RUN apk add --update openssh wget git
+
+ENV GRADLE_VERSION=4.4.1
+WORKDIR /opt
+RUN wget -qO- https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip | jar xvf /dev/stdin
+ENV GRADLE_BIN /opt/gradle-${GRADLE_VERSION}/bin
+RUN chmod +x ${GRADLE_BIN}/gradle
+ENV PATH $PATH:${GRADLE_BIN}
+ENV GRADLE_HOME /opt/gradle-${GRADLE_VERSION}
+ENV GRADLE_USER_HOME /codefresh/volume/.gradle
+RUN gradle --version
+
+# clean
+RUN rm -rf *.rpm
+RUN rm -rf *.zip
+
+ENV BUILD_NUMBER=1
+ENV SNAPSHOT=FALSE
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+COPY build.gradle /usr/src/app
+COPY gradle.properties /usr/src/app
+COPY settings.gradle /usr/src/app
+RUN gradle build -x test
+RUN rm -rf build
+COPY [".","/usr/src/app"]
+CMD ["gradle","test"]

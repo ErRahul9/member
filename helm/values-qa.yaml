@@ -1,0 +1,40 @@
+replicaCount: 1
+nameSpace: qa-ads
+image:
+  repository: steelhousedev/membership-consumer
+  tag: qa-latest
+  pullPolicy: Always
+service:
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+    external-dns.alpha.kubernetes.io/hostname: membership-consumer.coredev.west2.steelhouse.com
+    iam.amazonaws.com/role: core-dev-dynamo-access-pod-role
+    iam.amazonaws.com/permitted: ".*"
+  name: membership-consumer
+  externalPort: 80
+  internalPort: 8080
+  probePath: /health
+  domain: coredev.west2.steelhouse.com
+ingress:
+  enabled: true
+  labels:
+    traffic-type: internal
+resources:
+  limits:
+   cpu: 2000m
+   memory: 2Gi
+  requests:
+   cpu: 2000m
+   memory: 2Gi
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: qa
+imagePullSecrets: codefresh-generated-docker.io-dockerhub-qa-pixel
+istio:
+  enabled: false
+
+
+
+

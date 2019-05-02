@@ -1,0 +1,185 @@
+version: '1.0'
+steps:
+  InitVariables:
+    title: Init variables
+    image: alpine
+    commands:
+      - cf_export GIT_BRANCH=${{CF_BRANCH}}
+      - cf_export SNAPSHOT=${{SNAPSHOT}}
+
+  GradleBuilder:
+    type: build
+    description: create Gradle builder
+    dockerfile: Dockerfile.build
+    image_name: steelhousedev/gradle-builder-${{CF_REPO_NAME}}
+    when:
+      condition:
+        all:
+          noSkipCiInCommitMessage: |
+            includes(lower("${{CF_COMMIT_MESSAGE}}"), "skip ci") == false
+          mergeBranch: 'lower("${{CF_BRANCH}}") == lower("${{MERGE_BRANCH}}")'
+
+  GradleTest:
+    description: run unit tests
+    image: ${{GradleBuilder}}
+    volumes:
+      - ${{CF_VOLUME}}/${{CF_REPO_NAME}}:/codefresh/volume
+    commands:
+      - gradle test
+
+  GradleAssemble:
+    description: assemble application jar
+    image: ${{GradleBuilder}}
+    volumes:
+      - ${{CF_VOLUME}}/${{CF_REPO_NAME}}:/codefresh/volume
+    environment:
+      - DOCKERFILE_TAG=${{DOCKERFILE_TAG}}
+      - CF_SHORT_REVISION=${{CF_SHORT_REVISION}}
+      - BUILD_NUMBER=${{BUILD_NUMBER}}
+    commands:
+      - rm -rf /codefresh/volume/build && rm -rf build && mkdir -p build/distributions && mkdir -p /codefresh/volume/build/distributions
+      - gradle clean incrementMinorVersion assemble
+      - gradle properties | grep version
+      - echo "after gradle assemble - files in docker image dir ./build/distributions"
+      - ls -l ./build/distributions
+      - cp ./build/distributions/*.zip /codefresh/volume/build/distributions/.
+      - echo "after copy - files in codefresh volume dir /codefresh/volume/build/distributions"
+      - ls -l /codefresh/volume/build/distributions
+      - rm -rf /codefresh/volume/gradle.properties
+      - cp ./gradle.properties /codefresh/volume/.
+      - echo "copied gradle.properties to /codefresh/volume dir. Compare checksums"
+      - cksum ./gradle.properties && cksum /codefresh/volume/gradle.properties
+      - appversion=$(grep "version" gradle.properties | cut -d'=' -f2 | sed 's/ //g' | sed "s/'//g")
+      - appversion="v$appversion-${{DOCKERFILE_TAG}}-${{CF_SHORT_REVISION}}"
+      - echo "generated git tag - $appversion"
+      - cf_export APP_VERSION=$appversion
+
+  CopyAssembledArtifactToMainCloneDir:
+    image: ${{GradleBuilder}}
+    working_directory: ${{main_clone}}
+    commands:
+      - pwd
+      - echo "before copy - files in main_clone working dir ./build/distributions"
+      - ls -l ./build/distributions
+      - rm -rf ./build/distributions
+      - mkdir -p ./build/distributions
+      - cp /codefresh/volume/build/distributions/*.zip ./build/distributions/.
+      - echo "after copy - files in main_clone working dir ./build/distributions"
+      - ls -l ./build/distributions
+
+  BuildingDockerImage:
+    title: Building Docker Image
+    type: build
+    image_name: steelhousedev/${{CF_REPO_NAME}}
+    working_directory: ./
+    dockerfile: Dockerfile
+
+  PushingReleaseTagToDockerRegistry:
+    title: Pushing Release Tag to Docker Registry
+    type: push
+    candidate: '${{BuildingDockerImage}}'
+    tag: '${{APP_VERSION}}'
+    registry: dockerhub
+
+  PushingLatestTagToDockerRegistry:
+    title: Pushing Latest Tag to Docker Registry
+    type: push
+    candidate: '${{BuildingDockerImage}}'
+    tag: '${{DOCKERFILE_TAG}}-latest'
+    registry: dockerhub
+
+  CloneToTagRepo:
+    image: codefreshio/git-image:latest
+    working_directory: ${{main_clone}}
+    commands:
+      - git config user.name "${{CF_REPO_OWNER}}"
+      - git config user.email "${{GIT_USER_EMAIL}}"
+      - git_remote_url=https://${{SH_GRGIT_GITHUB_STATUS_TOKEN}}:x-oauth-basic@github.com/${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}.git
+      - bash -c 'rm -rf /codefresh/volume/${{CF_REPO_NAME}}/tagrepo'
+      - git clone $git_remote_url /codefresh/volume/${{CF_REPO_NAME}}/tagrepo
+      - ls -l /codefresh/volume/${{CF_REPO_NAME}}/tagrepo
+    when:
+      condition:
+        all:
+          validOnlyForNonSnapshot: 'lower("${{SNAPSHOT}}") == lower("FALSE")'
+
+  GitCommitVersionAndTag:
+    image: codefreshio/git-image:latest
+    working_directory: "/codefresh/volume/${{CF_REPO_NAME}}/tagrepo"
+    commands:
+      - git config user.name "${{CF_REPO_OWNER}}"
+      - git config user.email "${{GIT_USER_EMAIL}}"
+      - git checkout ${{CF_BRANCH}}
+      - git branch
+      - echo "before copy - cksum of gradle.properties" && cksum gradle.properties
+      - cp /codefresh/volume/gradle.properties gradle.properties
+      - echo "after copy - cksum of gradle.properties" && cksum gradle.properties
+      - git status
+      - git add gradle.properties
+      - git commit -m "bump minor version [skip ci]"
+      - git push origin ${{CF_BRANCH}}
+      - git tag -a "${{APP_VERSION}}" -m "${{APP_VERSION}}"
+      - git push --tags
+    when:
+      condition:
+        all:
+          validOnlyForNonSnapshot: 'lower("${{SNAPSHOT}}") == lower("FALSE")'
+
+#  UpdateBranchProtection:
+#    title: Add "QA Environment" status check to the branch
+#    image: cloudposse/github-status-updater
+#    environment:
+#      - GITHUB_ACTION=update_branch_protection
+#      - GITHUB_TOKEN=${{SH_GITHUB_STATUS_TOKEN}}
+#      - GITHUB_OWNER=${{CF_REPO_OWNER}}
+#      - GITHUB_REPO=${{CF_REPO_NAME}}
+#      - GITHUB_REF=${{CF_BRANCH}}
+#      - GITHUB_CONTEXT=QA Environment
+#    when:
+#      condition:
+#        all:
+#          executeForBranch: 'lower("${{CF_BRANCH}}") == lower("${{MERGE_BRANCH}}")'
+#
+#  SetDeploymentStatusToPending:
+#    title: Set "QA Environment" deployment status to "pending"
+#    image: cloudposse/github-status-updater
+#    environment:
+#      - GITHUB_ACTION=update_state
+#      - GITHUB_TOKEN=${{SH_GITHUB_STATUS_TOKEN}}
+#      - GITHUB_OWNER=${{CF_REPO_OWNER}}
+#      - GITHUB_REPO=${{CF_REPO_NAME}}
+#      - GITHUB_REF=${{CF_REVISION}}
+#      - GITHUB_CONTEXT=QA GCP Environment
+#      - GITHUB_STATE=pending
+#      - GITHUB_DESCRIPTION=Deploying changes to default namespace of '${{KUBE_CLUSTER}}'
+##      - GITHUB_TARGET_URL=http://master.demo.cloudposse.org
+
+#  RunningDeployScript:
+#    title: Running Deploy Script
+#    type: deploy
+#    kind: kubernetes
+#    cluster: '${{KUBE_CLUSTER}}'
+#    namespace: default
+#    when:
+#      branch:
+#        only:
+#          - '${{MERGE_BRANCH}}'
+#    service: '${{CF_REPO_NAME}}'
+#    timeout: 300
+#    candidate:
+#      image: '${{BuildingDockerImage}}'
+#      registry: dockerhub
+
+#  SetDeploymentStatusToSuccess:
+#    title: Set "QA Environment" deployment status to "success"
+#    image: cloudposse/github-status-updater
+#    environment:
+#      - GITHUB_ACTION=update_state
+#      - GITHUB_TOKEN=${{SH_GITHUB_STATUS_TOKEN}}
+#      - GITHUB_OWNER=${{CF_REPO_OWNER}}
+#      - GITHUB_REPO=${{CF_REPO_NAME}}
+#      - GITHUB_REF=${{CF_REVISION}}
+#      - GITHUB_CONTEXT=QA Environment
+#      - GITHUB_STATE=success
+#      - GITHUB_DESCRIPTION=Deployed to default namespace of '${{KUBE_CLUSTER}}'
+##      - GITHUB_TARGET_URL=http://master.demo.cloudposse.org

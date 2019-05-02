@@ -1,0 +1,16 @@
+spring:
+  profiles:
+    active: dev
+  kafka:
+    consumer:
+      group-id: membership-consumer-dev2
+
+logging:
+  level:
+    app: TRACE
+
+redis:
+  membershipConnection: redis://0.0.0.0:6379/1
+  membershipTTL: 7776000
+  partnerConnection: redis://0.0.0.0:6379/0
+  partnerTTL: 7776000
