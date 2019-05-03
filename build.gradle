@@ -185,6 +185,13 @@ bootJar {
     launchScript()
     enabled = true
     archiveName = rootProject.name + ".jar"
+    manifest {
+        attributes(
+                "Implementation-Title": rootProject.name,
+                "Implementation-Version": version,
+                "Main-Class": mainClassName
+        )
+    }
 }
 
 task steelhouseTar(type: Tar ){
