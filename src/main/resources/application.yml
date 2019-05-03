@@ -5,7 +5,8 @@ spring:
   profiles:
     active: dev
   application:
-      spring.http.encoding.charset: UTF-8
+    name: membership-consumer
+    spring.http.encoding.charset: UTF-8
       spring.http.encoding.enabled: true
       spring.http.encoding.force: true
   kafka:
