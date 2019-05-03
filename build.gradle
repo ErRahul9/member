@@ -71,7 +71,6 @@ if (System.getenv("SNAPSHOT")?.equalsIgnoreCase("FALSE")) {
     pomVersion += "-" + (System.getenv("BUILD_NUMBER") ?: "0") + "-SNAPSHOT"
 }
 
-//mainClassName = "com.steelhouse.augmentor.Application"
 
 sourceSets {
     integrationTest {
@@ -155,7 +154,7 @@ dependencies {
 }
 
 springBoot {
-    this.mainClassName = "com.steelhouse.augmentor.Application"
+    this.mainClassName = "com.steelhouse.membership.Application"
 }
 
 task sourceJar(type: Jar, dependsOn: classes) {
