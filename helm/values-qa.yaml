@@ -25,11 +25,11 @@ ingress:
     external-dns.alpha.kubernetes.io/target: membership-consumer.coredev.west2.steelhouse.com
 resources:
   limits:
-   cpu: 2000m
-   memory: 2Gi
+   cpu: 4000m
+   memory: 3Gi
   requests:
-   cpu: 2000m
-   memory: 2Gi
+   cpu: 4000m
+   memory: 3Gi
 env:
   - name: SPRING_PROFILES_ACTIVE
     value: qa

@@ -24,7 +24,7 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
                                 @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>) {
 
     val context = newFixedThreadPoolContext(1, "write-membership-thread-pool")
-    val lock = Semaphore(100000)
+    val lock = Semaphore(10000)
 
     @KafkaListener(topics = ["membership-updates"])
     @Throws(IOException::class)
