@@ -16,7 +16,7 @@ service:
   domain: coredev.west2.steelhouse.com
 ingress:
   enabled: true
-  host: membership-consumer.coredev.west2.steelhouse.com
+  domain: steelhouse
   labels:
     traffic-type: internal
   annotations:
