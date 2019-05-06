@@ -53,7 +53,7 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
                 for((aid, guid) in partners.orEmpty()) {
 
                     partnerResults += async {
-                        writeMemberships(guid, segments, aid)
+                        writeMemberships(guid, segments, membership.aid.toString())
                     }
                 }
 

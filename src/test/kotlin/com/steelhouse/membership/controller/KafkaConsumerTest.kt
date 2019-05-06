@@ -1,6 +1,7 @@
 package com.steelhouse.membership.controller
 
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
@@ -11,6 +12,7 @@ import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.logging.Log
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -42,7 +44,7 @@ class KafkaConsumerTest {
         val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452}"
 
         val future: RedisFuture<Map<String, String>> = mock()
-        whenever(future.get()).thenReturn(mutableMapOf(Pair("test","test")))
+        whenever(future.get()).thenReturn(mutableMapOf(Pair("beeswax","beeswaxId")))
         whenever(partnerCommands.hgetall(any())).thenReturn(future)
 
         val future2: RedisFuture<Boolean> = mock()
@@ -56,8 +58,20 @@ class KafkaConsumerTest {
             delay(100)
         }
 
-        verify(redisClientPartner.async(), times(1)).hgetall(any())
-        verify(redisClientMembership.async(), times(2)).hset(any(), any(), any())
+        val getAllKey = argumentCaptor<String>()
+
+        verify(redisClientPartner.async(), times(1)).hgetall(getAllKey.capture())
+        Assert.assertEquals("006866ac-cfb1-4639-99d3-c7948d7f5111", getAllKey.firstValue)
+
+        val hSetKey = argumentCaptor<String>()
+        val fieldKey = argumentCaptor<String>()
+        val fieldValue = argumentCaptor<String>()
+        verify(redisClientMembership.async(), times(2)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "beeswaxId"), hSetKey.allValues)
+        Assert.assertEquals(listOf("20460", "20460" ), fieldKey.allValues)
+        Assert.assertEquals(listOf("27797,27798,27801","27797,27798,27801"), fieldValue.allValues)
+
+
     }
 
     @Test
@@ -66,7 +80,7 @@ class KafkaConsumerTest {
         val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452}"
 
         val future: RedisFuture<Map<String, String>> = mock()
-        whenever(future.get()).thenReturn(mutableMapOf(Pair("test","test"), Pair("test2","test2")))
+        whenever(future.get()).thenReturn(mutableMapOf(Pair("beeswax","beeswaxId"), Pair("tradedesk","tradedeskId")))
         whenever(partnerCommands.hgetall(any())).thenReturn(future)
 
         val future2: RedisFuture<Boolean> = mock()
@@ -80,8 +94,17 @@ class KafkaConsumerTest {
             delay(100)
         }
 
-        verify(redisClientPartner.async(), times(1)).hgetall(any())
-        verify(redisClientMembership.async(), times(3)).hset(any(), any(), any())
+        val getAllKey = argumentCaptor<String>()
+        verify(redisClientPartner.async(), times(1)).hgetall(getAllKey.capture())
+        Assert.assertEquals("006866ac-cfb1-4639-99d3-c7948d7f5111", getAllKey.firstValue)
+
+        val hSetKey = argumentCaptor<String>()
+        val fieldKey = argumentCaptor<String>()
+        val fieldValue = argumentCaptor<String>()
+        verify(redisClientMembership.async(), times(3)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "beeswaxId", "tradedeskId"), hSetKey.allValues)
+        Assert.assertEquals(listOf("20460", "20460", "20460"), fieldKey.allValues)
+        Assert.assertEquals(listOf("27797,27798,27801","27797,27798,27801","27797,27798,27801"), fieldValue.allValues)
     }
 
     @Test
@@ -104,9 +127,17 @@ class KafkaConsumerTest {
             delay(100)
         }
 
+        val getAllKey = argumentCaptor<String>()
+        verify(redisClientPartner.async(), times(1)).hgetall(getAllKey.capture())
+        Assert.assertEquals("006866ac-cfb1-4639-99d3-c7948d7f5111", getAllKey.firstValue)
 
-        verify(redisClientPartner.async(), times(1)).hgetall(any())
-        verify(redisClientMembership.async(), times(1)).hset(any(), any(), any())
+        val hSetKey = argumentCaptor<String>()
+        val fieldKey = argumentCaptor<String>()
+        val fieldValue = argumentCaptor<String>()
+        verify(redisClientMembership.async(), times(1)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111"), hSetKey.allValues)
+        Assert.assertEquals(listOf("20460"), fieldKey.allValues)
+        Assert.assertEquals(listOf("27797,27798,27801"), fieldValue.allValues)
     }
 
 }
