@@ -12,7 +12,6 @@ import org.apache.commons.logging.Log
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.Status
 
