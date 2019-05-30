@@ -1,5 +1,5 @@
-replicaCount: 3
-nameSpace: prod-ads
+replicaCount: 1
+nameSpace: prod-targeting
 image:
   repository: steelhousedev/membership-consumer
   tag: prod-latest
@@ -23,19 +23,18 @@ ingress:
     traffic-type: internal
 resources:
   limits:
-   cpu: 2000m
-   memory: 4Gi
+    cpu: 4000m
+    memory: 3Gi
   requests:
-   cpu: 2000m
-   memory: 4Gi
+    cpu: 4000m
+    memory: 3Gi
 env:
   - name: SPRING_PROFILES_ACTIVE
-    value: "prod"
-  - name: SECURITY_BASIC_ENABLED
-    value: "false"
-  - name: MANAGEMENT_SECURITY_ENABLED
-    value: "false"
-
+    value: prod-aws-west
 imagePullSecrets: codefresh-generated-docker.io-dockerhub-prod-targeting
 istio:
   enabled: false
+
+
+
+

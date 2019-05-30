@@ -1,9 +1,7 @@
 spring:
   profiles:
     active: qa
-  kafka:
-    consumer:
-      group-id: membership-consumer-qa
+
 logging:
   level:
     app: TRACE
@@ -13,6 +11,6 @@ redis:
   membershipTTL: 7776000
   partnerConnection: redis://core-dev-redis-0.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 7776000
-  requestTimeoutSeconds: 10
   topologyRefreshHours: 1
-  clientShutdownSeconds: 10
+  clientShutdownSeconds: 60
+  requestTimeoutSeconds: 10
