@@ -50,7 +50,7 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
                 val partnerResults = mutableListOf<Deferred<Any>>()
 
                 val partners = partnerResult.await()
-                for((aid, guid) in partners.orEmpty()) {
+                for(guid in partners.orEmpty().values) {
 
                     partnerResults += async {
                         writeMemberships(guid, segments, membership.aid.toString())

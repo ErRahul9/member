@@ -1,37 +1,37 @@
 replicaCount: 1
-nameSpace: qa-targeting
+nameSpace: prod-targeting
 image:
   repository: steelhousedev/membership-consumer
-  tag: qa-latest
+  tag: prod-latest
   pullPolicy: Always
 service:
   type: LoadBalancer
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
     service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
-    external-dns.alpha.kubernetes.io/hostname: membership-consumer.coredev.west2.steelhouse.com
+    external-dns.alpha.kubernetes.io/hostname: membership-consumer.coreprod.east1.steelhouse.com
     iam.amazonaws.com/role: core-dev-dynamo-access-pod-role
     iam.amazonaws.com/permitted: ".*"
   name: membership-consumer
   externalPort: 80
   internalPort: 8080
   probePath: /health
-  domain: coredev.west2.steelhouse.com
+  domain: coreprod.east1.steelhouse.com
 ingress:
   enabled: true
   labels:
     traffic-type: internal
 resources:
   limits:
-   cpu: 4000m
-   memory: 3Gi
+    cpu: 4000m
+    memory: 3Gi
   requests:
-   cpu: 4000m
-   memory: 3Gi
+    cpu: 4000m
+    memory: 3Gi
 env:
   - name: SPRING_PROFILES_ACTIVE
-    value: qa
-imagePullSecrets: codefresh-generated-docker.io-dockerhub-qa-targeting
+    value: prod-aws-east
+imagePullSecrets: codefresh-generated-docker.io-dockerhub-prod-targeting
 istio:
   enabled: false
 
