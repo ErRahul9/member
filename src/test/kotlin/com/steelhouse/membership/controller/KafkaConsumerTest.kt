@@ -9,6 +9,7 @@ import com.nhaarman.mockitokotlin2.whenever
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
+import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.logging.Log
@@ -28,6 +29,8 @@ class KafkaConsumerTest {
     var partnerCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
 
     var membershipCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
+
+    val meterRegistry: MeterRegistry = mock()
 
     @Before
     fun init() {
@@ -51,7 +54,11 @@ class KafkaConsumerTest {
         whenever(future2.get()).thenReturn(true)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
-        val consumer = KafkaConsumer(log, redisClientPartner, redisClientMembership)
+        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership)
+        consumer.partnerCounter = mock()
+        consumer.partnerTimer = mock()
+        consumer.membershipCounter = mock()
+        consumer.membershipTimer = mock()
         consumer.consume(message)
 
         runBlocking {
@@ -87,7 +94,11 @@ class KafkaConsumerTest {
         whenever(future2.get()).thenReturn(true)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
-        val consumer = KafkaConsumer(log, redisClientPartner, redisClientMembership)
+        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership)
+        consumer.partnerCounter = mock()
+        consumer.partnerTimer = mock()
+        consumer.membershipCounter = mock()
+        consumer.membershipTimer = mock()
         consumer.consume(message)
 
         runBlocking {
@@ -120,7 +131,11 @@ class KafkaConsumerTest {
         whenever(future2.get()).thenReturn(true)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
-        val consumer = KafkaConsumer(log, redisClientPartner, redisClientMembership)
+        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership)
+        consumer.partnerCounter = mock()
+        consumer.partnerTimer = mock()
+        consumer.membershipCounter = mock()
+        consumer.membershipTimer = mock()
         consumer.consume(message)
 
         runBlocking {
