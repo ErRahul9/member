@@ -4,6 +4,7 @@ package com.steelhouse.membership.controller
 import com.steelhouse.core.model.gsonmessages.GsonMessageUtil
 import com.steelhouse.core.model.segmentation.gson.MembershipUpdateMessage
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
+import io.micrometer.core.annotation.Timed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -25,6 +26,8 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
 
     val context = newFixedThreadPoolContext(1, "write-membership-thread-pool")
     val lock = Semaphore(10000)
+
+
 
     @KafkaListener(topics = ["membership-updates"])
     @Throws(IOException::class)
@@ -66,14 +69,16 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
 
     }
 
+    @Timed(value = "writeMemberships", histogram = true, longTask = true)
     fun writeMemberships(guid: String, currentSegments: String, aid: String ) {
         val results= redisConnectionMembership.async().hset(guid, aid, currentSegments)
         results.get()
     }
 
+    @Timed(value = "retrievePartnerId", histogram = true, longTask = true)
     fun retrievePartnerId(guid: String): MutableMap<String, String>? {
-        val results  = redisConnectionPartner.async().hgetall(guid)
-        return results.get()
+        val asyncResults  = redisConnectionPartner.async().hgetall(guid)
+        return asyncResults.get()
     }
 
 }
