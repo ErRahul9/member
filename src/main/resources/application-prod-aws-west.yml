@@ -8,9 +8,9 @@ logging:
 
 redis:
   membershipConnection: redis://core-prod-membership.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  membershipTTL: 7776000
+  membershipTTL: 5184000
   partnerConnection: redis://core-prod-partner.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  partnerTTL: 7776000
+  partnerTTL: 15552000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
   requestTimeoutSeconds: 10
