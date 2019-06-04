@@ -1,4 +1,4 @@
-replicaCount: 1
+replicaCount: 15
 nameSpace: prod-targeting
 image:
   repository: steelhousedev/membership-consumer
@@ -34,7 +34,12 @@ env:
 imagePullSecrets: codefresh-generated-docker.io-dockerhub-prod-targeting
 istio:
   enabled: false
-
+autoscaling:
+  enabled: true
+  minReplicas: 15
+  maxReplicas: 60
+  metrics:
+    averageUtilization: 40
 
 
 
