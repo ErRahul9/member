@@ -30,7 +30,11 @@ resources:
     memory: 3Gi
 env:
   - name: SPRING_PROFILES_ACTIVE
-    value: prod-aws-west
+    value: "prod-aws-west"
+  - name: SECURITY_BASIC_ENABLED
+    value: "false"
+  - name: MANAGEMENT_SECURITY_ENABLED
+    value: "false"
 imagePullSecrets: codefresh-generated-docker.io-dockerhub-prod-targeting
 istio:
   enabled: false

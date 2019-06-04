@@ -1,6 +1,20 @@
+---
+kafkaAuth:
+  username: ENC(3qpeUILsCYG+FkbZbJBjB9CyXrs21xDN+KlPfxQiX/0=)
+  password: ENC(2wBkQZbnmRoicoHjcIlgpd0KIM5lJ62JSqqxf+cGE5QKL0DcLHGRICnyj70WDtYbQ4uYhCoAvJcN6LjMsISJc6JPhsTE8d6X4NTWKTC6AnY=)
+
 spring:
   profiles:
-    active: prod
+    active: prod-aws-east
+  kafka:
+    properties:
+      sasl:
+        jaas:
+          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="${kafkaAuth.username}" password="${kafkaAuth.password}";
+    consumer:
+      bootstrap-servers: ['pkc-4n7ze.us-west-2.aws.confluent.cloud:9092']
+      group-id: membership-consumer-prod-aws-east
+      auto-offset-reset: earliest
 
 logging:
   level:
