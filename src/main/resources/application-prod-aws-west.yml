@@ -8,8 +8,6 @@ spring:
     active: prod-aws-west
   kafka:
     properties:
-      client:
-        id: ${messageHub.username}${messageHub.password}
       sasl:
         jaas:
           config: org.apache.kafka.common.security.plain.PlainLoginModule required username="${kafkaAuth.username}" password="${kafkaAuth.password}";
