@@ -7,14 +7,31 @@ spring:
   profiles:
     active: prod-aws-west
   kafka:
+    listener:
+      concurrency=: 1
     properties:
+      ssl:
+        protocol: TLSv1.2
+        enabled:
+          protocols: TLSv1.2
+        truststore:
+          type: JKS
+        endpoint:
+          identification:
+            algorithm: HTTPS
       sasl:
         jaas:
-          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="${kafkaAuth.username}" password="${kafkaAuth.password}";
+          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="4H4YY5F3FLITE2KG" password="gwL8gRW9jXoVLodcjPq7UM4Lp1yjrkt8rTBfAvtbXmgNO7sTwJwRV/VLORHZsmkH";
+        mechanism: PLAIN
+      security:
+        protocol: SASL_SSL
     consumer:
       bootstrap-servers: ['pkc-4n7ze.us-west-2.aws.confluent.cloud:9092']
       group-id: membership-consumer-prod-aws-west
       auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
 
 logging:
   level:
