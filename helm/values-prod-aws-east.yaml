@@ -1,5 +1,11 @@
 replicaCount: 15
 nameSpace: prod-targeting
+container:
+  annotations:
+    prometheus.io/path: /prometheus
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/prefix: "membership-consumer.prod-aws-east."
 image:
   repository: steelhousedev/membership-consumer
   tag: prod-latest
