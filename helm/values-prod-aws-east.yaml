@@ -5,7 +5,7 @@ container:
     prometheus.io/path: /prometheus
     prometheus.io/scrape: "true"
     prometheus.io/port: "8080"
-    prometheus.io/prefix: "membership-consumer.prod-aws-east."
+    prometheus.io/prefix: "membership-consumer."
 image:
   repository: steelhousedev/membership-consumer
   tag: prod-latest
