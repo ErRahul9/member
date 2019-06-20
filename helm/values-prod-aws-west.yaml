@@ -23,6 +23,8 @@ service:
   internalPort: 8080
   probePath: /health
   domain: coreprod.west2.steelhouse.com
+  environment: prod
+  region: west
 ingress:
   enabled: true
   labels:
