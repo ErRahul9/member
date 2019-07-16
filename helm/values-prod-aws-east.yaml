@@ -1,4 +1,4 @@
-replicaCount: 15
+replicaCount: 20
 nameSpace: prod-targeting
 container:
   annotations:
@@ -48,7 +48,7 @@ istio:
   enabled: false
 autoscaling:
   enabled: true
-  minReplicas: 15
+  minReplicas: 20
   maxReplicas: 60
   metrics:
     averageUtilization: 40

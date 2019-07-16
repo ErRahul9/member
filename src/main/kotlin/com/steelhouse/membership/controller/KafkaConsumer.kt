@@ -30,7 +30,7 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
                                 @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>) {
 
     val context = newFixedThreadPoolContext(1, "write-membership-thread-pool")
-    val lock = Semaphore(10000)
+    val lock = Semaphore(7000)
 
     lateinit var partnerTimer: Timer
     lateinit var membershipTimer: Timer
