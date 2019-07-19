@@ -63,7 +63,8 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
                 }
 
                 val membershipResult = async {
-                    writeMemberships(membership.guid, segments, membership.aid.toString())
+                    writeMemberships(membership.guid.orEmpty(), segments, membership.aid.toString())
+                    writeMemberships(membership.ip.orEmpty(), segments, membership.aid.toString())
                 }
 
                 val partnerResults = mutableListOf<Deferred<Any>>()
