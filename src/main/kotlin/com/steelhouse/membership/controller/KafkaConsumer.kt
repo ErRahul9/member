@@ -1,23 +1,22 @@
 package com.steelhouse.membership.controller
 
 
+import com.google.common.base.Stopwatch
 import com.steelhouse.core.model.gsonmessages.GsonMessageUtil
 import com.steelhouse.core.model.segmentation.gson.MembershipUpdateMessage
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
-import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import org.apache.commons.logging.Log
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
 import java.io.IOException
+import java.time.Duration
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
@@ -31,19 +30,6 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
 
     val context = newFixedThreadPoolContext(1, "write-membership-thread-pool")
     val lock = Semaphore(7000)
-
-    lateinit var partnerTimer: Timer
-    lateinit var membershipTimer: Timer
-    lateinit var partnerCounter: Counter
-    lateinit var membershipCounter: Counter
-
-    @Autowired
-    fun metrics() {
-        partnerTimer =  meterRegistry.timer("write.partner.match.latency")
-        membershipTimer =  meterRegistry.timer("write.membership.match.latency")
-        partnerCounter =  meterRegistry.counter("write.partner.match.counter")
-        membershipCounter =  meterRegistry.counter("write.membership.match.counter")
-    }
 
     @KafkaListener(topics = ["membership-updates"])
     @Throws(IOException::class)
@@ -63,16 +49,18 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
                 }
 
                 val membershipResult = async {
-                    writeMemberships(membership.guid, segments, membership.aid.toString())
+                    writeMemberships(membership.guid.orEmpty(), segments, membership.aid.toString(), "steelhouse")
+                    writeMemberships(membership.ip.orEmpty(), segments, membership.aid.toString(), "ip")
                 }
 
                 val partnerResults = mutableListOf<Deferred<Any>>()
 
                 val partners = partnerResult.await()
-                for(guid in partners.orEmpty().values) {
+                for(key in partners.orEmpty().keys) {
 
                     partnerResults += async {
-                        writeMemberships(guid, segments, membership.aid.toString())
+                        val partnerGuid = partners.orEmpty()[key]
+                        writeMemberships(partnerGuid.orEmpty(), segments, membership.aid.toString(), key)
                     }
                 }
 
@@ -85,20 +73,20 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
 
     }
 
-    fun writeMemberships(guid: String, currentSegments: String, aid: String ) {
-        val startTime = System.currentTimeMillis()
+    fun writeMemberships(guid: String, currentSegments: String, aid: String, cookieType: String ) {
+        val stopwatch = Stopwatch.createStarted()
         val results= redisConnectionMembership.async().hset(guid, aid, currentSegments)
         results.get()
-        membershipTimer.record(System.currentTimeMillis() - startTime, TimeUnit.MILLISECONDS)
-        membershipCounter.increment()
+        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+        meterRegistry.timer("write.membership.match.latency", "cookieType", cookieType).record(Duration.ofMillis(responseTime))
     }
 
     fun retrievePartnerId(guid: String): MutableMap<String, String>? {
-        val startTime = System.currentTimeMillis()
+        val stopwatch = Stopwatch.createStarted()
         val asyncResults  = redisConnectionPartner.async().hgetall(guid)
         val results = asyncResults.get()
-        partnerTimer.record(System.currentTimeMillis() - startTime, TimeUnit.MILLISECONDS)
-        partnerCounter.increment()
+        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+        meterRegistry.timer("write.partner.match.latency").record(Duration.ofMillis(responseTime))
         return results
     }
 

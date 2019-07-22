@@ -9,7 +9,7 @@ import com.nhaarman.mockitokotlin2.whenever
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
-import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.logging.Log
@@ -30,7 +30,7 @@ class KafkaConsumerTest {
 
     var membershipCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
 
-    val meterRegistry: MeterRegistry = mock()
+    val meterRegistry = SimpleMeterRegistry()
 
     @Before
     fun init() {
@@ -44,7 +44,7 @@ class KafkaConsumerTest {
     @Test
     fun oneMatchingPartner() {
 
-        val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452}"
+        val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
         val future: RedisFuture<Map<String, String>> = mock()
         whenever(future.get()).thenReturn(mutableMapOf(Pair("beeswax","beeswaxId")))
@@ -55,10 +55,6 @@ class KafkaConsumerTest {
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
         val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership)
-        consumer.partnerCounter = mock()
-        consumer.partnerTimer = mock()
-        consumer.membershipCounter = mock()
-        consumer.membershipTimer = mock()
         consumer.consume(message)
 
         runBlocking {
@@ -73,10 +69,10 @@ class KafkaConsumerTest {
         val hSetKey = argumentCaptor<String>()
         val fieldKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.async(), times(2)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
-        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "beeswaxId"), hSetKey.allValues)
-        Assert.assertEquals(listOf("20460", "20460" ), fieldKey.allValues)
-        Assert.assertEquals(listOf("27797,27798,27801","27797,27798,27801"), fieldValue.allValues)
+        verify(redisClientMembership.async(), times(3)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId"), hSetKey.allValues)
+        Assert.assertEquals(listOf("20460", "20460", "20460" ), fieldKey.allValues)
+        Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)
 
 
     }
@@ -84,7 +80,7 @@ class KafkaConsumerTest {
     @Test
     fun twoMatchingPartner() {
 
-        val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452}"
+        val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
         val future: RedisFuture<Map<String, String>> = mock()
         whenever(future.get()).thenReturn(mutableMapOf(Pair("beeswax","beeswaxId"), Pair("tradedesk","tradedeskId")))
@@ -95,10 +91,6 @@ class KafkaConsumerTest {
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
         val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership)
-        consumer.partnerCounter = mock()
-        consumer.partnerTimer = mock()
-        consumer.membershipCounter = mock()
-        consumer.membershipTimer = mock()
         consumer.consume(message)
 
         runBlocking {
@@ -112,16 +104,16 @@ class KafkaConsumerTest {
         val hSetKey = argumentCaptor<String>()
         val fieldKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.async(), times(3)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
-        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "beeswaxId", "tradedeskId"), hSetKey.allValues)
-        Assert.assertEquals(listOf("20460", "20460", "20460"), fieldKey.allValues)
-        Assert.assertEquals(listOf("27797,27798,27801","27797,27798,27801","27797,27798,27801"), fieldValue.allValues)
+        verify(redisClientMembership.async(), times(4)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId", "tradedeskId"), hSetKey.allValues)
+        Assert.assertEquals(listOf("20460", "20460", "20460", "20460"), fieldKey.allValues)
+        Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801", "27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)
     }
 
     @Test
     fun noMatchingPartner() {
 
-        val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452}"
+        val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
         val future: RedisFuture<Map<String, String>> = mock()
         whenever(future.get()).thenReturn(mutableMapOf())
@@ -132,10 +124,6 @@ class KafkaConsumerTest {
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
         val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership)
-        consumer.partnerCounter = mock()
-        consumer.partnerTimer = mock()
-        consumer.membershipCounter = mock()
-        consumer.membershipTimer = mock()
         consumer.consume(message)
 
         runBlocking {
@@ -149,10 +137,10 @@ class KafkaConsumerTest {
         val hSetKey = argumentCaptor<String>()
         val fieldKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.async(), times(1)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
-        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111"), hSetKey.allValues)
-        Assert.assertEquals(listOf("20460"), fieldKey.allValues)
-        Assert.assertEquals(listOf("27797,27798,27801"), fieldValue.allValues)
+        verify(redisClientMembership.async(), times(2)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55"), hSetKey.allValues)
+        Assert.assertEquals(listOf("20460", "20460"), fieldKey.allValues)
+        Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)
     }
 
 }
