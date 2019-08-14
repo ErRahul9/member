@@ -6,6 +6,7 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
@@ -32,6 +33,8 @@ class KafkaConsumerTest {
 
     val meterRegistry = SimpleMeterRegistry()
 
+    var redisConfig: RedisConfig = mock()
+
     @Before
     fun init() {
         whenever(redisClientPartner.async()).thenReturn(partnerCommands)
@@ -54,7 +57,7 @@ class KafkaConsumerTest {
         whenever(future2.get()).thenReturn(true)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
-        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership)
+        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
         consumer.consume(message)
 
         runBlocking {
@@ -90,7 +93,7 @@ class KafkaConsumerTest {
         whenever(future2.get()).thenReturn(true)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
-        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership)
+        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
         consumer.consume(message)
 
         runBlocking {
@@ -123,7 +126,7 @@ class KafkaConsumerTest {
         whenever(future2.get()).thenReturn(true)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
-        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership)
+        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
         consumer.consume(message)
 
         runBlocking {

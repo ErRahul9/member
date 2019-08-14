@@ -4,6 +4,7 @@ package com.steelhouse.membership.controller
 import com.google.common.base.Stopwatch
 import com.steelhouse.core.model.gsonmessages.GsonMessageUtil
 import com.steelhouse.core.model.segmentation.gson.MembershipUpdateMessage
+import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +27,8 @@ import java.util.stream.Collectors
 class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
                                 private val meterRegistry: MeterRegistry,
                                 @Qualifier("redisConnectionPartner") private val redisConnectionPartner: StatefulRedisClusterConnection<String, String>,
-                                @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>) {
+                                @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>,
+                                private val redisConfig: RedisConfig) {
 
     val context = newFixedThreadPoolContext(1, "write-membership-thread-pool")
     val lock = Semaphore(7000)
@@ -76,6 +78,7 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
     fun writeMemberships(guid: String, currentSegments: String, aid: String, cookieType: String ) {
         val stopwatch = Stopwatch.createStarted()
         val results= redisConnectionMembership.async().hset(guid, aid, currentSegments)
+        redisConnectionMembership.async().expire(guid, redisConfig.membershipTTL!!)
         results.get()
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
         meterRegistry.timer("write.membership.match.latency", "cookieType", cookieType).record(Duration.ofMillis(responseTime))
