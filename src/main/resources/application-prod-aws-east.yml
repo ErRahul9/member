@@ -10,6 +10,9 @@ spring:
     listener:
       concurrency=: 1
     properties:
+      request:
+        timeout:
+          ms: 60000
       ssl:
         protocol: TLSv1.2
         enabled:
