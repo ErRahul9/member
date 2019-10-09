@@ -31,6 +31,10 @@ class KafkaConsumerTest {
 
     var membershipCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
 
+    var redisClientSegmentMapping: StatefulRedisClusterConnection<String, String> = mock()
+
+    var segmentMappingCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
+
     val meterRegistry = SimpleMeterRegistry()
 
     var redisConfig: RedisConfig = mock()
@@ -39,6 +43,7 @@ class KafkaConsumerTest {
     fun init() {
         whenever(redisClientPartner.async()).thenReturn(partnerCommands)
         whenever(redisClientMembership.async()).thenReturn(membershipCommands)
+        whenever(redisClientSegmentMapping.async()).thenReturn(segmentMappingCommands)
 
 
     }
@@ -57,7 +62,11 @@ class KafkaConsumerTest {
         whenever(future2.get()).thenReturn(true)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
-        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
+        val segmentMappingFuture: RedisFuture<String> = mock()
+        whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
+        whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
+
+        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisClientSegmentMapping, redisConfig)
         consumer.consume(message)
 
         runBlocking {
@@ -77,7 +86,6 @@ class KafkaConsumerTest {
         Assert.assertEquals(listOf("20460", "20460", "20460" ), fieldKey.allValues)
         Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)
 
-
     }
 
     @Test
@@ -93,7 +101,11 @@ class KafkaConsumerTest {
         whenever(future2.get()).thenReturn(true)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
-        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
+        val segmentMappingFuture: RedisFuture<String> = mock()
+        whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
+        whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
+
+        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisClientSegmentMapping, redisConfig)
         consumer.consume(message)
 
         runBlocking {
@@ -111,6 +123,7 @@ class KafkaConsumerTest {
         Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId", "tradedeskId"), hSetKey.allValues)
         Assert.assertEquals(listOf("20460", "20460", "20460", "20460"), fieldKey.allValues)
         Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801", "27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)
+
     }
 
     @Test
@@ -126,7 +139,11 @@ class KafkaConsumerTest {
         whenever(future2.get()).thenReturn(true)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
 
-        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
+        val segmentMappingFuture: RedisFuture<String> = mock()
+        whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
+        whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
+
+        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisClientSegmentMapping, redisConfig)
         consumer.consume(message)
 
         runBlocking {

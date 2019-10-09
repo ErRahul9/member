@@ -28,6 +28,7 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
                                 private val meterRegistry: MeterRegistry,
                                 @Qualifier("redisConnectionPartner") private val redisConnectionPartner: StatefulRedisClusterConnection<String, String>,
                                 @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>,
+                                @Qualifier("redisConnectionSegmentMapping") private val redisConnectionSegmentMapping: StatefulRedisClusterConnection<String, String>,
                                 private val redisConfig: RedisConfig) {
 
     val context = newFixedThreadPoolContext(1, "write-membership-thread-pool")
@@ -45,6 +46,9 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
             try {
 
                 val segments = membership.currentSegments.stream().map { it.toString() }.collect(Collectors.joining(","))
+//                val steelhouseSegmentMappings = retrieveBeeswaxSegmentIds(membership.aid.toString())
+
+//                val beeswaxSegments = extractBeeswaxSegments(membership, steelhouseSegmentMappings)
 
                 val partnerResult = async {
                     retrievePartnerId(membership.guid)
@@ -75,6 +79,21 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
 
     }
 
+//    private fun extractBeeswaxSegments(membership: MembershipUpdateMessage, steelhouseSegmentMappings: Map<String, String>): String {
+//
+//        val beeswaxSegmentList = mutableListOf<String>()
+//
+//        for (segment in membership.currentSegments) {
+//            if (steelhouseSegmentMappings.containsKey(segment.toString())) {
+//                val beeswaxSegmentId = steelhouseSegmentMappings[segment.toString()]
+//                beeswaxSegmentList.add(beeswaxSegmentId!!)
+//            }
+//        }
+//
+//        val beeswaxSegments = beeswaxSegmentList.stream().map { it }.collect(Collectors.joining(","))
+//        return beeswaxSegments.orEmpty()
+//    }
+
     fun writeMemberships(guid: String, currentSegments: String, aid: String, cookieType: String ) {
         val stopwatch = Stopwatch.createStarted()
         val results= redisConnectionMembership.async().hset(guid, aid, currentSegments)
@@ -92,5 +111,19 @@ class KafkaConsumer constructor(@Qualifier("app") private val log: Log,
         meterRegistry.timer("write.partner.match.latency").record(Duration.ofMillis(responseTime))
         return results
     }
+
+//    fun retrieveBeeswaxSegmentIds(advertiserId: String): Map<String,String> {
+//
+//        val startTime = System.currentTimeMillis()
+//
+//        val segmentMappings = redisConnectionSegmentMapping.sync().hgetall(advertiserId)
+//
+//        val responseTime = System.currentTimeMillis() - startTime
+//        meterRegistry.timer("retrieve.beeswax.segment.latency","datasource","redis").record(Duration.ofMillis(responseTime))
+//        log.trace("Beeswax Segment query completed in $responseTime milliseconds")
+//
+//        return segmentMappings
+//
+//    }
 
 }
