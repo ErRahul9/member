@@ -23,13 +23,9 @@ class CustomHealthIndicatorTest {
 
     var redisClientMembership: StatefulRedisClusterConnection<String, String> = mock()
 
-    var redisClientSegmentMapping: StatefulRedisClusterConnection<String, String> = mock()
-
     var partnerCommands: RedisAdvancedClusterCommands<String, String> = mock()
 
     var membershipCommands: RedisAdvancedClusterCommands<String, String> = mock()
-
-    var segmentMappingCommands: RedisAdvancedClusterCommands<String, String> = mock()
 
     val executions: Executions<String> = mock()
 
@@ -39,15 +35,12 @@ class CustomHealthIndicatorTest {
 
     val membershipNodeSelectionCommands: NodeSelectionCommands<String,String> = mock()
 
-    val segmentMappingNodeSelectionCommands: NodeSelectionCommands<String,String> = mock()
 
     @Before
     fun init() {
 
         whenever(redisClientPartner.sync()).thenReturn(partnerCommands)
         whenever(redisClientMembership.sync()).thenReturn(membershipCommands)
-        whenever(redisClientSegmentMapping.sync()).thenReturn(segmentMappingCommands)
-
 
         val membershipMasters: NodeSelection<String,String> = mock()
         whenever(membershipCommands.masters()).thenReturn(membershipMasters)
@@ -55,20 +48,15 @@ class CustomHealthIndicatorTest {
         val partnerMasters: NodeSelection<String, String> = mock()
         whenever(partnerCommands.masters()).thenReturn(partnerMasters)
 
-        val segmentMappingMasters: NodeSelection<String, String> = mock()
-        whenever(segmentMappingCommands.masters()).thenReturn(segmentMappingMasters)
-
-
         whenever(membershipMasters.commands()).thenReturn(membershipNodeSelectionCommands)
         whenever(partnerMasters.commands()).thenReturn(partnerNodeSelectionCommands)
-        whenever(segmentMappingMasters.commands()).thenReturn(segmentMappingNodeSelectionCommands)
 
     }
 
     @Test
     fun healthyRedisConnections() {
 
-        val indicator = CustomHealthIndicator(log, redisClientPartner, redisClientMembership, redisClientSegmentMapping)
+        val indicator = CustomHealthIndicator(log, redisClientPartner, redisClientMembership)
 
         whenever(executions.iterator()).thenReturn(mutableListOf("PONG","PONG","PONG").iterator())
         whenever(executions2.iterator()).thenReturn(mutableListOf("PONG","PONG","PONG").iterator())
@@ -85,17 +73,16 @@ class CustomHealthIndicatorTest {
     @Test
     fun unHealthyRedisConnections() {
 
-        val indicator = CustomHealthIndicator(log, redisClientPartner, redisClientMembership, redisClientSegmentMapping)
+        val indicator = CustomHealthIndicator(log, redisClientPartner, redisClientMembership)
 
         whenever(executions.iterator()).thenReturn(mutableListOf("PONG","PONG","PONG").iterator())
         whenever(executions2.iterator()).thenReturn(mutableListOf("PONG","BOOM","PONG").iterator())
 
         whenever(partnerNodeSelectionCommands.ping()).thenReturn(executions)
-        whenever(membershipNodeSelectionCommands.ping()).thenReturn(executions)
-        whenever(segmentMappingNodeSelectionCommands.ping()).thenReturn(executions2)
+        whenever(membershipNodeSelectionCommands.ping()).thenReturn(executions2)
 
         val builder = Health.Builder()
-        Assert.assertFalse(indicator.verifyConnections(builder, redisClientSegmentMapping))
+        Assert.assertFalse(indicator.verifyConnections(builder, redisClientMembership))
         Assert.assertTrue(builder.build().status == Status.DOWN)
     }
 

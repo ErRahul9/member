@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Test
 
 
-class KafkaConsumerTest {
+class MembershipConsumerTest {
 
     var log: Log = mock()
 
@@ -31,8 +31,6 @@ class KafkaConsumerTest {
 
     var membershipCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
 
-    var redisClientSegmentMapping: StatefulRedisClusterConnection<String, String> = mock()
-
     var segmentMappingCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
 
     val meterRegistry = SimpleMeterRegistry()
@@ -43,9 +41,6 @@ class KafkaConsumerTest {
     fun init() {
         whenever(redisClientPartner.async()).thenReturn(partnerCommands)
         whenever(redisClientMembership.async()).thenReturn(membershipCommands)
-        whenever(redisClientSegmentMapping.async()).thenReturn(segmentMappingCommands)
-
-
     }
 
 
@@ -66,7 +61,7 @@ class KafkaConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisClientSegmentMapping, redisConfig)
+        val consumer = MembershipConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
         consumer.consume(message)
 
         runBlocking {
@@ -105,7 +100,7 @@ class KafkaConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisClientSegmentMapping, redisConfig)
+        val consumer = MembershipConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
         consumer.consume(message)
 
         runBlocking {
@@ -143,7 +138,7 @@ class KafkaConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = KafkaConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisClientSegmentMapping, redisConfig)
+        val consumer = MembershipConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
         consumer.consume(message)
 
         runBlocking {

@@ -2,8 +2,30 @@ spring:
   profiles:
     active: dev
   kafka:
+    listener:
+      concurrency=: 4
+    properties:
+      ssl:
+        protocol: TLSv1.2
+        enabled:
+          protocols: TLSv1.2
+        truststore:
+          type: JKS
+        endpoint:
+          identification:
+            algorithm: HTTPS
+      sasl:
+        jaas:
+          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="BJXIEXRMLGDJZ3TC" password="Yud2SZwiKh8JSshSr5y28wbU/Ju7WmRTfG8106J5ZxDG77mZXYvla3CgZp3VLPLv";
+        mechanism: PLAIN
+      security:
+        protocol: SASL_SSL
     consumer:
+      bootstrap-servers: ['pkc-4n7ze.us-west-2.aws.confluent.cloud:9092']
       group-id: membership-consumer-dev2
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 logging:
   level:
@@ -17,3 +39,7 @@ redis:
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
   requestTimeoutSeconds: 10
+
+membership:
+  oracleConsumer: false
+  membershipConsumer: true
