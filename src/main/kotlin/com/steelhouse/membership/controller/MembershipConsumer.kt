@@ -3,7 +3,6 @@ package com.steelhouse.membership.controller
 
 import com.steelhouse.core.model.gsonmessages.GsonMessageUtil
 import com.steelhouse.core.model.segmentation.gson.MembershipUpdateMessage
-import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry

@@ -52,6 +52,8 @@ autoscaling:
   maxReplicas: 60
   metrics:
     averageUtilization: 40
-
+nonSpotInstance:
+  enabled: false
+  affinity: required
 
 

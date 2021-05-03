@@ -10,6 +10,7 @@ import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
+import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -29,7 +30,8 @@ class MembershipConsumerTest {
 
     var partnerCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
 
-    var membershipCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
+    var membershipCommands: RedisAdvancedClusterCommands<String, String> = mock()
+    var membershipAsyncCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
 
     var segmentMappingCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
 
@@ -40,7 +42,8 @@ class MembershipConsumerTest {
     @Before
     fun init() {
         whenever(redisClientPartner.async()).thenReturn(partnerCommands)
-        whenever(redisClientMembership.async()).thenReturn(membershipCommands)
+        whenever(redisClientMembership.sync()).thenReturn(membershipCommands)
+        whenever(redisClientMembership.async()).thenReturn(membershipAsyncCommands)
     }
 
 
@@ -55,7 +58,8 @@ class MembershipConsumerTest {
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
-        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
+        whenever(membershipAsyncCommands.expire(any(), any())).thenReturn(future2)
+        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(true)
 
         val segmentMappingFuture: RedisFuture<String> = mock()
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
@@ -76,7 +80,7 @@ class MembershipConsumerTest {
         val hSetKey = argumentCaptor<String>()
         val fieldKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.async(), times(3)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        verify(redisClientMembership.sync(), times(3)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
         Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId"), hSetKey.allValues)
         Assert.assertEquals(listOf("20460", "20460", "20460" ), fieldKey.allValues)
         Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)
@@ -94,7 +98,8 @@ class MembershipConsumerTest {
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
-        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
+        whenever(membershipAsyncCommands.expire(any(), any())).thenReturn(future2)
+        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(true)
 
         val segmentMappingFuture: RedisFuture<String> = mock()
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
@@ -114,7 +119,7 @@ class MembershipConsumerTest {
         val hSetKey = argumentCaptor<String>()
         val fieldKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.async(), times(4)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        verify(redisClientMembership.sync(), times(4)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
         Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId", "tradedeskId"), hSetKey.allValues)
         Assert.assertEquals(listOf("20460", "20460", "20460", "20460"), fieldKey.allValues)
         Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801", "27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)
@@ -132,7 +137,8 @@ class MembershipConsumerTest {
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
-        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(future2)
+        whenever(membershipAsyncCommands.expire(any(), any())).thenReturn(future2)
+        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(true)
 
         val segmentMappingFuture: RedisFuture<String> = mock()
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
@@ -152,7 +158,7 @@ class MembershipConsumerTest {
         val hSetKey = argumentCaptor<String>()
         val fieldKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.async(), times(2)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        verify(redisClientMembership.sync(), times(2)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
         Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55"), hSetKey.allValues)
         Assert.assertEquals(listOf("20460", "20460"), fieldKey.allValues)
         Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)

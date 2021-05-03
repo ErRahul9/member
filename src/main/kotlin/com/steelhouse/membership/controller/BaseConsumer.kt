@@ -35,8 +35,8 @@ abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
 
     fun writeMemberships(guid: String, currentSegments: String, aid: String, cookieType: String, audienceType: String) {
         val stopwatch = Stopwatch.createStarted()
-        val results = redisConnectionMembership.async().hset(guid, aid, currentSegments)
-        redisConnectionMembership.async().expire(guid, redisConfig.membershipTTL!!)
+        redisConnectionMembership.sync().hset(guid, aid, currentSegments)
+        val results = redisConnectionMembership.async().expire(guid, redisConfig.membershipTTL!!)
         results.get()
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
         meterRegistry.timer("write.membership.match.latency", "cookieType", cookieType, "audienceType", audienceType).record(Duration.ofMillis(responseTime))

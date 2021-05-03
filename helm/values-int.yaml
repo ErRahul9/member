@@ -34,6 +34,9 @@ env:
 imagePullSecrets: codefresh-generated-docker.io-dockerhub-qa-pixel
 istio:
   enabled: false
+nonSpotInstance:
+  enabled: false
+  affinity: required
 
 
 
