@@ -15,19 +15,15 @@ open class CustomHealthIndicator constructor(@Qualifier("app") private val log: 
 
     @Throws(Exception::class)
     override fun doHealthCheck(builder: Health.Builder) {
-        verifyConnections(builder)
+        verifyConnections(builder, redisConnectionPartner)
+        verifyConnections(builder, redisConnectionMembership)
     }
 
-    fun verifyConnections(builder: Health.Builder): Boolean {
+    fun verifyConnections(builder: Health.Builder, redisConnection: StatefulRedisClusterConnection<String,String>): Boolean {
 
         var connected = true
 
-        var executions = redisConnectionPartner.sync().masters().commands().ping()
-        for (execution in executions) {
-            connected = connected && execution == ("PONG")
-        }
-
-        executions = redisConnectionMembership.sync().masters().commands().ping()
+        var executions =  redisConnection.sync().masters().commands().ping()
         for (execution in executions) {
             connected = connected && execution == ("PONG")
         }

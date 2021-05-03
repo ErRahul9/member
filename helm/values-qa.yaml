@@ -1,5 +1,5 @@
 replicaCount: 1
-nameSpace: qa-ads
+nameSpace: qa-targeting
 image:
   repository: steelhousedev/membership-consumer
   tag: qa-latest
@@ -23,18 +23,20 @@ ingress:
     traffic-type: internal
 resources:
   limits:
-   cpu: 2000m
-   memory: 2Gi
+   cpu: 4000m
+   memory: 3Gi
   requests:
-   cpu: 2000m
-   memory: 2Gi
+   cpu: 4000m
+   memory: 3Gi
 env:
   - name: SPRING_PROFILES_ACTIVE
     value: qa
-imagePullSecrets: codefresh-generated-docker.io-dockerhub-qa-pixel
+imagePullSecrets: codefresh-generated-docker.io-dockerhub-qa-targeting
 istio:
   enabled: false
-
+nonSpotInstance:
+  enabled: false
+  affinity: required
 
 
 

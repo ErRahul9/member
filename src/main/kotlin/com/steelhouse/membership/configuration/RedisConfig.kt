@@ -29,9 +29,6 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
     open var membershipTTL: Long? = null
 
     @NotNull
-    open var partnerTTL: Long? = null
-
-    @NotNull
     var requestTimeoutSeconds: Long? = null
 
     @NotNull

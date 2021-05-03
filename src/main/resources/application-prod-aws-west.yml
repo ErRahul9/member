@@ -1,9 +1,14 @@
+---
+kafkaAuth:
+  username: ENC(3qpeUILsCYG+FkbZbJBjB9CyXrs21xDN+KlPfxQiX/0=)
+  password: ENC(2wBkQZbnmRoicoHjcIlgpd0KIM5lJ62JSqqxf+cGE5QKL0DcLHGRICnyj70WDtYbQ4uYhCoAvJcN6LjMsISJc6JPhsTE8d6X4NTWKTC6AnY=)
+
 spring:
   profiles:
-    active: dev
+    active: prod-aws-west
   kafka:
     listener:
-      concurrency=: 4
+      concurrency=: 1
     properties:
       ssl:
         protocol: TLSv1.2
@@ -16,26 +21,27 @@ spring:
             algorithm: HTTPS
       sasl:
         jaas:
-          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="BJXIEXRMLGDJZ3TC" password="Yud2SZwiKh8JSshSr5y28wbU/Ju7WmRTfG8106J5ZxDG77mZXYvla3CgZp3VLPLv";
+          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="4H4YY5F3FLITE2KG" password="gwL8gRW9jXoVLodcjPq7UM4Lp1yjrkt8rTBfAvtbXmgNO7sTwJwRV/VLORHZsmkH";
         mechanism: PLAIN
       security:
         protocol: SASL_SSL
     consumer:
       bootstrap-servers: ['pkc-4n7ze.us-west-2.aws.confluent.cloud:9092']
-      group-id: membership-consumer-dev2
+      group-id: membership-consumer-prod-aws-west
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
+
 logging:
   level:
-    app: TRACE
+    app: INFO
 
 redis:
-  membershipConnection: redis://core-dev-redis-1.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  membershipTTL: 7776000
-  partnerConnection: redis://core-dev-redis-0.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  partnerTTL: 7776000
+  membershipConnection: redis://core-prod-membership.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  membershipTTL: 5184000
+  partnerConnection: redis://core-prod-partner.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  partnerTTL: 15552000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
   requestTimeoutSeconds: 10

@@ -1,0 +1,59 @@
+replicaCount: 20
+nameSpace: prod-targeting
+container:
+  annotations:
+    prometheus.io/path: /prometheus
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/prefix: "membership-consumer-oracle."
+image:
+  repository: steelhousedev/membership-consumer
+  tag: prod-latest
+  pullPolicy: Always
+service:
+  type: LoadBalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+    external-dns.alpha.kubernetes.io/hostname: membership-consumer-oracle.coreprod.west2.steelhouse.com
+    iam.amazonaws.com/role: core-dev-dynamo-access-pod-role
+    iam.amazonaws.com/permitted: ".*"
+  name: membership-consumer-oracle
+  externalPort: 80
+  internalPort: 8080
+  probePath: /health
+  domain: coreprod.west2.steelhouse.com
+  environment: prod
+  region: west
+ingress:
+  enabled: true
+  labels:
+    traffic-type: internal
+resources:
+  limits:
+    cpu: 4000m
+    memory: 3Gi
+  requests:
+    cpu: 4000m
+    memory: 3Gi
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: "prod-oracle-west"
+  - name: SECURITY_BASIC_ENABLED
+    value: "false"
+  - name: MANAGEMENT_SECURITY_ENABLED
+    value: "false"
+imagePullSecrets: codefresh-generated-docker.io-dockerhub-prod-targeting
+istio:
+  enabled: false
+autoscaling:
+  enabled: true
+  minReplicas: 5
+  maxReplicas: 60
+  metrics:
+    averageUtilization: 40
+nonSpotInstance:
+  enabled: false
+  affinity: required
+
+

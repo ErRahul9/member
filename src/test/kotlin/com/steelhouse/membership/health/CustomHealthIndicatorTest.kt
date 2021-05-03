@@ -12,7 +12,6 @@ import org.apache.commons.logging.Log
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.Status
 
@@ -36,19 +35,18 @@ class CustomHealthIndicatorTest {
 
     val membershipNodeSelectionCommands: NodeSelectionCommands<String,String> = mock()
 
+
     @Before
     fun init() {
 
         whenever(redisClientPartner.sync()).thenReturn(partnerCommands)
         whenever(redisClientMembership.sync()).thenReturn(membershipCommands)
 
-
         val membershipMasters: NodeSelection<String,String> = mock()
         whenever(membershipCommands.masters()).thenReturn(membershipMasters)
 
         val partnerMasters: NodeSelection<String, String> = mock()
         whenever(partnerCommands.masters()).thenReturn(partnerMasters)
-
 
         whenever(membershipMasters.commands()).thenReturn(membershipNodeSelectionCommands)
         whenever(partnerMasters.commands()).thenReturn(partnerNodeSelectionCommands)
@@ -68,7 +66,7 @@ class CustomHealthIndicatorTest {
 
 
         val builder = Health.Builder()
-        Assert.assertTrue(indicator.verifyConnections(builder))
+        Assert.assertTrue(indicator.verifyConnections(builder, redisClientPartner))
         Assert.assertTrue(builder.build().status == Status.UP)
     }
 
@@ -84,7 +82,7 @@ class CustomHealthIndicatorTest {
         whenever(membershipNodeSelectionCommands.ping()).thenReturn(executions2)
 
         val builder = Health.Builder()
-        Assert.assertFalse(indicator.verifyConnections(builder))
+        Assert.assertFalse(indicator.verifyConnections(builder, redisClientMembership))
         Assert.assertTrue(builder.build().status == Status.DOWN)
     }
 

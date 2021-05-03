@@ -1,37 +1,49 @@
 replicaCount: 1
-nameSpace: qa-ads
+nameSpace: qa-targeting
+container:
+  annotations:
+    prometheus.io/path: /prometheus
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/prefix: "membership-consumer-oracle."
 image:
   repository: steelhousedev/membership-consumer
-  tag: int-latest
+  tag: qa-latest
   pullPolicy: Always
 service:
   type: LoadBalancer
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
     service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
-    external-dns.alpha.kubernetes.io/hostname: membership-consumer.coredev.west2.steelhouse.com
+    external-dns.alpha.kubernetes.io/hostname: membership-consumer-oracle.coredev.west2.steelhouse.com
     iam.amazonaws.com/role: core-dev-dynamo-access-pod-role
     iam.amazonaws.com/permitted: ".*"
-  name: membership-consumer
+  name: membership-consumer-oracle
   externalPort: 80
   internalPort: 8080
   probePath: /health
   domain: coredev.west2.steelhouse.com
+  environment: qa
+  region: west
 ingress:
   enabled: true
   labels:
     traffic-type: internal
 resources:
   limits:
-   cpu: 2000m
-   memory: 2Gi
+    cpu: 4000m
+    memory: 3Gi
   requests:
-   cpu: 2000m
-   memory: 2Gi
+    cpu: 4000m
+    memory: 3Gi
 env:
   - name: SPRING_PROFILES_ACTIVE
-    value: qa
-imagePullSecrets: codefresh-generated-docker.io-dockerhub-qa-pixel
+    value: "qa-oracle-west"
+  - name: SECURITY_BASIC_ENABLED
+    value: "false"
+  - name: MANAGEMENT_SECURITY_ENABLED
+    value: "false"
+imagePullSecrets: codefresh-generated-docker.io-dockerhub-qa-targeting
 istio:
   enabled: false
 nonSpotInstance:

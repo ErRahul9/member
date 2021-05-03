@@ -5,34 +5,10 @@ spring:
   profiles:
     active: dev
   application:
-      spring.http.encoding.charset: UTF-8
-      spring.http.encoding.enabled: true
-      spring.http.encoding.force: true
-  kafka:
-    listener:
-      concurrency=: 4
-    properties:
-      ssl:
-        protocol: TLSv1.2
-        enabled:
-          protocols: TLSv1.2
-        truststore:
-          type: JKS
-        endpoint:
-          identification:
-            algorithm: HTTPS
-      sasl:
-        jaas:
-          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="BJXIEXRMLGDJZ3TC" password="Yud2SZwiKh8JSshSr5y28wbU/Ju7WmRTfG8106J5ZxDG77mZXYvla3CgZp3VLPLv";
-        mechanism: PLAIN
-      security:
-        protocol: SASL_SSL
-    consumer:
-      bootstrap-servers: ['pkc-4n7ze.us-west-2.aws.confluent.cloud:9092']
-      group-id: membership-consumer-dev
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    name: membership-consumer
+    spring.http.encoding.charset: UTF-8
+    spring.http.encoding.enabled: true
+    spring.http.encoding.force: true
 
 logging:
   path: ./log
@@ -63,7 +39,14 @@ management:
         health: health
 
 kafka:
-  subscribe-topic: tdsync
+  subscribe-topic: membership-updates
 
-
+redis:
+  membershipConnection: redis://core-dev-redis-1.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  membershipTTL: 7776000
+  partnerConnection: redis://core-dev-redis-0.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  partnerTTL: 7776000
+  requestTimeoutSeconds: 10
+  topologyRefreshHours: 1
+  clientShutdownSeconds: 10
 
