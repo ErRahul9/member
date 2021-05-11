@@ -35,7 +35,7 @@ public class MembershipKey {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        com.steelhouse.membership.model.MembershipKey that = (com.steelhouse.membership.model.MembershipKey) o;
+        MembershipKey that = (MembershipKey) o;
         return java.util.Objects.equals(ip, that.ip) &&
                 java.util.Objects.equals(segment, that.segment);
     }

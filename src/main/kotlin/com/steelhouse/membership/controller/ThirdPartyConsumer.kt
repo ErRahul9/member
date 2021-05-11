@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import com.steelhouse.core.model.gsonmessages.GsonMessageUtil
 import com.steelhouse.core.model.segmentation.gson.MembershipUpdateMessage
+import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
 import com.steelhouse.membership.model.Membership
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
@@ -12,6 +13,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.apache.commons.logging.Log
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.annotation.KafkaListener
@@ -23,6 +25,7 @@ import java.util.stream.Collectors
 @Service
 class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
                                      private val meterRegistry: MeterRegistry,
+                                     val appConfig: AppConfig,
                                      @Qualifier("redisConnectionPartner") private val redisConnectionPartner: StatefulRedisClusterConnection<String, String>,
                                      @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>,
                                      private val amazonDynamoDB: AmazonDynamoDB,
@@ -67,7 +70,7 @@ class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
 
     private suspend fun processMembershipEvents(oracleMembership: MembershipUpdateMessage) {
 
-        CoroutineScope(context).launch {
+        withContext(context) {
 
            val currentEvents =  async {
                 val events = generatePayload(oracleMembership, oracleMembership.currentSegments)
@@ -81,7 +84,9 @@ class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
 
             currentEvents.await()
             oldEvents.await()
+
         }
+
 
     }
 
@@ -94,7 +99,7 @@ class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
             membership.ip = oracleMembership.ip
             membership.segment = segment.toString()
             membership.source = oracleMembership.source
-            membership.epoch = oracleMembership.epoch / 1000
+            membership.epoch = oracleMembership.epoch / 1000 + appConfig.membershipDataExpirationWindowSeconds!!
             membership.aid = oracleMembership.aid
 
             events.add(membership)

@@ -11,7 +11,7 @@ import org.springframework.data.annotation.Id;
 public class Membership {
 
     @Id
-    private com.steelhouse.membership.model.MembershipKey membershipKey;
+    private MembershipKey membershipKey;
 
     private String source;
     private Long epoch;
@@ -72,7 +72,7 @@ public class Membership {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        com.steelhouse.membership.model.Membership that = (com.steelhouse.membership.model.Membership) o;
+        Membership that = (Membership) o;
         return java.util.Objects.equals(membershipKey, that.membershipKey) &&
                 java.util.Objects.equals(source, that.source) &&
                 java.util.Objects.equals(epoch, that.epoch) &&
