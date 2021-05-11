@@ -29,3 +29,6 @@ redis:
 membership:
   oracleConsumer: true
   membershipConsumer: false
+
+app:
+  membershipDataExpirationWindowSeconds: 7776000
