@@ -39,7 +39,7 @@ class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
     @KafkaListener(topics = ["sh-dw-generated-audiences"], autoStartup = "\${membership.oracleConsumer:false}")
     @Throws(IOException::class)
     override fun consume(message: String) {
-        log.error(message)
+
         val oracleMembership = GsonMessageUtil.deserialize(message, MembershipUpdateMessage::class.java)
 
         lock.acquire()
