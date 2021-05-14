@@ -7,15 +7,12 @@ import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.apache.commons.logging.Log
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
 import java.io.IOException
-import java.util.stream.Collectors
 
 
 @Service
@@ -35,28 +32,32 @@ class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
     override fun consume(message: String) {
 
         val oracleMembership = GsonMessageUtil.deserialize(message, MembershipUpdateMessage::class.java)
+        val results = mutableListOf<Deferred<Any>>()
 
         lock.acquire()
 
         CoroutineScope(context).launch {
             try {
 
-                val membershipResult = async {
+                val segments = oracleMembership.currentSegments.map { it.toString() }.toTypedArray()
 
-                    val segments = oracleMembership.currentSegments.stream().map { it.toString() }
-                            .collect(Collectors.joining(","))
-
-                    writeMemberships(oracleMembership.ip.orEmpty(), segments,
-                            oracleMembership.aid.toString(), "ip", Audiencetype.oracle.name)
+                results += async {
+                    writeMemberships(oracleMembership.ip.orEmpty(), segments, "ip", Audiencetype.oracle.name)
                 }
 
-                membershipResult.await()
+                val oldSegments = oracleMembership.oldSegments.map { it.toString() }.toTypedArray()
+
+                results += async {
+                    deleteMemberships(oracleMembership.ip.orEmpty(), oldSegments, "ip", Audiencetype.oracle.name)
+                }
+
+                results.forEach{ it.await() }
             } finally {
                 lock.release()
             }
         }
-        }
 
+    }
 
 
 

@@ -33,21 +33,35 @@ abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
     }
 
 
-    fun writeMemberships(guid: String, currentSegments: String, aid: String, cookieType: String, audienceType: String) {
+    fun writeMemberships(guid: String, currentSegments: Array<String>, cookieType: String, audienceType: String) {
         val stopwatch = Stopwatch.createStarted()
-        redisConnectionMembership.sync().hset(guid, aid, currentSegments)
-        val results = redisConnectionMembership.async().expire(guid, redisConfig.membershipTTL!!)
-        results.get()
+
+        redisConnectionMembership.sync().sadd(guid, *currentSegments)
+        redisConnectionMembership.sync().expire(guid, redisConfig.membershipTTL!!)
+
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-        meterRegistry.timer("write.membership.match.latency", "cookieType", cookieType, "audienceType", audienceType).record(Duration.ofMillis(responseTime))
+        meterRegistry.timer("write.membership.match.latency", "cookieType", cookieType, "audienceType",
+                audienceType).record(Duration.ofMillis(responseTime))
+    }
+
+    fun deleteMemberships(guid: String, deletedSegments: Array<String>, cookieType: String, audienceType: String) {
+        val stopwatch = Stopwatch.createStarted()
+
+        redisConnectionMembership.sync().srem(guid, *deletedSegments)
+
+        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+        meterRegistry.timer("delete.membership.match.latency", "cookieType", cookieType, "audienceType",
+                audienceType).record(Duration.ofMillis(responseTime))
     }
 
     fun retrievePartnerId(guid: String, audienceType: String): MutableMap<String, String>? {
         val stopwatch = Stopwatch.createStarted()
-        val asyncResults = redisConnectionPartner.async().hgetall(guid)
-        val results = asyncResults.get()
+
+        val results = redisConnectionPartner.sync().hgetall(guid)
+
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-        meterRegistry.timer("write.partner.match.latency", "audienceType", audienceType).record(Duration.ofMillis(responseTime))
+        meterRegistry.timer("write.partner.match.latency", "audienceType",
+                audienceType).record(Duration.ofMillis(responseTime))
         return results
     }
 }

@@ -40,15 +40,15 @@ class MembershipConsumer constructor(@Qualifier("app") private val log: Log,
         CoroutineScope(context).launch {
             try {
 
-                val segments = membership.currentSegments.stream().map { it.toString() }.collect(Collectors.joining(","))
+                val segments = membership.currentSegments.map { it.toString() }.toTypedArray()
 
                 val partnerResult = async {
                     retrievePartnerId(membership.guid, Audiencetype.steelhouse.name)
                 }
 
                 val membershipResult = async {
-                    writeMemberships(membership.guid.orEmpty(), segments, membership.aid.toString(), "steelhouse", Audiencetype.steelhouse.name)
-                    writeMemberships(membership.ip.orEmpty(), segments, membership.aid.toString(), "ip", Audiencetype.steelhouse.name)
+                    writeMemberships(membership.guid.orEmpty(), segments, "steelhouse", Audiencetype.steelhouse.name)
+                    writeMemberships(membership.ip.orEmpty(), segments, "ip", Audiencetype.steelhouse.name)
                 }
 
                 val partnerResults = mutableListOf<Deferred<Any>>()
@@ -58,7 +58,7 @@ class MembershipConsumer constructor(@Qualifier("app") private val log: Log,
 
                     partnerResults += async {
                         val partnerGuid = partners.orEmpty()[key]
-                        writeMemberships(partnerGuid.orEmpty(), segments, membership.aid.toString(), key, Audiencetype.steelhouse.name)
+                        writeMemberships(partnerGuid.orEmpty(), segments, key, Audiencetype.steelhouse.name)
                     }
                 }
 
