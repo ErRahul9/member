@@ -28,7 +28,7 @@ class MembershipConsumerTest {
 
     var redisClientMembership: StatefulRedisClusterConnection<String, String> = mock()
 
-    var partnerCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
+    var partnerCommands: RedisAdvancedClusterCommands<String, String> = mock()
 
     var membershipCommands: RedisAdvancedClusterCommands<String, String> = mock()
     var membershipAsyncCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
@@ -41,7 +41,7 @@ class MembershipConsumerTest {
 
     @Before
     fun init() {
-        whenever(redisClientPartner.async()).thenReturn(partnerCommands)
+        whenever(redisClientPartner.sync()).thenReturn(partnerCommands)
         whenever(redisClientMembership.sync()).thenReturn(membershipCommands)
         whenever(redisClientMembership.async()).thenReturn(membershipAsyncCommands)
     }
@@ -52,9 +52,7 @@ class MembershipConsumerTest {
 
         val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
-        val future: RedisFuture<Map<String, String>> = mock()
-        whenever(future.get()).thenReturn(mutableMapOf(Pair("beeswax","beeswaxId")))
-        whenever(partnerCommands.hgetall(any())).thenReturn(future)
+        whenever(partnerCommands.hgetall(any())).thenReturn(mutableMapOf(Pair("beeswax","beeswaxId")))
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
@@ -74,16 +72,15 @@ class MembershipConsumerTest {
 
         val getAllKey = argumentCaptor<String>()
 
-        verify(redisClientPartner.async(), times(1)).hgetall(getAllKey.capture())
+        verify(redisClientPartner.sync(), times(1)).hgetall(getAllKey.capture())
         Assert.assertEquals("006866ac-cfb1-4639-99d3-c7948d7f5111", getAllKey.firstValue)
 
         val hSetKey = argumentCaptor<String>()
         val fieldKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.sync(), times(3)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        verify(redisClientMembership.sync(), times(3)).sadd(hSetKey.capture(), fieldValue.capture())
         Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId"), hSetKey.allValues)
-        Assert.assertEquals(listOf("20460", "20460", "20460" ), fieldKey.allValues)
-        Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)
+        Assert.assertEquals(listOf("27797", "27798", "27801", "27797", "27798", "27801", "27797", "27798", "27801"), fieldValue.allValues)
 
     }
 
@@ -92,9 +89,7 @@ class MembershipConsumerTest {
 
         val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
-        val future: RedisFuture<Map<String, String>> = mock()
-        whenever(future.get()).thenReturn(mutableMapOf(Pair("beeswax","beeswaxId"), Pair("tradedesk","tradedeskId")))
-        whenever(partnerCommands.hgetall(any())).thenReturn(future)
+        whenever(partnerCommands.hgetall(any())).thenReturn(mutableMapOf(Pair("beeswax","beeswaxId"), Pair("tradedesk","tradedeskId")))
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
@@ -113,16 +108,14 @@ class MembershipConsumerTest {
         }
 
         val getAllKey = argumentCaptor<String>()
-        verify(redisClientPartner.async(), times(1)).hgetall(getAllKey.capture())
+        verify(redisClientPartner.sync(), times(1)).hgetall(getAllKey.capture())
         Assert.assertEquals("006866ac-cfb1-4639-99d3-c7948d7f5111", getAllKey.firstValue)
 
         val hSetKey = argumentCaptor<String>()
-        val fieldKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.sync(), times(4)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        verify(redisClientMembership.sync(), times(4)).sadd(hSetKey.capture(), fieldValue.capture())
         Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId", "tradedeskId"), hSetKey.allValues)
-        Assert.assertEquals(listOf("20460", "20460", "20460", "20460"), fieldKey.allValues)
-        Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801", "27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)
+        Assert.assertEquals(listOf("27797", "27798", "27801", "27797", "27798", "27801", "27797", "27798", "27801", "27797", "27798" ,"27801"), fieldValue.allValues)
 
     }
 
@@ -131,9 +124,7 @@ class MembershipConsumerTest {
 
         val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
-        val future: RedisFuture<Map<String, String>> = mock()
-        whenever(future.get()).thenReturn(mutableMapOf())
-        whenever(partnerCommands.hgetall(any())).thenReturn(future)
+        whenever(partnerCommands.hgetall(any())).thenReturn(mutableMapOf())
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
@@ -152,16 +143,14 @@ class MembershipConsumerTest {
         }
 
         val getAllKey = argumentCaptor<String>()
-        verify(redisClientPartner.async(), times(1)).hgetall(getAllKey.capture())
+        verify(redisClientPartner.sync(), times(1)).hgetall(getAllKey.capture())
         Assert.assertEquals("006866ac-cfb1-4639-99d3-c7948d7f5111", getAllKey.firstValue)
 
         val hSetKey = argumentCaptor<String>()
-        val fieldKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.sync(), times(2)).hset(hSetKey.capture(), fieldKey.capture(), fieldValue.capture())
+        verify(redisClientMembership.sync(), times(2)).sadd(hSetKey.capture(), fieldValue.capture())
         Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("20460", "20460"), fieldKey.allValues)
-        Assert.assertEquals(listOf("27797,27798,27801", "27797,27798,27801"), fieldValue.allValues)
+        Assert.assertEquals(listOf("27797", "27798", "27801", "27797", "27798", "27801"), fieldValue.allValues)
     }
 
 }
