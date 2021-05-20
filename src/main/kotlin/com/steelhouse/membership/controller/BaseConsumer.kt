@@ -34,24 +34,28 @@ abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
 
 
     fun writeMemberships(guid: String, currentSegments: Array<String>, cookieType: String, audienceType: String) {
-        val stopwatch = Stopwatch.createStarted()
+        if(currentSegments.isNotEmpty()) {
+            val stopwatch = Stopwatch.createStarted()
 
-        redisConnectionMembership.sync().sadd(guid, *currentSegments)
-        redisConnectionMembership.sync().expire(guid, redisConfig.membershipTTL!!)
+            redisConnectionMembership.sync().sadd(guid, *currentSegments)
+            redisConnectionMembership.sync().expire(guid, redisConfig.membershipTTL!!)
 
-        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-        meterRegistry.timer("write.membership.match.latency", "cookieType", cookieType, "audienceType",
-                audienceType).record(Duration.ofMillis(responseTime))
+            val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+            meterRegistry.timer("write.membership.match.latency", "cookieType", cookieType, "audienceType",
+                    audienceType).record(Duration.ofMillis(responseTime))
+        }
     }
 
     fun deleteMemberships(guid: String, deletedSegments: Array<String>, cookieType: String, audienceType: String) {
-        val stopwatch = Stopwatch.createStarted()
+        if(deletedSegments.isNotEmpty()) {
+            val stopwatch = Stopwatch.createStarted()
 
-        redisConnectionMembership.sync().srem(guid, *deletedSegments)
+            redisConnectionMembership.sync().srem(guid, *deletedSegments)
 
-        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-        meterRegistry.timer("delete.membership.match.latency", "cookieType", cookieType, "audienceType",
-                audienceType).record(Duration.ofMillis(responseTime))
+            val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+            meterRegistry.timer("delete.membership.match.latency", "cookieType", cookieType, "audienceType",
+                    audienceType).record(Duration.ofMillis(responseTime))
+        }
     }
 
     fun retrievePartnerId(guid: String, audienceType: String): MutableMap<String, String>? {
