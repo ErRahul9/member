@@ -76,7 +76,6 @@ class MembershipConsumerTest {
         Assert.assertEquals("006866ac-cfb1-4639-99d3-c7948d7f5111", getAllKey.firstValue)
 
         val hSetKey = argumentCaptor<String>()
-        val fieldKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
         verify(redisClientMembership.sync(), times(3)).sadd(hSetKey.capture(), fieldValue.capture())
         Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId"), hSetKey.allValues)
