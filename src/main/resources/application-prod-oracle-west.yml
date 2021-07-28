@@ -21,6 +21,7 @@ redis:
   membershipConnection: redis://core-prod-membership-new.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   membershipTTL: 5184000
   partnerConnection: redis://core-prod-partner.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  householdConnection: redis://core-prod-household-score.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 15552000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60

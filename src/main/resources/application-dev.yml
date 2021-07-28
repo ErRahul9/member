@@ -35,13 +35,14 @@ redis:
   membershipConnection: redis://core-dev-membership.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   membershipTTL: 5184000
   partnerConnection: redis://core-dev-partner.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  householdConnection: redis://core-dev-household-score.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 7776000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
   requestTimeoutSeconds: 10
 
 membership:
-  oracleConsumer: false
+  oracleConsumer: true
   membershipConsumer: true
 
 app:

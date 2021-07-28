@@ -1,9 +1,10 @@
 package com.steelhouse.membership.controller
 
 
-import com.steelhouse.core.model.gsonmessages.GsonMessageUtil
-import com.steelhouse.core.model.segmentation.gson.MembershipUpdateMessage
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
 import com.steelhouse.membership.configuration.RedisConfig
+import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +16,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
 import java.io.IOException
-import java.util.stream.Collectors
 
 
 @Service
@@ -28,12 +28,16 @@ class MembershipConsumer constructor(@Qualifier("app") private val log: Log,
         redisConnectionMembership = redisConnectionMembership,
         redisConfig = redisConfig) {
 
+    val gson = GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .create()
+
 
     @KafkaListener(topics = ["membership-updates"], autoStartup = "\${membership.membershipConsumer:false}")
     @Throws(IOException::class)
     override fun consume(message: String) {
 
-        val membership = GsonMessageUtil.deserialize(message, MembershipUpdateMessage::class.java)
+        val membership = gson.fromJson(message, MembershipUpdateMessage::class.java)
 
         lock.acquire()
 

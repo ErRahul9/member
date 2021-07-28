@@ -20,6 +20,7 @@ redis:
   membershipConnection: redis://core-prod-membership-new.xusj1p.clustercfg.use1.cache.amazonaws.com:6379
   membershipTTL: 5184000
   partnerConnection: redis://core-prod-partner.xusj1p.clustercfg.use1.cache.amazonaws.com:6379
+  householdConnection: redis://core-prod-household-score.xusj1p.clustercfg.use1.cache.amazonaws.com:6379
   partnerTTL: 15552000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60

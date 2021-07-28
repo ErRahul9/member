@@ -26,6 +26,9 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
     var partnerConnection: String? = null
 
     @NotNull
+    var householdConnection: String? = null
+
+    @NotNull
     open var membershipTTL: Long? = null
 
     @NotNull
@@ -102,9 +105,37 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
     }
 
     @Bean
+    open fun redisClientHousehold(clusterClientOptions: ClusterClientOptions) : RedisClusterClient? {
+
+        val clientResources = DefaultClientResources.builder() //
+                .dnsResolver(DirContextDnsResolver()) // Does not cache DNS lookups
+                .build()
+
+        val redisClient = RedisClusterClient.create(clientResources, householdConnection)
+
+        redisClient.setOptions(clusterClientOptions)
+        redisClient.setDefaultTimeout(Duration.ofSeconds(requestTimeoutSeconds!!))
+
+        Runtime.getRuntime().addShutdownHook(object : Thread() {
+            override fun run() {
+                redisClient.shutdown(clientShutdownSeconds!!, clientShutdownSeconds!!, TimeUnit.SECONDS)
+            }
+        })
+
+        return redisClient
+    }
+
+    @Bean
     open fun redisConnectionMembership(redisClientMembership: RedisClusterClient) : StatefulRedisClusterConnection<String, String>? {
 
         return redisClientMembership.connect()
+
+    }
+
+    @Bean
+    open fun redisConnectionUserScore(redisClientHousehold: RedisClusterClient) : StatefulRedisClusterConnection<String, String>? {
+
+        return redisClientHousehold.connect()
 
     }
 
