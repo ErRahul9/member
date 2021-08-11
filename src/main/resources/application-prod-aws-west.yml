@@ -38,7 +38,7 @@ logging:
     app: INFO
 
 redis:
-  membershipConnection: redis://core-prod-membership-new.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  membershipConnection: redis://core-prod-membership-opm.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   membershipTTL: 5184000
   partnerConnection: redis://core-prod-partner.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 15552000
