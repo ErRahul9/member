@@ -22,7 +22,7 @@ abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
                                  private val redisConfig: RedisConfig) {
 
     val context = newFixedThreadPoolContext(1, "write-membership-thread-pool")
-    val lock = Semaphore(7000)
+    val lock = Semaphore(4000)
 
     @Throws(IOException::class)
     abstract open fun consume(message: String)
