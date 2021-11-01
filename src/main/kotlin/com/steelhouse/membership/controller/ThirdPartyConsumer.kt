@@ -59,9 +59,9 @@ class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
                     deleteMemberships(oracleMembership.ip.orEmpty(), oldSegments, "ip", Audiencetype.oracle.name)
                 }
 
-                results += async{
-                    writeHouseHoldScore(oracleMembership.ip.orEmpty(), oracleMembership.householdScore)
-                }
+//                results += async{
+//                    writeHouseHoldScore(oracleMembership.ip.orEmpty(), oracleMembership.householdScore)
+//                }
 
                 results.forEach{ it.await() }
             } finally {
@@ -71,18 +71,18 @@ class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
 
     }
 
-    fun writeHouseHoldScore(id: String, houseHoldScore: Int?) {
-
-        val stopwatch = Stopwatch.createStarted()
-
-        if(houseHoldScore != null) {
-            redisConnectionUserScore.sync().hset(id, "household_score", houseHoldScore.toString())
-
-            val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-            meterRegistry.timer("write.user.score.latency", "score", "houeshold")
-                    .record(Duration.ofMillis(responseTime))
-        }
-    }
+//    fun writeHouseHoldScore(id: String, houseHoldScore: Int?) {
+//
+//        val stopwatch = Stopwatch.createStarted()
+//
+//        if(houseHoldScore != null) {
+//            redisConnectionUserScore.sync().hset(id, "household_score", houseHoldScore.toString())
+//
+//            val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+//            meterRegistry.timer("write.user.score.latency", "score", "houeshold")
+//                    .record(Duration.ofMillis(responseTime))
+//        }
+//    }
 
 
 }
