@@ -90,11 +90,11 @@ class ThirdPartyConsumerTest {
         val fieldValueScore = argumentCaptor<String>()
 
         verify(redisClientMembership.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
-        //verify(redisClientUserScore.sync(), times(1)).hset(hSetKeyScore.capture(), fieldKeyScore.capture(), fieldValueScore.capture())
+        verify(redisClientUserScore.sync(), times(1)).hset(hSetKeyScore.capture(), fieldKeyScore.capture(), fieldValueScore.capture())
         Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
         Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
-        //Assert.assertEquals("household_score", fieldKeyScore.firstValue)
-        //Assert.assertEquals("80", fieldValueScore.firstValue)
+        Assert.assertEquals("household_score", fieldKeyScore.firstValue)
+        Assert.assertEquals("80", fieldValueScore.firstValue)
 
     }
 
@@ -130,7 +130,7 @@ class ThirdPartyConsumerTest {
 
         verify(redisClientMembership.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
         verify(redisClientMembership.sync(), times(1)).srem(hSetKeyDelete.capture(), deleteValue.capture())
-       // verify(redisClientUserScore.sync(), times(0)).hset(any(), any(), any())
+        verify(redisClientUserScore.sync(), times(0)).hset(any(), any(), any())
         Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
         Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
         Assert.assertEquals(listOf("28579", "29060", "32357", "42631", "43527", "42825", "43508", "27702", "27799",
