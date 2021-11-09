@@ -6,7 +6,7 @@ spring:
     listener:
       concurrency=: 1
     consumer:
-      bootstrap-servers: ['b-1.msk-rtb-prod.gsn3vr.c2.kafka.us-east-1.amazonaws.com:9092,b-2.msk-rtb-prod.gsn3vr.c2.kafka.us-east-1.amazonaws.com:9092,b-3.msk-rtb-prod.gsn3vr.c2.kafka.us-east-1.amazonaws.com:9092']
+      bootstrap-servers: ['b-4.msk-rtb-prod.gsn3vr.c2.kafka.us-east-1.amazonaws.com:9092,b-6.msk-rtb-prod.gsn3vr.c2.kafka.us-east-1.amazonaws.com:9092,b-1.msk-rtb-prod.gsn3vr.c2.kafka.us-east-1.amazonaws.com:9092']
       group-id: membership-consumer-prod-oracle-east
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
