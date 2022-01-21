@@ -6,8 +6,10 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
+import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.RedisFuture
+import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
 import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands
@@ -28,10 +30,13 @@ class MembershipConsumerTest {
 
     var redisClientMembership: StatefulRedisClusterConnection<String, String> = mock()
 
+    var redisConnectionRecency: StatefulRedisClusterConnection<String, String> = mock()
+
     var partnerCommands: RedisAdvancedClusterCommands<String, String> = mock()
 
     var membershipCommands: RedisAdvancedClusterCommands<String, String> = mock()
     var membershipAsyncCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
+    var recencyAsyncCommands: RedisAdvancedClusterCommands<String, String> = mock()
 
     var segmentMappingCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
 
@@ -39,11 +44,18 @@ class MembershipConsumerTest {
 
     var redisConfig: RedisConfig = mock()
 
+    val appConfig = AppConfig()
+
     @Before
     fun init() {
         whenever(redisClientPartner.sync()).thenReturn(partnerCommands)
         whenever(redisClientMembership.sync()).thenReturn(membershipCommands)
         whenever(redisClientMembership.async()).thenReturn(membershipAsyncCommands)
+        whenever(redisConnectionRecency.sync()).thenReturn(recencyAsyncCommands)
+
+        appConfig.recencyExpirationWindowSeconds = 100
+        appConfig.recencySha = "iuhioy87yg"
+        appConfig.recencyDeviceIDTTLSeconds = 100
     }
 
 
@@ -63,7 +75,12 @@ class MembershipConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = MembershipConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
+        whenever(recencyAsyncCommands.evalsha<String>(appConfig.recencySha, ScriptOutputType.VALUE, arrayOf("154.130.20.55"),
+                "20460", "1556195801515452", appConfig.recencyExpirationWindowSeconds.toString(),
+                appConfig.recencyDeviceIDTTLSeconds.toString())).thenReturn("")
+
+        val consumer = MembershipConsumer(log, meterRegistry, appConfig, redisClientPartner, redisClientMembership,
+                redisConnectionRecency, redisConfig)
         consumer.consume(message)
 
         runBlocking {
@@ -99,7 +116,8 @@ class MembershipConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = MembershipConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
+        val consumer = MembershipConsumer(log, meterRegistry, appConfig, redisClientPartner, redisClientMembership,
+                redisConnectionRecency, redisConfig)
         consumer.consume(message)
 
         runBlocking {
@@ -134,7 +152,8 @@ class MembershipConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = MembershipConsumer(log, meterRegistry, redisClientPartner, redisClientMembership, redisConfig)
+        val consumer = MembershipConsumer(log, meterRegistry, appConfig, redisClientPartner, redisClientMembership,
+                redisConnectionRecency, redisConfig)
         consumer.consume(message)
 
         runBlocking {

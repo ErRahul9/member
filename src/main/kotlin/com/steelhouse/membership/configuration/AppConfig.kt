@@ -13,5 +13,15 @@ open class AppConfig {
 
     @NotNull
     var membershipDataExpirationWindowSeconds: Long? = null
+
+    @NotNull
+    var recencySha: String? = null
+
+    @NotNull
+    var recencyDeviceIDTTLSeconds: Long? = null
+
+    @NotNull
+    var recencyExpirationWindowSeconds: Long? = null
+
 }
 

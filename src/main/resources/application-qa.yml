@@ -1,27 +1,16 @@
 spring:
   profiles:
     active: qa
-  kafka:
     listener:
-      concurrency=: 4
-    properties:
-      ssl:
-        protocol: TLSv1.2
-        enabled:
-          protocols: TLSv1.2
-        truststore:
-          type: JKS
-        endpoint:
-          identification:
-            algorithm: HTTPS
-      sasl:
-        jaas:
-          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="BJXIEXRMLGDJZ3TC" password="Yud2SZwiKh8JSshSr5y28wbU/Ju7WmRTfG8106J5ZxDG77mZXYvla3CgZp3VLPLv";
-        mechanism: PLAIN
-      security:
-        protocol: SASL_SSL
+      concurrency=: 1
+  kafka:
+    producer:
+      bootstrap-servers: ['b-2.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092','b-1.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092']
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 3
     consumer:
-      bootstrap-servers: ['pkc-4n7ze.us-west-2.aws.confluent.cloud:9092']
+      bootstrap-servers: ['b-2.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092','b-1.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092']
       group-id: membership-consumer-dev
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -36,6 +25,7 @@ redis:
   membershipTTL: 5184000
   partnerConnection: redis://core-dev-partner.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   householdConnection: redis://core-dev-household-score.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  recencyConnection: redis://core-dev-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 15552000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
@@ -46,4 +36,7 @@ membership:
   membershipConsumer: true
 
 app:
-  membershipDataExpirationWindowSeconds: 7776000
+  membershipDataExpirationWindowSeconds: 432000
+  recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
+  recencyDeviceIDTTLSeconds: 432000
+  recencyExpirationWindowSeconds: 604800

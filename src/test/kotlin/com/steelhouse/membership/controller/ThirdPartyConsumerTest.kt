@@ -30,6 +30,8 @@ class ThirdPartyConsumerTest {
 
     var redisClientMembership: StatefulRedisClusterConnection<String, String> = mock()
 
+    var redisConnectionRecency: StatefulRedisClusterConnection<String, String> = mock()
+
     var redisClientUserScore: StatefulRedisClusterConnection<String, String> = mock()
     var userScoreCommands: RedisAdvancedClusterCommands<String, String> = mock()
 
@@ -75,7 +77,7 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(log, meterRegistry, appConfig, redisClientPartner, redisClientMembership,
-                redisClientUserScore, redisConfig)
+                redisClientUserScore, redisConnectionRecency, redisConfig)
         consumer.consume(message)
 
         runBlocking {
@@ -116,7 +118,7 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(log, meterRegistry, appConfig, redisClientPartner, redisClientMembership,
-                redisClientUserScore, redisConfig)
+                redisClientUserScore, redisConnectionRecency, redisConfig)
         consumer.consume(message)
 
         runBlocking {

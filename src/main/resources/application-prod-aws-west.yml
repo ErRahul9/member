@@ -42,6 +42,7 @@ redis:
   membershipTTL: 5184000
   partnerConnection: redis://core-prod-partner.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   householdConnection: redis://core-prod-household-score.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  recencyConnection: redis://core-prod-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 15552000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
@@ -53,3 +54,6 @@ membership:
 
 app:
   membershipDataExpirationWindowSeconds: 7776000
+  recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
+  recencyDeviceIDTTLSeconds: 604800
+  recencyExpirationWindowSeconds: 604800

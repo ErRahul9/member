@@ -40,6 +40,9 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
     @NotNull
     var clientShutdownSeconds: Long? = null
 
+    @NotNull
+    var recencyConnection: String? = null
+
     @Bean
     open fun redisClientPartner(clusterClientOptions: ClusterClientOptions) : RedisClusterClient? {
 
@@ -61,11 +64,39 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
         return redisClient
     }
 
+    @Bean
+    open fun redisClientRecency(clusterClientOptions: ClusterClientOptions) : RedisClusterClient? {
+
+        var clientResources = DefaultClientResources.builder() //
+                .dnsResolver(DirContextDnsResolver()) // Does not cache DNS lookups
+                .build()
+
+        var redisClient = RedisClusterClient.create(clientResources, recencyConnection)
+
+        redisClient.setOptions(clusterClientOptions)
+        redisClient.setDefaultTimeout(Duration.ofSeconds(requestTimeoutSeconds!!))
+
+        Runtime.getRuntime().addShutdownHook(object : Thread() {
+            override fun run() {
+                redisClient.shutdown(clientShutdownSeconds!!, clientShutdownSeconds!!, TimeUnit.SECONDS)
+            }
+        })
+
+        return redisClient
+    }
+
 
     @Bean
     open fun redisConnectionPartner(redisClientPartner: RedisClusterClient) : StatefulRedisClusterConnection<String, String>? {
 
         return redisClientPartner.connect()
+
+    }
+
+    @Bean
+    open fun redisConnectionRecency(redisClientRecency: RedisClusterClient) : StatefulRedisClusterConnection<String, String>? {
+
+        return redisClientRecency.connect()
 
     }
 
