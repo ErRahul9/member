@@ -25,8 +25,8 @@ abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
                                  @Qualifier("redisConnectionRecency") private val redisConnectionRecency: StatefulRedisClusterConnection<String, String>,
                                  private val redisConfig: RedisConfig) {
 
-    val context = newFixedThreadPoolContext(15, "write-membership-thread-pool")
-    val lock = Semaphore(4000)
+    val context = newFixedThreadPoolContext(30, "write-membership-thread-pool")
+    val lock = Semaphore(2000)
 
     @Throws(IOException::class)
     abstract open fun consume(message: String)
