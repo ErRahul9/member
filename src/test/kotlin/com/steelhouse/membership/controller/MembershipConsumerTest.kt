@@ -131,7 +131,7 @@ class MembershipConsumerTest {
         val hSetKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
         verify(redisClientMembership.sync(), times(4)).sadd(hSetKey.capture(), fieldValue.capture())
-        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId", "tradedeskId"), hSetKey.allValues)
+        Assert.assertTrue(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId", "tradedeskId").containsAll(hSetKey.allValues))
         Assert.assertEquals(listOf("27797", "27798", "27801", "27797", "27798", "27801", "27797", "27798", "27801", "27797", "27798" ,"27801"), fieldValue.allValues)
 
     }
