@@ -121,7 +121,7 @@ class MembershipConsumerTest {
         consumer.consume(message)
 
         runBlocking {
-            delay(100)
+            delay(1000)
         }
 
         val getAllKey = argumentCaptor<String>()
