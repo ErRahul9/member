@@ -23,14 +23,13 @@ import java.util.concurrent.TimeUnit
 class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
                                      private val meterRegistry: MeterRegistry,
                                      val appConfig: AppConfig,
-                                     @Qualifier("redisConnectionPartner") private val redisConnectionPartner: StatefulRedisClusterConnection<String, String>,
-                                     @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>,
+                                     @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
                                      @Qualifier("redisConnectionUserScore") private val redisConnectionUserScore: StatefulRedisClusterConnection<String, String>,
                                      @Qualifier("redisConnectionRecency") private val redisConnectionRecency: StatefulRedisClusterConnection<String, String>,
                                      private val redisConfig: RedisConfig): BaseConsumer(log = log,
-        meterRegistry = meterRegistry, redisConnectionPartner = redisConnectionPartner,
-        redisConnectionMembership = redisConnectionMembership,
-        redisConfig = redisConfig, redisConnectionRecency = redisConnectionRecency, appConfig = appConfig) {
+        meterRegistry = meterRegistry,
+        redisConnectionMembershipTpa = redisConnectionMembershipTpa, redisConfig = redisConfig,
+        redisConnectionRecency = redisConnectionRecency, appConfig = appConfig) {
 
     val gson = GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -52,7 +51,8 @@ class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
                     val segments = oracleMembership.currentSegments.map { it.toString() }.toTypedArray()
 
                     results += async {
-                        writeMemberships(oracleMembership.ip.orEmpty(), segments, "ip", Audiencetype.oracle.name)
+                        writeMemberships(oracleMembership.ip.orEmpty(), segments, "ip",
+                            Audiencetype.oracle.name)
                     }
                 }
 
@@ -60,7 +60,8 @@ class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
                     val oldSegments = oracleMembership.oldSegments.map { it.toString() }.toTypedArray()
 
                     results += async {
-                        deleteMemberships(oracleMembership.ip.orEmpty(), oldSegments, "ip", Audiencetype.oracle.name)
+                        deleteMemberships(oracleMembership.ip.orEmpty(), oldSegments, "ip",
+                            Audiencetype.oracle.name)
                     }
                 }
 

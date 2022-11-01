@@ -1,11 +1,6 @@
 package com.steelhouse.membership.controller
 
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.argumentCaptor
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
 import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.RedisFuture
@@ -26,13 +21,10 @@ class MembershipConsumerTest {
 
     var log: Log = mock()
 
-    var redisClientPartner: StatefulRedisClusterConnection<String, String> = mock()
-
-    var redisClientMembership: StatefulRedisClusterConnection<String, String> = mock()
+    var redisClientMembershipTpa: StatefulRedisClusterConnection<String, String> = mock()
 
     var redisConnectionRecency: StatefulRedisClusterConnection<String, String> = mock()
 
-    var partnerCommands: RedisAdvancedClusterCommands<String, String> = mock()
 
     var membershipCommands: RedisAdvancedClusterCommands<String, String> = mock()
     var membershipAsyncCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
@@ -48,10 +40,10 @@ class MembershipConsumerTest {
 
     @Before
     fun init() {
-        whenever(redisClientPartner.sync()).thenReturn(partnerCommands)
-        whenever(redisClientMembership.sync()).thenReturn(membershipCommands)
-        whenever(redisClientMembership.async()).thenReturn(membershipAsyncCommands)
+        whenever(redisClientMembershipTpa.sync()).thenReturn(membershipCommands)
+        whenever(redisClientMembershipTpa.async()).thenReturn(membershipAsyncCommands)
         whenever(redisConnectionRecency.sync()).thenReturn(recencyAsyncCommands)
+        whenever(redisConfig.membershipTTL).thenReturn(5)
 
         appConfig.recencyExpirationWindowSeconds = 100
         appConfig.recencySha = "iuhioy87yg"
@@ -60,115 +52,64 @@ class MembershipConsumerTest {
 
 
     @Test
-    fun oneMatchingPartner() {
+    fun noValidDataSource() {
 
-        val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
-
-        whenever(partnerCommands.hgetall(any())).thenReturn(mutableMapOf(Pair("beeswax","beeswaxId")))
+        val message = "{\"data_source\":\"1\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
-        whenever(membershipAsyncCommands.expire(any(), any())).thenReturn(future2)
+        whenever(membershipAsyncCommands.expire(any(), same(5))).thenReturn(future2)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(true)
 
         val segmentMappingFuture: RedisFuture<String> = mock()
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        whenever(recencyAsyncCommands.evalsha<String>(appConfig.recencySha, ScriptOutputType.VALUE, arrayOf("154.130.20.55"),
-                "20460", "1556195801515452", appConfig.recencyExpirationWindowSeconds.toString(),
-                appConfig.recencyDeviceIDTTLSeconds.toString())).thenReturn("")
-
-        val consumer = MembershipConsumer(log, meterRegistry, appConfig, redisClientPartner, redisClientMembership,
-                redisConnectionRecency, redisConfig)
-        consumer.consume(message)
-
-        runBlocking {
-            delay(100)
-        }
-
-        val getAllKey = argumentCaptor<String>()
-
-        verify(redisClientPartner.sync(), times(1)).hgetall(getAllKey.capture())
-        Assert.assertEquals("006866ac-cfb1-4639-99d3-c7948d7f5111", getAllKey.firstValue)
-
-        val hSetKey = argumentCaptor<String>()
-        val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.sync(), times(3)).sadd(hSetKey.capture(), fieldValue.capture())
-        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801", "27797", "27798", "27801", "27797", "27798", "27801"), fieldValue.allValues)
-
-    }
-
-    @Test
-    fun twoMatchingPartner() {
-
-        val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
-
-        whenever(partnerCommands.hgetall(any())).thenReturn(mutableMapOf(Pair("beeswax","beeswaxId"), Pair("tradedesk","tradedeskId")))
-
-        val future2: RedisFuture<Boolean> = mock()
-        whenever(future2.get()).thenReturn(true)
-        whenever(membershipAsyncCommands.expire(any(), any())).thenReturn(future2)
-        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(true)
-
-        val segmentMappingFuture: RedisFuture<String> = mock()
-        whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
-        whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
-
-        val consumer = MembershipConsumer(log, meterRegistry, appConfig, redisClientPartner, redisClientMembership,
-                redisConnectionRecency, redisConfig)
+        val consumer = MembershipConsumer(log, meterRegistry, appConfig, redisClientMembershipTpa,
+            redisConnectionRecency, redisConfig)
         consumer.consume(message)
 
         runBlocking {
             delay(1000)
         }
 
-        val getAllKey = argumentCaptor<String>()
-        verify(redisClientPartner.sync(), times(1)).hgetall(getAllKey.capture())
-        Assert.assertEquals("006866ac-cfb1-4639-99d3-c7948d7f5111", getAllKey.firstValue)
-
         val hSetKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.sync(), times(4)).sadd(hSetKey.capture(), fieldValue.capture())
+        verify(redisClientMembershipTpa.sync(), times(0)).sadd(hSetKey.capture(), fieldValue.capture())
         Assert.assertTrue(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId", "tradedeskId").containsAll(hSetKey.allValues))
-        Assert.assertEquals(listOf("27797", "27798", "27801", "27797", "27798", "27801", "27797", "27798", "27801", "27797", "27798" ,"27801"), fieldValue.allValues)
+        Assert.assertEquals(emptyList<String>(), fieldValue.allValues)
 
     }
 
     @Test
-    fun noMatchingPartner() {
+    fun tpaDataSourceWrite() {
 
-        val message = "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
+        val message = "{\"data_source\":\"3\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
-        whenever(partnerCommands.hgetall(any())).thenReturn(mutableMapOf())
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
-        whenever(membershipAsyncCommands.expire(any(), any())).thenReturn(future2)
+        whenever(membershipAsyncCommands.expire(any(), same(5))).thenReturn(future2)
         whenever(membershipCommands.hset(any(), any(), any())).thenReturn(true)
 
         val segmentMappingFuture: RedisFuture<String> = mock()
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = MembershipConsumer(log, meterRegistry, appConfig, redisClientPartner, redisClientMembership,
-                redisConnectionRecency, redisConfig)
+        val consumer = MembershipConsumer(log, meterRegistry, appConfig, redisClientMembershipTpa,
+            redisConnectionRecency, redisConfig)
         consumer.consume(message)
 
         runBlocking {
             delay(100)
         }
 
-        val getAllKey = argumentCaptor<String>()
-        verify(redisClientPartner.sync(), times(1)).hgetall(getAllKey.capture())
-        Assert.assertEquals("006866ac-cfb1-4639-99d3-c7948d7f5111", getAllKey.firstValue)
 
         val hSetKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembership.sync(), times(2)).sadd(hSetKey.capture(), fieldValue.capture())
-        Assert.assertEquals(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801", "27797", "27798", "27801"), fieldValue.allValues)
+        verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
+        Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
+        Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
     }
 
 }

@@ -10,13 +10,11 @@ import org.springframework.stereotype.Component
 
 @Component
 open class CustomHealthIndicator constructor(@Qualifier("app") private val log: Log,
-                                        @Qualifier("redisConnectionPartner") private val redisConnectionPartner: StatefulRedisClusterConnection<String, String>,
-                                        @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>) : AbstractHealthIndicator() {
+                                        @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>) : AbstractHealthIndicator() {
 
     @Throws(Exception::class)
     override fun doHealthCheck(builder: Health.Builder) {
-        verifyConnections(builder, redisConnectionPartner)
-        verifyConnections(builder, redisConnectionMembership)
+        verifyConnections(builder, redisConnectionMembershipTpa)
     }
 
     fun verifyConnections(builder: Health.Builder, redisConnection: StatefulRedisClusterConnection<String,String>): Boolean {

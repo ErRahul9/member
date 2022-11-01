@@ -12,9 +12,6 @@ import javax.validation.constraints.NotNull
 open class AppConfig {
 
     @NotNull
-    var membershipDataExpirationWindowSeconds: Long? = null
-
-    @NotNull
     var recencySha: String? = null
 
     @NotNull
@@ -22,6 +19,15 @@ open class AppConfig {
 
     @NotNull
     var recencyExpirationWindowSeconds: Long? = null
+
+    @NotNull
+    var frequencySha: String? = null
+
+    @NotNull
+    var frequencyDeviceIDTTLSeconds: Long? = null
+
+    @NotNull
+    var frequencyExpirationWindowMilliSeconds: Long? = null
 
 }
 

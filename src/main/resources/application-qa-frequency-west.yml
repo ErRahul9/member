@@ -29,9 +29,9 @@ redis:
   requestTimeoutSeconds: 10
 
 membership:
-  oracleConsumer: true
+  oracleConsumer: false
   membershipConsumer: false
-  impressionConsumer: false
+  impressionConsumer: true
 
 app:
   recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
@@ -39,4 +39,4 @@ app:
   recencyExpirationWindowSeconds: 604800
   frequencySha: ebdab639a5a6a3e9781cb71fedf413cb9485adc5
   frequencyDeviceIDTTLSeconds: 3600000
-  frequencyExpirationWindowMilliSeconds: 864000000
+  frequencyExpirationWindowMilliSeconds:

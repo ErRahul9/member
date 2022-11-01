@@ -1,7 +1,6 @@
 ---
 spring:
-  profiles:
-    active: prod-oracle-west
+
   kafka:
     listener:
       concurrency=: 1
@@ -12,17 +11,16 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
-
 logging:
   level:
     app: INFO
 
 redis:
-  membershipConnection: redis://core-prod-membership-new.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  membershipConnectionTpa: redis://core-prod-membership-new.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   membershipTTL: 5184000
-  partnerConnection: redis://core-prod-partner.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   householdConnection: redis://core-prod-household-score.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   recencyConnection: redis://core-prod-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  frequencyCapConnection: redis://core-prod-frequency-caps.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 15552000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
@@ -31,6 +29,12 @@ redis:
 membership:
   oracleConsumer: true
   membershipConsumer: false
+  impressionConsumer: false
 
 app:
-  membershipDataExpirationWindowSeconds: 7776000
+  recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
+  recencyDeviceIDTTLSeconds: 604800
+  recencyExpirationWindowSeconds: 604800
+  frequencySha: ebdab639a5a6a3e9781cb71fedf413cb9485adc5
+  frequencyDeviceIDTTLSeconds: 3600000
+  frequencyExpirationWindowMilliSeconds: 864000000

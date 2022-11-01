@@ -18,12 +18,11 @@ import java.util.concurrent.TimeUnit
 
 @Service
 abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
-                                 private val appConfig: AppConfig,
-                                 private val meterRegistry: MeterRegistry,
-                                 @Qualifier("redisConnectionPartner") private val redisConnectionPartner: StatefulRedisClusterConnection<String, String>,
-                                 @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>,
-                                 @Qualifier("redisConnectionRecency") private val redisConnectionRecency: StatefulRedisClusterConnection<String, String>,
-                                 private val redisConfig: RedisConfig) {
+                                        private val appConfig: AppConfig,
+                                        private val meterRegistry: MeterRegistry,
+                                        @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
+                                        @Qualifier("redisConnectionRecency") private val redisConnectionRecency: StatefulRedisClusterConnection<String, String>,
+                                        private val redisConfig: RedisConfig) {
 
     val context = newFixedThreadPoolContext(30, "write-membership-thread-pool")
     val lock = Semaphore(2000)
@@ -38,11 +37,12 @@ abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
 
 
     fun writeMemberships(guid: String, currentSegments: Array<String>, cookieType: String, audienceType: String) {
+
         if(currentSegments.isNotEmpty()) {
             val stopwatch = Stopwatch.createStarted()
 
-            redisConnectionMembership.sync().sadd(guid, *currentSegments)
-            redisConnectionMembership.sync().expire(guid, redisConfig.membershipTTL!!)
+            redisConnectionMembershipTpa.sync().sadd(guid, *currentSegments)
+            redisConnectionMembershipTpa.sync().expire(guid, redisConfig.membershipTTL!!)
 
             val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
             meterRegistry.timer("write.membership.match.latency", "cookieType", cookieType, "audienceType",
@@ -54,7 +54,7 @@ abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
         if(deletedSegments.isNotEmpty()) {
             val stopwatch = Stopwatch.createStarted()
 
-            redisConnectionMembership.sync().srem(guid, *deletedSegments)
+            redisConnectionMembershipTpa.sync().srem(guid, *deletedSegments)
 
             val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
             meterRegistry.timer("delete.membership.match.latency", "cookieType", cookieType, "audienceType",
@@ -62,16 +62,6 @@ abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
         }
     }
 
-    fun retrievePartnerId(guid: String, audienceType: String): MutableMap<String, String>? {
-        val stopwatch = Stopwatch.createStarted()
-
-        val results = redisConnectionPartner.sync().hgetall(guid)
-
-        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-        meterRegistry.timer("write.partner.match.latency", "audienceType",
-                audienceType).record(Duration.ofMillis(responseTime))
-        return results
-    }
 
     fun writeRecency(deviceID: String, advertiserID: String, recencyEpoch: String) {
 

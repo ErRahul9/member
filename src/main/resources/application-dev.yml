@@ -21,8 +21,9 @@ logging:
 redis:
   membershipConnection: redis://core-dev-membership.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   membershipTTL: 5184000
-  partnerConnection: redis://core-dev-partner.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   householdConnection: redis://core-dev-household-score.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  recencyConnection: redis://core-dev-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  frequencyCapConnection: redis://core-dev-frequency-caps.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 7776000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
@@ -31,9 +32,12 @@ redis:
 membership:
   oracleConsumer: true
   membershipConsumer: true
+  impressionConsumer: false
 
 app:
-  membershipDataExpirationWindowSeconds: 432000
   recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
   recencyDeviceIDTTLSeconds: 604800
   recencyExpirationWindowSeconds: 604800
+  frequencySha: ebdab639a5a6a3e9781cb71fedf413cb9485adc5
+  frequencyDeviceIDTTLSeconds: 3600000
+  frequencyExpirationWindowMilliSeconds: 864000000

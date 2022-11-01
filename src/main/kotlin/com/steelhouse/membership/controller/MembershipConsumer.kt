@@ -9,7 +9,6 @@ import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.apache.commons.logging.Log
@@ -23,18 +22,20 @@ import java.io.IOException
 class MembershipConsumer constructor(@Qualifier("app") private val log: Log,
                                      private val meterRegistry: MeterRegistry,
                                      val appConfig: AppConfig,
-                                     @Qualifier("redisConnectionPartner") private val redisConnectionPartner: StatefulRedisClusterConnection<String, String>,
-                                     @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>,
+                                     @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
                                      @Qualifier("redisConnectionRecency") private val redisConnectionRecency: StatefulRedisClusterConnection<String, String>,
                                      private val redisConfig: RedisConfig): BaseConsumer(log = log,
-        meterRegistry = meterRegistry, redisConnectionPartner = redisConnectionPartner,
-        redisConnectionMembership = redisConnectionMembership,
-        redisConfig = redisConfig, redisConnectionRecency = redisConnectionRecency, appConfig = appConfig) {
+        meterRegistry = meterRegistry,
+        redisConnectionMembershipTpa = redisConnectionMembershipTpa,
+        redisConfig = redisConfig,
+        redisConnectionRecency = redisConnectionRecency, appConfig = appConfig) {
 
     val gson = GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create()
 
+    val opmCacheSources = setOf(2,6,7) //OPM datasources
+    val tpaCacheSources = setOf(3) // TPA datasources
 
     @KafkaListener(topics = ["membership-updates"], autoStartup = "\${membership.membershipConsumer:false}")
     @Throws(IOException::class)
@@ -49,23 +50,20 @@ class MembershipConsumer constructor(@Qualifier("app") private val log: Log,
 
                 val segments = membership.currentSegments.map { it.toString() }.toTypedArray()
 
-                val partnerResult = async {
-                    retrievePartnerId(membership.guid, Audiencetype.steelhouse.name)
-                }
-
                 val membershipResult = async {
-                    writeMemberships(membership.guid.orEmpty(), segments, "steelhouse", Audiencetype.steelhouse.name)
-                    writeMemberships(membership.ip.orEmpty(), segments, "ip", Audiencetype.steelhouse.name)
-                }
 
-                val partnerResults = mutableListOf<Deferred<Any>>()
+                    if(membership.dataSource in opmCacheSources) {
+                        writeMemberships(membership.ip.orEmpty(), segments, "ip",
+                            Audiencetype.steelhouse.name)
 
-                val partners = partnerResult.await()
-                for(key in partners.orEmpty().keys) {
-
-                    partnerResults += async {
-                        val partnerGuid = partners.orEmpty()[key]
-                        writeMemberships(partnerGuid.orEmpty(), segments, key, Audiencetype.steelhouse.name)
+                    } else if (membership.dataSource in tpaCacheSources) {
+                        writeMemberships(membership.ip.orEmpty(), segments, "ip",
+                            Audiencetype.steelhouse.name)
+                    }
+                    if (membership.oldSegments != null) {
+                        val oldSegments = membership.oldSegments.map { it.toString() }.toTypedArray()
+                        deleteMemberships(membership.ip.orEmpty(), oldSegments, "ip",
+                            Audiencetype.oracle.name)
                     }
                 }
 
@@ -76,7 +74,7 @@ class MembershipConsumer constructor(@Qualifier("app") private val log: Log,
                 }
 
                 membershipResult.await()
-                partnerResults.forEach{it.await()}
+
                 recency.await()
             } finally {
                 lock.release()
