@@ -3,7 +3,6 @@ package com.steelhouse.membership.controller
 import com.google.common.base.Stopwatch
 import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
-import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.newFixedThreadPoolContext
@@ -21,7 +20,6 @@ abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
                                         private val appConfig: AppConfig,
                                         private val meterRegistry: MeterRegistry,
                                         @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
-                                        @Qualifier("redisConnectionRecency") private val redisConnectionRecency: StatefulRedisClusterConnection<String, String>,
                                         private val redisConfig: RedisConfig) {
 
     val context = newFixedThreadPoolContext(30, "write-membership-thread-pool")
@@ -62,19 +60,4 @@ abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
         }
     }
 
-
-    fun writeRecency(deviceID: String, advertiserID: String, recencyEpoch: String) {
-
-        val stopwatch = Stopwatch.createStarted()
-
-        val expirationWindow = System.currentTimeMillis() - appConfig.recencyExpirationWindowSeconds!!
-
-        redisConnectionRecency.sync().evalsha<String>(appConfig.recencySha,
-                ScriptOutputType.VALUE, arrayOf(deviceID), advertiserID, recencyEpoch,
-                expirationWindow.toString(), appConfig.recencyDeviceIDTTLSeconds.toString())
-
-        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-        meterRegistry.timer("write.recency.latency").record(Duration.ofMillis(responseTime))
-
-    }
 }

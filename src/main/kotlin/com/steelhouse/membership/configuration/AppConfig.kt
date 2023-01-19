@@ -18,7 +18,7 @@ open class AppConfig {
     var recencyDeviceIDTTLSeconds: Long? = null
 
     @NotNull
-    var recencyExpirationWindowSeconds: Long? = null
+    var recencyExpirationWindowMilliSeconds: Long? = null
 
     @NotNull
     var frequencySha: String? = null

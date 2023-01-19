@@ -23,12 +23,11 @@ class MembershipConsumer constructor(@Qualifier("app") private val log: Log,
                                      private val meterRegistry: MeterRegistry,
                                      val appConfig: AppConfig,
                                      @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
-                                     @Qualifier("redisConnectionRecency") private val redisConnectionRecency: StatefulRedisClusterConnection<String, String>,
                                      private val redisConfig: RedisConfig): BaseConsumer(log = log,
         meterRegistry = meterRegistry,
         redisConnectionMembershipTpa = redisConnectionMembershipTpa,
         redisConfig = redisConfig,
-        redisConnectionRecency = redisConnectionRecency, appConfig = appConfig) {
+        appConfig = appConfig) {
 
     val gson = GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -67,15 +66,8 @@ class MembershipConsumer constructor(@Qualifier("app") private val log: Log,
                     }
                 }
 
-                val recency = async {
-                    val epochMillis = membership.activityEpoch / 1000
-                    writeRecency(deviceID =  membership.ip, advertiserID = membership.advertiserId.toString(),
-                            recencyEpoch = epochMillis.toString())
-                }
-
                 membershipResult.await()
 
-                recency.await()
             } finally {
                 lock.release()
             }

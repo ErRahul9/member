@@ -13,3 +13,5 @@ data class ImpressionMessage(@SerializedName("GUID") val guid: String,
                              @SerializedName("AID") val aid: Long,
                              @SerializedName("REMOTE_IP") val remoteIp: String,
                              @SerializedName("TTD_IMPRESSION_ID") val tdImpressionId: String?)
+
+data class RecencyMessage(val ip: String, val advertiserID: Int?, val epoch: Long?)

@@ -25,11 +25,9 @@ class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
                                      val appConfig: AppConfig,
                                      @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
                                      @Qualifier("redisConnectionUserScore") private val redisConnectionUserScore: StatefulRedisClusterConnection<String, String>,
-                                     @Qualifier("redisConnectionRecency") private val redisConnectionRecency: StatefulRedisClusterConnection<String, String>,
                                      private val redisConfig: RedisConfig): BaseConsumer(log = log,
         meterRegistry = meterRegistry,
-        redisConnectionMembershipTpa = redisConnectionMembershipTpa, redisConfig = redisConfig,
-        redisConnectionRecency = redisConnectionRecency, appConfig = appConfig) {
+        redisConnectionMembershipTpa = redisConnectionMembershipTpa, redisConfig = redisConfig, appConfig = appConfig) {
 
     val gson = GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)

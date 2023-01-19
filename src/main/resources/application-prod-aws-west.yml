@@ -50,11 +50,12 @@ membership:
   oracleConsumer: false
   membershipConsumer: true
   impressionConsumer: false
+  recencyConsumer: false
 
 app:
   recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
   recencyDeviceIDTTLSeconds: 604800
-  recencyExpirationWindowSeconds: 604800
+  recencyExpirationWindowMilliSeconds: 604800000
   frequencySha: ebdab639a5a6a3e9781cb71fedf413cb9485adc5
   frequencyDeviceIDTTLSeconds: 3600000
   frequencyExpirationWindowMilliSeconds: 864000000
