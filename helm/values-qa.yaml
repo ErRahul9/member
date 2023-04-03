@@ -23,11 +23,11 @@ ingress:
     traffic-type: internal
 resources:
   limits:
-   cpu: 4000m
-   memory: 3Gi
+    cpu: 4000m
+    memory: 3Gi
   requests:
-   cpu: 4000m
-   memory: 3Gi
+    cpu: 4000m
+    memory: 3Gi
 env:
   - name: SPRING_PROFILES_ACTIVE
     value: qa

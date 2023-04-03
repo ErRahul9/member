@@ -20,13 +20,13 @@ spring:
       security:
         protocol: SASL_SSL
     consumer:
-      bootstrap-servers: ['pkc-4n7ze.us-west-2.aws.confluent.cloud:9092']
+      bootstrap-servers: [ 'pkc-4n7ze.us-west-2.aws.confluent.cloud:9092' ]
       group-id: membership-consumer-prod-recency-west
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
-      bootstrap-servers: ['pkc-4n7ze.us-west-2.aws.confluent.cloud:9092']
+      bootstrap-servers: [ 'pkc-4n7ze.us-west-2.aws.confluent.cloud:9092' ]
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       retries: 3
@@ -38,7 +38,7 @@ logging:
 redis:
   membershipConnectionTpa: redis://core-prod-membership-new.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   membershipTTL: 5184000
-  householdConnection: redis://core-prod-household-score.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  deviceInfoConnection: redis://rtb-prod-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   recencyConnection: redis://core-prod-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   frequencyCapConnection: redis://core-prod-frequency-caps.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 15552000
@@ -54,8 +54,8 @@ membership:
 
 app:
   recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
-  recencyDeviceIDTTLSeconds: 604800
-  recencyExpirationWindowMilliSeconds: 604800000
+  recencyDeviceIDTTLSeconds: 2592000
+  recencyExpirationWindowMilliSeconds: 2592000000
   frequencySha: ebdab639a5a6a3e9781cb71fedf413cb9485adc5
   frequencyDeviceIDTTLSeconds: 3600000
   frequencyExpirationWindowMilliSeconds: 864000000

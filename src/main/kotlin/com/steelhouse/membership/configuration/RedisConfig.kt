@@ -17,13 +17,13 @@ import javax.validation.constraints.NotNull
 
 @Configuration
 @ConfigurationProperties(prefix = "redis")
-open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
+open class RedisConfig constructor(@Qualifier("app") private val log: Log) {
 
     @NotNull
     var membershipConnectionTpa: String? = null
 
     @NotNull
-    var householdConnection: String? = null
+    var deviceInfoConnection: String? = null
 
     @NotNull
     open var membershipTTL: Long? = null
@@ -44,11 +44,10 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
     var frequencyCapConnection: String? = null
 
     @Bean
-    open fun redisClientRecency(clusterClientOptions: ClusterClientOptions) : RedisClusterClient? {
-
+    open fun redisClientRecency(clusterClientOptions: ClusterClientOptions): RedisClusterClient? {
         var clientResources = DefaultClientResources.builder() //
-                .dnsResolver(DirContextDnsResolver()) // Does not cache DNS lookups
-                .build()
+            .dnsResolver(DirContextDnsResolver()) // Does not cache DNS lookups
+            .build()
 
         var redisClient = RedisClusterClient.create(clientResources, recencyConnection)
 
@@ -65,10 +64,8 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
     }
 
     @Bean
-    open fun redisConnectionRecency(redisClientRecency: RedisClusterClient) : StatefulRedisClusterConnection<String, String>? {
-
+    open fun redisConnectionRecency(redisClientRecency: RedisClusterClient): StatefulRedisClusterConnection<String, String>? {
         return redisClientRecency.connect()
-
     }
 
     @Bean
@@ -76,21 +73,20 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
         val duration = Duration.ofHours(topologyRefreshHours!!)
 
         val clusterTopologyRefreshOptions = ClusterTopologyRefreshOptions.builder()
-                .enablePeriodicRefresh(duration)
-                .enableAdaptiveRefreshTrigger()
-                .build()
+            .enablePeriodicRefresh(duration)
+            .enableAdaptiveRefreshTrigger()
+            .build()
 
         return ClusterClientOptions.builder()
-                .topologyRefreshOptions(clusterTopologyRefreshOptions)
-                .build()
+            .topologyRefreshOptions(clusterTopologyRefreshOptions)
+            .build()
     }
 
     @Bean
-    open fun redisClientMembershipTpa(clusterClientOptions: ClusterClientOptions) : RedisClusterClient? {
-
+    open fun redisClientMembershipTpa(clusterClientOptions: ClusterClientOptions): RedisClusterClient? {
         val clientResources = DefaultClientResources.builder() //
-                .dnsResolver(DirContextDnsResolver()) // Does not cache DNS lookups
-                .build()
+            .dnsResolver(DirContextDnsResolver()) // Does not cache DNS lookups
+            .build()
 
         val redisClient = RedisClusterClient.create(clientResources, membershipConnectionTpa)
 
@@ -106,15 +102,13 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
         return redisClient
     }
 
-
     @Bean
-    open fun redisClientHousehold(clusterClientOptions: ClusterClientOptions) : RedisClusterClient? {
-
+    open fun redisClientDeviceInfo(clusterClientOptions: ClusterClientOptions): RedisClusterClient? {
         val clientResources = DefaultClientResources.builder() //
-                .dnsResolver(DirContextDnsResolver()) // Does not cache DNS lookups
-                .build()
+            .dnsResolver(DirContextDnsResolver()) // Does not cache DNS lookups
+            .build()
 
-        val redisClient = RedisClusterClient.create(clientResources, householdConnection)
+        val redisClient = RedisClusterClient.create(clientResources, deviceInfoConnection)
 
         redisClient.setOptions(clusterClientOptions)
         redisClient.setDefaultTimeout(Duration.ofSeconds(requestTimeoutSeconds!!))
@@ -129,8 +123,7 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
     }
 
     @Bean
-    open fun redisClientFrequencyCap(clusterClientOptions: ClusterClientOptions) : RedisClusterClient? {
-
+    open fun redisClientFrequencyCap(clusterClientOptions: ClusterClientOptions): RedisClusterClient? {
         var clientResources = DefaultClientResources.builder() //
             .dnsResolver(DirContextDnsResolver()) // Does not cache DNS lookups
             .build()
@@ -150,24 +143,17 @@ open class RedisConfig  constructor(@Qualifier("app") private val log: Log){
     }
 
     @Bean
-    open fun redisConnectionMembershipTpa(redisClientMembershipTpa: RedisClusterClient) : StatefulRedisClusterConnection<String, String>? {
-
+    open fun redisConnectionMembershipTpa(redisClientMembershipTpa: RedisClusterClient): StatefulRedisClusterConnection<String, String>? {
         return redisClientMembershipTpa.connect()
-
     }
 
     @Bean
-    open fun redisConnectionUserScore(redisClientHousehold: RedisClusterClient) : StatefulRedisClusterConnection<String, String>? {
-
-        return redisClientHousehold.connect()
-
+    open fun redisConnectionDeviceInfo(redisClientDeviceInfo: RedisClusterClient): StatefulRedisClusterConnection<String, String>? {
+        return redisClientDeviceInfo.connect()
     }
 
     @Bean
-    open fun redisConnectionFrequencyCap(redisClientFrequencyCap: RedisClusterClient) : StatefulRedisClusterConnection<String, String>? {
-
+    open fun redisConnectionFrequencyCap(redisClientFrequencyCap: RedisClusterClient): StatefulRedisClusterConnection<String, String>? {
         return redisClientFrequencyCap.connect()
-
     }
-
 }

@@ -15,7 +15,6 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-
 class MembershipConsumerTest {
 
     var log: Log = mock()
@@ -44,11 +43,10 @@ class MembershipConsumerTest {
         appConfig.recencyDeviceIDTTLSeconds = 100
     }
 
-
     @Test
     fun noValidDataSource() {
-
-        val message = "{\"data_source\":\"1\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
+        val message =
+            "{\"data_source\":\"1\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
@@ -69,16 +67,21 @@ class MembershipConsumerTest {
         val hSetKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
         verify(redisClientMembershipTpa.sync(), times(0)).sadd(hSetKey.capture(), fieldValue.capture())
-        Assert.assertTrue(listOf("006866ac-cfb1-4639-99d3-c7948d7f5111", "154.130.20.55", "beeswaxId", "tradedeskId").containsAll(hSetKey.allValues))
+        Assert.assertTrue(
+            listOf(
+                "006866ac-cfb1-4639-99d3-c7948d7f5111",
+                "154.130.20.55",
+                "beeswaxId",
+                "tradedeskId",
+            ).containsAll(hSetKey.allValues),
+        )
         Assert.assertEquals(emptyList<String>(), fieldValue.allValues)
-
     }
 
     @Test
     fun tpaDataSourceWrite() {
-
-        val message = "{\"data_source\":\"3\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
-
+        val message =
+            "{\"data_source\":\"3\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
@@ -96,12 +99,10 @@ class MembershipConsumerTest {
             delay(100)
         }
 
-
         val hSetKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
         verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
         Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
         Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
     }
-
 }

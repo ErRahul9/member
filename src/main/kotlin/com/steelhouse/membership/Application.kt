@@ -8,8 +8,12 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.scheduling.annotation.EnableScheduling
 
 @EnableScheduling
-@SpringBootApplication(exclude = [DataSourceAutoConfiguration::class, // No JPA
-    DataSourceTransactionManagerAutoConfiguration::class, HibernateJpaAutoConfiguration::class])
+@SpringBootApplication(
+    exclude = [
+        DataSourceAutoConfiguration::class, // No JPA
+        DataSourceTransactionManagerAutoConfiguration::class, HibernateJpaAutoConfiguration::class,
+    ],
+)
 open class Application {
 
     companion object {
@@ -19,5 +23,4 @@ open class Application {
             SpringApplication.run(Application::class.java, *args)
         }
     }
-
 }

@@ -1,11 +1,10 @@
 ---
 spring:
-
   kafka:
     listener:
       concurrency=: 1
     consumer:
-      bootstrap-servers: ['b-3.msk-rtb-prod-2.ifib9x.c10.kafka.us-west-2.amazonaws.com:9092','b-4.msk-rtb-prod-2.ifib9x.c10.kafka.us-west-2.amazonaws.com:9092','b-7.msk-rtb-prod-2.ifib9x.c10.kafka.us-west-2.amazonaws.com:9092']
+      bootstrap-servers: [ 'b-3.msk-rtb-prod-2.ifib9x.c10.kafka.us-west-2.amazonaws.com:9092','b-4.msk-rtb-prod-2.ifib9x.c10.kafka.us-west-2.amazonaws.com:9092','b-7.msk-rtb-prod-2.ifib9x.c10.kafka.us-west-2.amazonaws.com:9092' ]
       group-id: membership-consumer-prod-oracle-west
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -18,7 +17,7 @@ logging:
 redis:
   membershipConnectionTpa: redis://core-prod-membership-new.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   membershipTTL: 5184000
-  householdConnection: redis://core-prod-household-score.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  deviceInfoConnection: redis://rtb-prod-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   recencyConnection: redis://core-prod-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   frequencyCapConnection: redis://core-prod-frequency-caps.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 15552000
@@ -34,8 +33,8 @@ membership:
 
 app:
   recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
-  recencyDeviceIDTTLSeconds: 604800
-  recencyExpirationWindowMilliSeconds: 604800000
+  recencyDeviceIDTTLSeconds: 2592000
+  recencyExpirationWindowMilliSeconds: 2592000000
   frequencySha: ebdab639a5a6a3e9781cb71fedf413cb9485adc5
   frequencyDeviceIDTTLSeconds: 3600000
   frequencyExpirationWindowMilliSeconds: 864000000

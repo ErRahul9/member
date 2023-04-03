@@ -8,4 +8,4 @@ class Util {
     fun getEpochInMillis(): Long {
         return System.currentTimeMillis()
     }
- }
+}

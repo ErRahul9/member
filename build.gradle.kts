@@ -10,7 +10,7 @@ plugins {
     id("com.gorylenko.gradle-git-properties") version "2.2.2"
     kotlin("plugin.serialization") version "1.6.21"
 //    id("org.jetbrains.kotlin.plugin.serialization") version "1.7.0"
-//    id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
+    id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
 
     java
 }
@@ -71,7 +71,6 @@ dependencies {
     implementation("io.springfox:springfox-swagger2:2.8.0")
     implementation("io.springfox:springfox-swagger-ui:2.8.0")
 
-
     implementation("io.grpc:grpc-netty-shaded:1.46.0")
     implementation("io.grpc:grpc-protobuf:1.46.0")
     implementation("io.grpc:grpc-stub:1.46.0")
@@ -90,20 +89,17 @@ dependencies {
     // https://mvnrepository.com/artifact/org.slf4j/api
     implementation("org.slf4j:slf4j-api:1.7.36")
 
-
-    //implementation("commons-validator:commons-validator:1.7.0")
-    //implementation("javax.validation:name:validation-api:2.0.1.Final")
+    // implementation("commons-validator:commons-validator:1.7.0")
+    // implementation("javax.validation:name:validation-api:2.0.1.Final")
     // implementation("io.awspring.cloud:spring-cloud-starter-aws-messaging")
 
-    //implementation(platform("software.amazon.awssdk:bom:2.15.69"))
-    //implementation("software.amazon.awssdk:sqs")
+    // implementation(platform("software.amazon.awssdk:bom:2.15.69"))
+    // implementation("software.amazon.awssdk:sqs")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:1.9.3.kotlin12")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
     implementation("junit:junit:4.13.2")
-
-
 }
 
 java {
@@ -124,7 +120,14 @@ springBoot {
 gitProperties {
     dateFormat = "EEEE, MMMM dd, YYYY 'at' h:mm:ss a z"
     dateFormatTimeZone = "GMT-07:00"
-    keys = listOf("git.branch", "git.build.version", "git.commit.id", "git.commit.id.abbrev", "git.commit.message.full", "git.commit.time")
+    keys = listOf(
+        "git.branch",
+        "git.build.version",
+        "git.commit.id",
+        "git.commit.id.abbrev",
+        "git.commit.message.full",
+        "git.commit.time"
+    )
 }
 
 tasks.withType<Test> {

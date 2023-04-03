@@ -16,5 +16,4 @@ open class LogConfig {
     companion object {
         val appLoggerName = "app"
     }
-
 }
