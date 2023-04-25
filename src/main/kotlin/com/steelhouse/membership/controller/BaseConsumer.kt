@@ -26,46 +26,37 @@ abstract class BaseConsumer constructor(
     val context = newFixedThreadPoolContext(30, "write-membership-thread-pool")
     val lock = Semaphore(2000)
 
+    val tpaCacheSources = setOf(3) // TPA datasources
+
     @Throws(IOException::class)
     open abstract fun consume(message: String)
 
-    enum class Audiencetype(name: String) {
-        oracle("oracle"),
-        steelhouse("steelhouse"),
-    }
+    fun writeMemberships(ip: String, currentSegments: Array<String>, cookieType: String, overwrite: Boolean) {
+        if (overwrite) {
+            deleteIp(ip)
+        }
 
-    fun writeMemberships(guid: String, currentSegments: Array<String>, cookieType: String, audienceType: String) {
         if (currentSegments.isNotEmpty()) {
             val stopwatch = Stopwatch.createStarted()
 
-            redisConnectionMembershipTpa.sync().sadd(guid, *currentSegments)
-            redisConnectionMembershipTpa.sync().expire(guid, redisConfig.membershipTTL!!)
+            redisConnectionMembershipTpa.sync().sadd(ip, *currentSegments)
+            redisConnectionMembershipTpa.sync().expire(ip, redisConfig.membershipTTL!!)
 
             val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
             meterRegistry.timer(
                 "write.membership.match.latency",
                 "cookieType",
                 cookieType,
-                "audienceType",
-                audienceType,
             ).record(Duration.ofMillis(responseTime))
         }
     }
 
-    fun deleteMemberships(guid: String, deletedSegments: Array<String>, cookieType: String, audienceType: String) {
-        if (deletedSegments.isNotEmpty()) {
-            val stopwatch = Stopwatch.createStarted()
+    fun deleteIp(ip: String) {
+        val stopwatch = Stopwatch.createStarted()
 
-            redisConnectionMembershipTpa.sync().srem(guid, *deletedSegments)
+        redisConnectionMembershipTpa.sync().del(ip)
 
-            val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-            meterRegistry.timer(
-                "delete.membership.match.latency",
-                "cookieType",
-                cookieType,
-                "audienceType",
-                audienceType,
-            ).record(Duration.ofMillis(responseTime))
-        }
+        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+        meterRegistry.timer("delete.membership.match.latency").record(Duration.ofMillis(responseTime))
     }
 }

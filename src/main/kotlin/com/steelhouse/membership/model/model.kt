@@ -13,6 +13,7 @@ data class MembershipUpdateMessage(
     val dataSource: Int?,
     val householdScore: Int?,
     val geoVersion: String?,
+    val isDelta: Boolean?,
 )
 
 data class ImpressionMessage(

@@ -53,26 +53,17 @@ class ThirdPartyConsumer constructor(
                 if (oracleMembership.currentSegments != null) {
                     val segments = oracleMembership.currentSegments.map { it.toString() }.toTypedArray()
 
-                    results += async {
-                        writeMemberships(
-                            oracleMembership.ip.orEmpty(),
-                            segments,
-                            "ip",
-                            Audiencetype.oracle.name,
-                        )
-                    }
-                }
+                    if (oracleMembership.dataSource in tpaCacheSources) {
+                        val overwrite = oracleMembership?.isDelta ?: true
 
-                if (oracleMembership.oldSegments != null) {
-                    val oldSegments = oracleMembership.oldSegments.map { it.toString() }.toTypedArray()
-
-                    results += async {
-                        deleteMemberships(
-                            oracleMembership.ip.orEmpty(),
-                            oldSegments,
-                            "ip",
-                            Audiencetype.oracle.name,
-                        )
+                        results += async {
+                            writeMemberships(
+                                oracleMembership.ip.orEmpty(),
+                                segments,
+                                "ip",
+                                !overwrite,
+                            )
+                        }
                     }
                 }
 

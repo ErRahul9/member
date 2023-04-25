@@ -35,9 +35,6 @@ class MembershipConsumer constructor(
         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .create()
 
-    val opmCacheSources = setOf(2, 6, 7) // OPM datasources
-    val tpaCacheSources = setOf(3) // TPA datasources
-
     @KafkaListener(topics = ["membership-updates"], autoStartup = "\${membership.membershipConsumer:false}")
     @Throws(IOException::class)
     override fun consume(message: String) {
@@ -50,28 +47,14 @@ class MembershipConsumer constructor(
                 val segments = membership.currentSegments.map { it.toString() }.toTypedArray()
 
                 val membershipResult = async {
-                    if (membership.dataSource in opmCacheSources) {
+                    if (membership.dataSource in tpaCacheSources) {
+                        val overwrite = membership?.isDelta ?: true
+
                         writeMemberships(
                             membership.ip.orEmpty(),
                             segments,
                             "ip",
-                            Audiencetype.steelhouse.name,
-                        )
-                    } else if (membership.dataSource in tpaCacheSources) {
-                        writeMemberships(
-                            membership.ip.orEmpty(),
-                            segments,
-                            "ip",
-                            Audiencetype.steelhouse.name,
-                        )
-                    }
-                    if (membership.oldSegments != null) {
-                        val oldSegments = membership.oldSegments.map { it.toString() }.toTypedArray()
-                        deleteMemberships(
-                            membership.ip.orEmpty(),
-                            oldSegments,
-                            "ip",
-                            Audiencetype.oracle.name,
+                            overwrite,
                         )
                     }
                 }
