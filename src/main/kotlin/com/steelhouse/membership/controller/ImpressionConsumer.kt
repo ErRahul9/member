@@ -56,6 +56,7 @@ class ImpressionConsumer constructor(
         if (impression.remoteIp != null && impression.cid != null && impression.epoch != null &&
             impression.tdImpressionId != null
         ) {
+            impression.apply { impression.epoch /= 1000 } // Convert epoch micro to millis
             redisConnectionFrequencyCap.sync().evalsha<String>(
                 appConfig.frequencySha,
                 ScriptOutputType.VALUE,
