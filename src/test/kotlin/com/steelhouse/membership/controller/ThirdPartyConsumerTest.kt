@@ -1,7 +1,17 @@
 package com.steelhouse.membership.controller
 
 import com.nhaarman.mockitokotlin2.*
+import com.google.gson.Gson
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.same
+import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.whenever
+import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
+import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
@@ -249,5 +259,37 @@ class ThirdPartyConsumerTest {
         verify(redisClientUserScore.sync(), times(0)).hset(any(), any(), any())
         Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
         Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
+    }
+
+    @Test
+    fun writeDeviceMetadataToCache() {
+        val testMsg = MembershipUpdateMessage(
+            guid = "006866ac-cfb1-4639-99d3-c7948d7f5111",
+            advertiserId = 20460,
+            epoch = 1556195886916784L,
+            ip = "154.130.20.55",
+            householdScore = 33,
+            geoVersion = "43543543543",
+            activityEpoch = 1556195801515452L,
+            isDelta = false,
+            dataSource = 8,
+            metadataInfo = mapOf("household_score" to "55", "geo_version" to "76543543543"),
+        )
+
+        ThirdPartyConsumer(
+            log,
+            meterRegistry,
+            appConfig,
+            redisClientMembershipTpa,
+            redisClientUserScore,
+            redisConfig,
+        ).writeDeviceMetadata(testMsg)
+
+        val valueMap = argumentCaptor<Map<String, String>>()
+        verify(redisClientUserScore.sync(), times(1)).hset(any(), valueMap.capture())
+        Assert.assertEquals(3, valueMap.firstValue.size)
+        Assert.assertEquals(testMsg.householdScore.toString(), valueMap.firstValue["household_score"])
+        Assert.assertEquals(testMsg.geoVersion, valueMap.firstValue["geo_version"])
+        Assert.assertEquals(Gson().toJson(testMsg.metadataInfo), valueMap.firstValue["metadata_info"])
     }
 }
