@@ -2,6 +2,7 @@ package com.steelhouse.membership.controller
 
 import com.google.common.base.Stopwatch
 import com.google.gson.FieldNamingPolicy
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
@@ -81,24 +82,29 @@ class ThirdPartyConsumer constructor(
     fun writeDeviceMetadata(message: MembershipUpdateMessage) {
         val ip = message.ip
 
-        if (ip != null) {
-            val stopwatch = Stopwatch.createStarted()
+        val stopwatch = Stopwatch.createStarted()
 
-            if (message.householdScore != null) {
-                redisConnectionDeviceInfo.sync().hset(ip, "household_score", message.householdScore.toString())
-            }
+        val valuesToSet = mutableMapOf<String, String>()
 
-            if (message.geoVersion != null) {
-                redisConnectionDeviceInfo.sync().hset(ip, "geo_version", message.geoVersion)
-            }
-
-            if (message.geoVersion != null || message.householdScore != null) {
-                redisConnectionDeviceInfo.sync().expire(ip, redisConfig.membershipTTL!!)
-            }
-
-            val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-            meterRegistry.timer("write.user.score.latency")
-                .record(Duration.ofMillis(responseTime))
+        if (message.householdScore != null) {
+            valuesToSet["household_score"] = message.householdScore.toString()
         }
+
+        if (message.geoVersion != null) {
+            valuesToSet["geo_version"] = message.geoVersion
+        }
+
+        if (message.metadataInfo.isNotEmpty()) {
+            valuesToSet["metadata_info"] = Gson().toJson(message.metadataInfo)
+        }
+        redisConnectionDeviceInfo.sync().hset(ip, valuesToSet)
+
+        if (message.geoVersion != null || message.householdScore != null) {
+            redisConnectionDeviceInfo.sync().expire(ip, redisConfig.membershipTTL!!)
+        }
+
+        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+        meterRegistry.timer("write.user.score.latency")
+            .record(Duration.ofMillis(responseTime))
     }
 }
