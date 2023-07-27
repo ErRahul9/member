@@ -3,12 +3,33 @@ spring:
   kafka:
     listener:
       concurrency=: 1
+    properties:
+      ssl:
+        protocol: TLSv1.2
+        enabled:
+          protocols: TLSv1.2
+        truststore:
+          type: JKS
+        endpoint:
+          identification:
+            algorithm: HTTPS
+      sasl:
+        jaas:
+          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="4H4YY5F3FLITE2KG" password="gwL8gRW9jXoVLodcjPq7UM4Lp1yjrkt8rTBfAvtbXmgNO7sTwJwRV/VLORHZsmkH";
+        mechanism: PLAIN
+      security:
+        protocol: SASL_SSL
     consumer:
-      bootstrap-servers: [ 'b-3.msk-rtb-prod-2.ifib9x.c10.kafka.us-west-2.amazonaws.com:9092','b-4.msk-rtb-prod-2.ifib9x.c10.kafka.us-west-2.amazonaws.com:9092','b-7.msk-rtb-prod-2.ifib9x.c10.kafka.us-west-2.amazonaws.com:9092' ]
-      group-id: membership-consumer-prod-oracle-west
+      bootstrap-servers: [ 'pkc-4n7ze.us-west-2.aws.confluent.cloud:9092' ]
+      group-id: membership-consumer-prod-recency-west
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      bootstrap-servers: [ 'pkc-4n7ze.us-west-2.aws.confluent.cloud:9092' ]
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 3
 
 logging:
   level:
@@ -26,10 +47,10 @@ redis:
   requestTimeoutSeconds: 10
 
 membership:
-  oracleConsumer: true
+  oracleConsumer: false
   membershipConsumer: false
   impressionConsumer: false
-  recencyConsumer: false
+  recencyConsumer: true
 
 app:
   recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db

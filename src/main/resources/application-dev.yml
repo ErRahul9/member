@@ -1,28 +1,13 @@
 spring:
-  profiles:
-    active: dev
   kafka:
-    listener:
-      concurrency=: 4
-    properties:
-      ssl:
-        protocol: TLSv1.2
-        enabled:
-          protocols: TLSv1.2
-        truststore:
-          type: JKS
-        endpoint:
-          identification:
-            algorithm: HTTPS
-      sasl:
-        jaas:
-          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="BJXIEXRMLGDJZ3TC" password="Yud2SZwiKh8JSshSr5y28wbU/Ju7WmRTfG8106J5ZxDG77mZXYvla3CgZp3VLPLv";
-        mechanism: PLAIN
-      security:
-        protocol: SASL_SSL
+    producer:
+      bootstrap-servers: [ 'b-2.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092','b-1.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092' ]
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 3
     consumer:
-      bootstrap-servers: ['pkc-4n7ze.us-west-2.aws.confluent.cloud:9092']
-      group-id: membership-consumer-dev2
+      bootstrap-servers: [ 'b-2.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092','b-1.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092' ]
+      group-id: membership-consumer-dev
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -32,14 +17,26 @@ logging:
     app: TRACE
 
 redis:
-  membershipConnection: redis://core-dev-redis-1.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  membershipTTL: 7776000
-  partnerConnection: redis://core-dev-redis-0.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  membershipConnectionTpa: redis://core-dev-membership.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  membershipTTL: 5184000
+  deviceInfoConnection: redis://rtb-dev-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  recencyConnection: redis://core-dev-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  frequencyCapConnection: redis://core-dev-frequency-caps.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 7776000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
   requestTimeoutSeconds: 10
 
 membership:
-  oracleConsumer: false
+  oracleConsumer: true
   membershipConsumer: true
+  impressionConsumer: false
+  recencyConsumer: true
+
+app:
+  recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
+  recencyDeviceIDTTLSeconds: 604800
+  recencyExpirationWindowMilliSeconds: 604800000
+  frequencySha: ebdab639a5a6a3e9781cb71fedf413cb9485adc5
+  frequencyDeviceIDTTLSeconds: 3600000
+  frequencyExpirationWindowMilliSeconds: 864000000

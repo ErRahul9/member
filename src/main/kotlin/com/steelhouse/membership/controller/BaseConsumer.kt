@@ -1,6 +1,7 @@
 package com.steelhouse.membership.controller
 
 import com.google.common.base.Stopwatch
+import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
@@ -13,41 +14,49 @@ import java.time.Duration
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
-
 @Service
-abstract class BaseConsumer constructor(@Qualifier("app") private val log: Log,
-                                 private val meterRegistry: MeterRegistry,
-                                 @Qualifier("redisConnectionPartner") private val redisConnectionPartner: StatefulRedisClusterConnection<String, String>,
-                                 @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>,
-                                 private val redisConfig: RedisConfig) {
+abstract class BaseConsumer constructor(
+    @Qualifier("app") private val log: Log,
+    private val appConfig: AppConfig,
+    private val meterRegistry: MeterRegistry,
+    @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
+    private val redisConfig: RedisConfig,
+) {
 
-    val context = newFixedThreadPoolContext(1, "write-membership-thread-pool")
-    val lock = Semaphore(7000)
+    val context = newFixedThreadPoolContext(30, "write-membership-thread-pool")
+    val lock = Semaphore(2000)
+
+    val tpaCacheSources = setOf(3) // TPA datasources
 
     @Throws(IOException::class)
-    abstract open fun consume(message: String)
+    open abstract fun consume(message: String)
 
-    enum class Audiencetype(name: String) {
-        oracle("oracle"),
-        steelhouse("steelhouse")
+    fun writeMemberships(ip: String, currentSegments: Array<String>, cookieType: String, overwrite: Boolean) {
+        if (overwrite) {
+            deleteIp(ip)
+        }
+
+        if (currentSegments.isNotEmpty()) {
+            val stopwatch = Stopwatch.createStarted()
+
+            redisConnectionMembershipTpa.sync().sadd(ip, *currentSegments)
+            redisConnectionMembershipTpa.sync().expire(ip, redisConfig.membershipTTL!!)
+
+            val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+            meterRegistry.timer(
+                "write.membership.match.latency",
+                "cookieType",
+                cookieType,
+            ).record(Duration.ofMillis(responseTime))
+        }
     }
 
-
-    fun writeMemberships(guid: String, currentSegments: String, aid: String, cookieType: String, audienceType: String) {
+    fun deleteIp(ip: String) {
         val stopwatch = Stopwatch.createStarted()
-        redisConnectionMembership.sync().hset(guid, aid, currentSegments)
-        val results = redisConnectionMembership.async().expire(guid, redisConfig.membershipTTL!!)
-        results.get()
-        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-        meterRegistry.timer("write.membership.match.latency", "cookieType", cookieType, "audienceType", audienceType).record(Duration.ofMillis(responseTime))
-    }
 
-    fun retrievePartnerId(guid: String, audienceType: String): MutableMap<String, String>? {
-        val stopwatch = Stopwatch.createStarted()
-        val asyncResults = redisConnectionPartner.async().hgetall(guid)
-        val results = asyncResults.get()
+        redisConnectionMembershipTpa.sync().del(ip)
+
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-        meterRegistry.timer("write.partner.match.latency", "audienceType", audienceType).record(Duration.ofMillis(responseTime))
-        return results
+        meterRegistry.timer("delete.membership.match.latency").record(Duration.ofMillis(responseTime))
     }
 }

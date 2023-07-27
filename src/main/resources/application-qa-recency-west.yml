@@ -1,27 +1,25 @@
+---
 spring:
+  kafka:
     listener:
       concurrency=: 1
-  kafka:
-    producer:
-      bootstrap-servers: [ 'b-2.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092','b-1.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092' ]
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      retries: 3
     consumer:
-      bootstrap-servers: [ 'b-2.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092','b-1.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092' ]
-      group-id: membership-consumer-dev
+      bootstrap-servers: [ 'b-1.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092','b-2.msk-rtb-dev.ohu5pn.c2.kafka.us-west-2.amazonaws.com:9092' ]
+      group-id: membership-consumer-dev-oracle-west
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
+
 logging:
   level:
-    app: TRACE
+    app: INFO
 
 redis:
   membershipConnectionTpa: redis://core-dev-membership.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   membershipTTL: 5184000
   deviceInfoConnection: redis://rtb-dev-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  partnerConnection: redis://core-dev-partner.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   recencyConnection: redis://core-dev-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   frequencyCapConnection: redis://core-dev-frequency-caps.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 15552000
@@ -31,7 +29,7 @@ redis:
 
 membership:
   oracleConsumer: false
-  membershipConsumer: true
+  membershipConsumer: false
   impressionConsumer: false
   recencyConsumer: true
 

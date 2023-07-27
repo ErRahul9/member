@@ -1,12 +1,15 @@
 package com.steelhouse.membership.controller
 
-
-import com.steelhouse.core.model.gsonmessages.GsonMessageUtil
-import com.steelhouse.core.model.segmentation.gson.MembershipUpdateMessage
+import com.google.common.base.Stopwatch
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
+import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
+import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.apache.commons.logging.Log
@@ -14,42 +17,88 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
 import java.io.IOException
-import java.util.stream.Collectors
-
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 @Service
-class ThirdPartyConsumer constructor(@Qualifier("app") private val log: Log,
-                                     private val meterRegistry: MeterRegistry,
-                                     @Qualifier("redisConnectionPartner") private val redisConnectionPartner: StatefulRedisClusterConnection<String, String>,
-                                     @Qualifier("redisConnectionMembership") private val redisConnectionMembership: StatefulRedisClusterConnection<String, String>,
-                                     private val redisConfig: RedisConfig): BaseConsumer(log = log,
-        meterRegistry = meterRegistry, redisConnectionPartner = redisConnectionPartner,
-        redisConnectionMembership = redisConnectionMembership,
-        redisConfig = redisConfig) {
+class ThirdPartyConsumer constructor(
+    @Qualifier("app") private val log: Log,
+    private val meterRegistry: MeterRegistry,
+    val appConfig: AppConfig,
+    @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
+    @Qualifier("redisConnectionDeviceInfo") private val redisConnectionDeviceInfo: StatefulRedisClusterConnection<String, String>,
+    private val redisConfig: RedisConfig,
+) : BaseConsumer(
+    log = log,
+    meterRegistry = meterRegistry,
+    redisConnectionMembershipTpa = redisConnectionMembershipTpa,
+    redisConfig = redisConfig,
+    appConfig = appConfig,
+) {
+
+    val gson = GsonBuilder()
+        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+        .create()
 
     @KafkaListener(topics = ["sh-dw-generated-audiences"], autoStartup = "\${membership.oracleConsumer:false}")
     @Throws(IOException::class)
     override fun consume(message: String) {
-
-        val oracleMembership = GsonMessageUtil.deserialize(message, MembershipUpdateMessage::class.java)
+        val oracleMembership = gson.fromJson(message, MembershipUpdateMessage::class.java)
+        val results = mutableListOf<Deferred<Any>>()
 
         lock.acquire()
 
         CoroutineScope(context).launch {
             try {
+                if (oracleMembership.currentSegments != null) {
+                    val segments = oracleMembership.currentSegments.map { it.toString() }.toTypedArray()
 
-                val segments = oracleMembership.currentSegments.stream().map { it.toString() }.collect(Collectors.joining(","))
+                    if (oracleMembership.dataSource in tpaCacheSources) {
+                        val overwrite = oracleMembership?.isDelta ?: true
 
-                val membershipResult = async {
-                    writeMemberships(oracleMembership.ip.orEmpty(), segments, oracleMembership.aid.toString(), "ip", Audiencetype.oracle.name)
+                        results += async {
+                            writeMemberships(
+                                oracleMembership.ip.orEmpty(),
+                                segments,
+                                "ip",
+                                !overwrite,
+                            )
+                        }
+                    }
                 }
 
-                membershipResult.await()
+                results += async {
+                    writeDeviceMetadata(oracleMembership)
+                }
+
+                results.forEach { it.await() }
             } finally {
                 lock.release()
             }
         }
+    }
+
+    fun writeDeviceMetadata(message: MembershipUpdateMessage) {
+        val ip = message.ip
+
+        if (ip != null) {
+            val stopwatch = Stopwatch.createStarted()
+
+            if (message.householdScore != null) {
+                redisConnectionDeviceInfo.sync().hset(ip, "household_score", message.householdScore.toString())
+            }
+
+            if (message.geoVersion != null) {
+                redisConnectionDeviceInfo.sync().hset(ip, "geo_version", message.geoVersion)
+            }
+
+            if (message.geoVersion != null || message.householdScore != null) {
+                redisConnectionDeviceInfo.sync().expire(ip, redisConfig.membershipTTL!!)
+            }
+
+            val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+            meterRegistry.timer("write.user.score.latency")
+                .record(Duration.ofMillis(responseTime))
         }
-
-
+    }
 }
