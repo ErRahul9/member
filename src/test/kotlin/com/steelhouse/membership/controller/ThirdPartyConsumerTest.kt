@@ -2,14 +2,7 @@ package com.steelhouse.membership.controller
 
 import com.nhaarman.mockitokotlin2.*
 import com.google.gson.Gson
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.argumentCaptor
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.same
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.whenever
-import com.steelhouse.membership.configuration.AppConfig
+import com.nhaarman.mockitokotlin2.*
 import com.steelhouse.membership.configuration.RedisConfig
 import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.RedisFuture
@@ -271,9 +264,7 @@ class ThirdPartyConsumerTest {
         )
 
         ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
@@ -306,9 +297,7 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
