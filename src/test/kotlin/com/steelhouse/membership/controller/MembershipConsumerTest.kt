@@ -1,7 +1,6 @@
 package com.steelhouse.membership.controller
 
 import com.nhaarman.mockitokotlin2.*
-import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
@@ -10,14 +9,11 @@ import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.apache.commons.logging.Log
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
 class MembershipConsumerTest {
-
-    var log: Log = mock()
 
     var redisClientMembershipTpa: StatefulRedisClusterConnection<String, String> = mock()
 
@@ -30,17 +26,11 @@ class MembershipConsumerTest {
 
     var redisConfig: RedisConfig = mock()
 
-    val appConfig = AppConfig()
-
     @Before
     fun init() {
         whenever(redisClientMembershipTpa.sync()).thenReturn(membershipCommands)
         whenever(redisClientMembershipTpa.async()).thenReturn(membershipAsyncCommands)
         whenever(redisConfig.membershipTTL).thenReturn(5)
-
-        appConfig.recencyExpirationWindowMilliSeconds = 100
-        appConfig.recencySha = "iuhioy87yg"
-        appConfig.recencyDeviceIDTTLSeconds = 100
     }
 
     @Test
@@ -57,7 +47,7 @@ class MembershipConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = MembershipConsumer(log, meterRegistry, appConfig, redisClientMembershipTpa, redisConfig)
+        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig)
         consumer.consume(message)
 
         runBlocking {
@@ -92,7 +82,7 @@ class MembershipConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = MembershipConsumer(log, meterRegistry, appConfig, redisClientMembershipTpa, redisConfig)
+        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig)
         consumer.consume(message)
 
         runBlocking {
