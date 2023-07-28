@@ -68,26 +68,17 @@ class ThirdPartyConsumer(
     }
 
     fun writeDeviceMetadata(message: MembershipUpdateMessage) {
-        val ip = message.ip
-
         val stopwatch = Stopwatch.createStarted()
 
-        val valuesToSet = mutableMapOf<String, String>()
+        val valuesToSet = mapOf(
+            "household_score" to message.householdScore?.toString(),
+            "geo_version" to message.geoVersion,
+            "metadata_info" to if (!message.metadataInfo.isNullOrEmpty()) Gson().toJson(message.metadataInfo) else null,
+        ).filterValues { it != null }
 
-        if (message.householdScore != null) {
-            valuesToSet["household_score"] = message.householdScore.toString()
-        }
-
-        if (message.geoVersion != null) {
-            valuesToSet["geo_version"] = message.geoVersion
-        }
-
-        if (message.metadataInfo.isNotEmpty()) {
-            valuesToSet["metadata_info"] = Gson().toJson(message.metadataInfo)
-        }
-        redisConnectionDeviceInfo.sync().hset(ip, valuesToSet)
-
-        if (message.geoVersion != null || message.householdScore != null) {
+        if (valuesToSet.isNotEmpty()) {
+            val ip = message.ip
+            redisConnectionDeviceInfo.sync().hset(ip, valuesToSet)
             redisConnectionDeviceInfo.sync().expire(ip, redisConfig.membershipTTL!!)
         }
 
