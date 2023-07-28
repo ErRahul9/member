@@ -9,8 +9,6 @@ import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.apache.commons.logging.Log
 import org.springframework.beans.factory.annotation.Qualifier
@@ -44,19 +42,17 @@ class ThirdPartyConsumer constructor(
     @Throws(IOException::class)
     override fun consume(message: String) {
         val oracleMembership = gson.fromJson(message, MembershipUpdateMessage::class.java)
-        val results = mutableListOf<Deferred<Any>>()
 
         lock.acquire()
 
         CoroutineScope(context).launch {
             try {
-                if (oracleMembership.currentSegments != null) {
-                    val segments = oracleMembership.currentSegments.map { it.toString() }.toTypedArray()
+                launch {
+                    if (oracleMembership.currentSegments != null) {
+                        val segments = oracleMembership.currentSegments.map { it.toString() }.toTypedArray()
 
-                    if (oracleMembership.dataSource in tpaCacheSources) {
-                        val overwrite = oracleMembership?.isDelta ?: true
-
-                        results += async {
+                        if (oracleMembership.dataSource in tpaCacheSources) {
+                            val overwrite = oracleMembership?.isDelta ?: true
                             writeMemberships(
                                 oracleMembership.ip.orEmpty(),
                                 segments,
@@ -67,11 +63,9 @@ class ThirdPartyConsumer constructor(
                     }
                 }
 
-                results += async {
+                launch {
                     writeDeviceMetadata(oracleMembership)
                 }
-
-                results.forEach { it.await() }
             } finally {
                 lock.release()
             }
