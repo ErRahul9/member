@@ -2,6 +2,7 @@ package com.steelhouse.membership.controller
 
 import com.google.common.base.Stopwatch
 import com.google.gson.FieldNamingPolicy
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
@@ -79,26 +80,22 @@ class ThirdPartyConsumer constructor(
     }
 
     fun writeDeviceMetadata(message: MembershipUpdateMessage) {
-        val ip = message.ip
+        val stopwatch = Stopwatch.createStarted()
 
-        if (ip != null) {
-            val stopwatch = Stopwatch.createStarted()
+        val valuesToSet = mapOf(
+            "household_score" to message.householdScore?.toString(),
+            "geo_version" to message.geoVersion,
+            "metadata_info" to if (!message.metadataInfo.isNullOrEmpty()) Gson().toJson(message.metadataInfo) else null,
+        ).filterValues { it != null }
 
-            if (message.householdScore != null) {
-                redisConnectionDeviceInfo.sync().hset(ip, "household_score", message.householdScore.toString())
-            }
-
-            if (message.geoVersion != null) {
-                redisConnectionDeviceInfo.sync().hset(ip, "geo_version", message.geoVersion)
-            }
-
-            if (message.geoVersion != null || message.householdScore != null) {
-                redisConnectionDeviceInfo.sync().expire(ip, redisConfig.membershipTTL!!)
-            }
-
-            val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
-            meterRegistry.timer("write.user.score.latency")
-                .record(Duration.ofMillis(responseTime))
+        if (valuesToSet.isNotEmpty()) {
+            val ip = message.ip
+            redisConnectionDeviceInfo.sync().hset(ip, valuesToSet)
+            redisConnectionDeviceInfo.sync().expire(ip, redisConfig.membershipTTL!!)
         }
+
+        val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
+        meterRegistry.timer("write.user.score.latency")
+            .record(Duration.ofMillis(responseTime))
     }
 }
