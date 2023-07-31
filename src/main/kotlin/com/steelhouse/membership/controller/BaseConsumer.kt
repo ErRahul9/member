@@ -1,12 +1,10 @@
 package com.steelhouse.membership.controller
 
 import com.google.common.base.Stopwatch
-import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.newFixedThreadPoolContext
-import org.apache.commons.logging.Log
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import java.io.IOException
@@ -15,9 +13,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
 @Service
-abstract class BaseConsumer constructor(
-    @Qualifier("app") private val log: Log,
-    private val appConfig: AppConfig,
+abstract class BaseConsumer(
     private val meterRegistry: MeterRegistry,
     @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
     private val redisConfig: RedisConfig,
@@ -29,7 +25,7 @@ abstract class BaseConsumer constructor(
     val tpaCacheSources = setOf(3) // TPA datasources
 
     @Throws(IOException::class)
-    open abstract fun consume(message: String)
+    abstract fun consume(message: String)
 
     fun writeMemberships(ip: String, currentSegments: Array<String>, cookieType: String, overwrite: Boolean) {
         if (overwrite) {

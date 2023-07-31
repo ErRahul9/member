@@ -4,16 +4,12 @@ import com.google.common.base.Stopwatch
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
 import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import org.apache.commons.logging.Log
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
@@ -22,19 +18,15 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 @Service
-class ThirdPartyConsumer constructor(
-    @Qualifier("app") private val log: Log,
+class ThirdPartyConsumer(
     private val meterRegistry: MeterRegistry,
-    val appConfig: AppConfig,
     @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
     @Qualifier("redisConnectionDeviceInfo") private val redisConnectionDeviceInfo: StatefulRedisClusterConnection<String, String>,
     private val redisConfig: RedisConfig,
 ) : BaseConsumer(
-    log = log,
     meterRegistry = meterRegistry,
     redisConnectionMembershipTpa = redisConnectionMembershipTpa,
     redisConfig = redisConfig,
-    appConfig = appConfig,
 ) {
 
     val gson = GsonBuilder()
@@ -45,19 +37,17 @@ class ThirdPartyConsumer constructor(
     @Throws(IOException::class)
     override fun consume(message: String) {
         val oracleMembership = gson.fromJson(message, MembershipUpdateMessage::class.java)
-        val results = mutableListOf<Deferred<Any>>()
 
         lock.acquire()
 
         CoroutineScope(context).launch {
             try {
-                if (oracleMembership.currentSegments != null) {
-                    val segments = oracleMembership.currentSegments.map { it.toString() }.toTypedArray()
+                launch {
+                    if (oracleMembership.currentSegments != null) {
+                        val segments = oracleMembership.currentSegments.map { it.toString() }.toTypedArray()
 
-                    if (oracleMembership.dataSource in tpaCacheSources) {
-                        val overwrite = oracleMembership?.isDelta ?: true
-
-                        results += async {
+                        if (oracleMembership.dataSource in tpaCacheSources) {
+                            val overwrite = oracleMembership?.isDelta ?: true
                             writeMemberships(
                                 oracleMembership.ip.orEmpty(),
                                 segments,
@@ -68,11 +58,9 @@ class ThirdPartyConsumer constructor(
                     }
                 }
 
-                results += async {
+                launch {
                     writeDeviceMetadata(oracleMembership)
                 }
-
-                results.forEach { it.await() }
             } finally {
                 lock.release()
             }

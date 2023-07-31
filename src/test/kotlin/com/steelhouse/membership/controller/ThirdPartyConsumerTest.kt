@@ -1,14 +1,7 @@
 package com.steelhouse.membership.controller
 
 import com.google.gson.Gson
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.argumentCaptor
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.same
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.whenever
-import com.steelhouse.membership.configuration.AppConfig
+import com.nhaarman.mockitokotlin2.*
 import com.steelhouse.membership.configuration.RedisConfig
 import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.RedisFuture
@@ -18,14 +11,11 @@ import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.apache.commons.logging.LogFactory
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
 class ThirdPartyConsumerTest {
-
-    var log = LogFactory.getLog(ThirdPartyConsumerTest::class.java)
 
     var redisClientMembershipTpa: StatefulRedisClusterConnection<String, String> = mock()
 
@@ -40,8 +30,6 @@ class ThirdPartyConsumerTest {
     val meterRegistry = SimpleMeterRegistry()
 
     var redisConfig: RedisConfig = mock()
-
-    val appConfig = AppConfig()
 
     @Before
     fun init() {
@@ -69,9 +57,7 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
@@ -116,9 +102,7 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
@@ -126,7 +110,7 @@ class ThirdPartyConsumerTest {
         consumer.consume(message)
 
         runBlocking {
-            delay(100)
+            delay(1000)
         }
 
         val hSetKey = argumentCaptor<String>()
@@ -158,9 +142,7 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
@@ -202,9 +184,7 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
@@ -245,9 +225,7 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
@@ -285,9 +263,7 @@ class ThirdPartyConsumerTest {
         )
 
         ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
@@ -320,9 +296,7 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,

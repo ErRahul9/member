@@ -20,7 +20,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
 @Service
-class ImpressionConsumer constructor(
+class ImpressionConsumer(
     @Qualifier("app") private val log: Log,
     private val meterRegistry: MeterRegistry,
     val appConfig: AppConfig,
