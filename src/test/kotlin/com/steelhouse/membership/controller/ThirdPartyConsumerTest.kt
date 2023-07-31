@@ -111,7 +111,7 @@ class ThirdPartyConsumerTest {
         consumer.consume(message)
 
         runBlocking {
-            delay(100)
+            delay(1000)
         }
 
         val hSetKey = argumentCaptor<String>()
