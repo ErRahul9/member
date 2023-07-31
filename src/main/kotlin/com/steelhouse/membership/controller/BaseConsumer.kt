@@ -25,7 +25,7 @@ abstract class BaseConsumer(
     val tpaCacheSources = setOf(3) // TPA datasources
 
     @Throws(IOException::class)
-    open abstract fun consume(message: String)
+    abstract fun consume(message: String)
 
     fun writeMemberships(ip: String, currentSegments: Array<String>, cookieType: String, overwrite: Boolean) {
         if (overwrite) {
