@@ -1,6 +1,5 @@
 package com.steelhouse.membership.controller
 
-import com.nhaarman.mockitokotlin2.*
 import com.google.gson.Gson
 import com.nhaarman.mockitokotlin2.*
 import com.steelhouse.membership.configuration.RedisConfig
