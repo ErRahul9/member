@@ -47,12 +47,12 @@ class ThirdPartyConsumer(
                         val segments = oracleMembership.currentSegments.map { it.toString() }.toTypedArray()
 
                         if (oracleMembership.dataSource in tpaCacheSources) {
-                            val overwrite = oracleMembership?.isDelta ?: true
+                            val overwrite = !(oracleMembership?.isDelta ?: true)
                             writeMemberships(
                                 oracleMembership.ip.orEmpty(),
                                 segments,
                                 "ip",
-                                !overwrite,
+                                overwrite,
                             )
                         }
                     }

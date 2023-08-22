@@ -40,7 +40,7 @@ class MembershipConsumer(
                 val segments = membership.currentSegments.map { it.toString() }.toTypedArray()
 
                 if (membership.dataSource in tpaCacheSources) {
-                    val overwrite = membership?.isDelta ?: true
+                    val overwrite = !(membership?.isDelta ?: true)
 
                     writeMemberships(
                         membership.ip.orEmpty(),
