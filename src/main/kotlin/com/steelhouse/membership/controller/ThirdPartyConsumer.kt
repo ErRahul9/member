@@ -46,14 +46,12 @@ class ThirdPartyConsumer(
         CoroutineScope(context).launch {
             try {
                 if (oracleMembership.currentSegments != null) {
-                    val segments = oracleMembership.currentSegments.map { it.toString() }.toTypedArray()
-
                     if (oracleMembership.dataSource in tpaCacheSources) {
                         val overwrite = !(oracleMembership?.isDelta ?: true)
                         results += async {
                             writeMemberships(
-                                oracleMembership.ip.orEmpty(),
-                                segments,
+                                oracleMembership.ip,
+                                oracleMembership.currentSegments,
                                 "ip",
                                 overwrite,
                             )

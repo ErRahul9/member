@@ -27,7 +27,7 @@ abstract class BaseConsumer(
     @Throws(IOException::class)
     abstract fun consume(message: String)
 
-    fun writeMemberships(ip: String, currentSegments: Array<String>, cookieType: String, overwrite: Boolean) {
+    fun writeMemberships(ip: String, currentSegments: List<Int>, cookieType: String, overwrite: Boolean) {
         if (overwrite) {
             deleteIp(ip)
         }
@@ -35,7 +35,7 @@ abstract class BaseConsumer(
         if (currentSegments.isNotEmpty()) {
             val stopwatch = Stopwatch.createStarted()
 
-            redisConnectionMembershipTpa.sync().sadd(ip, *currentSegments)
+            redisConnectionMembershipTpa.sync().set(ip, currentSegments.joinToString(",") { it.toString() })
             redisConnectionMembershipTpa.sync().expire(ip, redisConfig.membershipTTL!!)
 
             val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)

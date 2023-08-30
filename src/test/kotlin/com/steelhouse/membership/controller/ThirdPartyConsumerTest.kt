@@ -74,13 +74,13 @@ class ThirdPartyConsumerTest {
         val hSetKeyScore = argumentCaptor<String>()
         val metadataValueMap = argumentCaptor<Map<String, String>>()
 
-        verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
+        verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
         verify(redisMetadataScore.sync(), times(1)).hset(
             hSetKeyScore.capture(),
             metadataValueMap.capture(),
         )
         Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
+        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
         Assert.assertEquals(1, metadataValueMap.firstValue.size)
         Assert.assertEquals("80", metadataValueMap.firstValue["household_score"])
     }
@@ -117,11 +117,11 @@ class ThirdPartyConsumerTest {
         val hSetKeyDelete = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
 
-        verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
+        verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
         verify(redisClientMembershipTpa.sync(), times(1)).del(hSetKeyDelete.capture())
         verify(redisMetadataScore.sync(), times(0)).hset(any(), any())
         Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
+        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
     }
 
     @Test
@@ -240,11 +240,11 @@ class ThirdPartyConsumerTest {
         val hSetKeyDelete = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
 
-        verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
+        verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
         verify(redisClientMembershipTpa.sync(), times(0)).del(hSetKeyDelete.capture())
         verify(redisMetadataScore.sync(), times(0)).hset(any(), any())
         Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
+        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
     }
 
     @Test
@@ -313,13 +313,13 @@ class ThirdPartyConsumerTest {
         val hSetKeyScore = argumentCaptor<String>()
         val metadataValueMap = argumentCaptor<Map<String, String>>()
 
-        verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
+        verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
         verify(redisMetadataScore.sync(), times(1)).hset(
             hSetKeyScore.capture(),
             metadataValueMap.capture(),
         )
         Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
+        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
         Assert.assertEquals(3, metadataValueMap.firstValue.size)
         Assert.assertEquals("80", metadataValueMap.firstValue["household_score"])
         Assert.assertEquals("55555", metadataValueMap.firstValue["geo_version"])

@@ -92,16 +92,16 @@ class MembershipConsumerTest {
         consumer.consume(message)
 
         runBlocking {
-            delay(100)
+            delay(1000)
         }
 
-        val hSetKey = argumentCaptor<String>()
+        val hKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        val hSetKeyDelete = argumentCaptor<String>()
-        verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
-        verify(redisClientMembershipTpa.sync(), times(1)).del(hSetKeyDelete.capture())
-        Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
+        val hKeyDelete = argumentCaptor<String>()
+        verify(redisClientMembershipTpa.sync(), times(1)).set(hKey.capture(), fieldValue.capture())
+        verify(redisClientMembershipTpa.sync(), times(1)).del(hKeyDelete.capture())
+        Assert.assertEquals(listOf("154.130.20.55"), hKey.allValues)
+        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
     }
 
     /**
@@ -125,15 +125,15 @@ class MembershipConsumerTest {
         consumer.consume(message)
 
         runBlocking {
-            delay(100)
+            delay(1000)
         }
 
-        val hSetKey = argumentCaptor<String>()
+        val hKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        val hSetKeyDelete = argumentCaptor<String>()
-        verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
-        verify(redisClientMembershipTpa.sync(), times(0)).del(hSetKeyDelete.capture())
-        Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
+        val hKeyDelete = argumentCaptor<String>()
+        verify(redisClientMembershipTpa.sync(), times(1)).set(hKey.capture(), fieldValue.capture())
+        verify(redisClientMembershipTpa.sync(), times(0)).del(hKeyDelete.capture())
+        Assert.assertEquals(listOf("154.130.20.55"), hKey.allValues)
+        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
     }
 }

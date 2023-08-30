@@ -37,14 +37,12 @@ class MembershipConsumer(
 
         CoroutineScope(context).launch {
             try {
-                val segments = membership.currentSegments.map { it.toString() }.toTypedArray()
-
                 if (membership.dataSource in tpaCacheSources) {
                     val overwrite = !(membership?.isDelta ?: true)
 
                     writeMemberships(
-                        membership.ip.orEmpty(),
-                        segments,
+                        membership.ip,
+                        membership.currentSegments,
                         "ip",
                         overwrite,
                     )

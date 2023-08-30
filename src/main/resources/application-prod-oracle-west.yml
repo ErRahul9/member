@@ -15,7 +15,7 @@ logging:
     app: INFO
 
 redis:
-  membershipConnectionTpa: redis://core-prod-membership-new.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  membershipConnectionTpa: redis://core-prod-membership-compression.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   membershipTTL: 5184000
   deviceInfoConnection: redis://rtb-prod-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   recencyConnection: redis://core-prod-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
