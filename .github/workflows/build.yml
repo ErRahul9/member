@@ -20,7 +20,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
       - name: Execute Gradle build
-        run: ./gradle clean test
+        run: ./gradlew clean test
   codacy-uploads:
     runs-on: ubuntu-latest
     env:
@@ -38,7 +38,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
       - name: Execute Gradle build
-        run: ./gradle clean test jacocoTestReport
+        run: ./gradlew clean test jacocoTestReport
       - name: Get current branch name
         id: branch-name
         uses: tj-actions/branch-names@v7
