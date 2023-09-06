@@ -8,6 +8,7 @@ on:
 
 jobs:
   build-test:
+    name: Build & test the codebase
     runs-on: ubuntu-latest
     steps:
       - name: checkout repo
@@ -27,6 +28,8 @@ jobs:
           name: jacoco-test-coverage-report
           path: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
   codacy-uploads:
+    name: Upload jacoco test coverage report to codacy
+    needs: build-test
     runs-on: ubuntu-latest
     env:
       CODACY_ACCOUNT_API_TOKEN: CfZGn11TIA2dcBhQNK8v
