@@ -36,10 +36,6 @@ jobs:
       CODACY_ORG_NAME: SteelHouse
       CODACY_GIT_PROVIDER: gh
     steps:
-      - name: Download jacoco test report artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: jacoco-test-coverage-report
       - name: Get current branch name
         id: branch-name
         uses: tj-actions/branch-names@v7
@@ -50,6 +46,10 @@ jobs:
             -H 'Accept: application/json' \
             -H 'api-token: ${{ env.CODACY_ACCOUNT_API_TOKEN}}' \
             -d '{"isEnabled": true}'
+      - name: Download jacoco test report artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jacoco-test-coverage-report
       - name: Upload jacoco test coverage report to codacy
         env:
           CODACY_API_TOKEN: ${{ env.CODACY_ACCOUNT_API_TOKEN }}
