@@ -15,9 +15,10 @@ import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class MembershipConsumerTest {
 
@@ -32,7 +33,7 @@ class MembershipConsumerTest {
 
     var redisConfig: RedisConfig = mock()
 
-    @Before
+    @BeforeEach
     fun init() {
         whenever(redisClientMembershipTpa.sync()).thenReturn(membershipCommands)
         whenever(redisClientMembershipTpa.async()).thenReturn(membershipAsyncCommands)
@@ -63,7 +64,7 @@ class MembershipConsumerTest {
         val hSetKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
         verify(redisClientMembershipTpa.sync(), times(0)).sadd(hSetKey.capture(), fieldValue.capture())
-        Assert.assertTrue(
+        assertTrue(
             listOf(
                 "006866ac-cfb1-4639-99d3-c7948d7f5111",
                 "154.130.20.55",
@@ -71,7 +72,7 @@ class MembershipConsumerTest {
                 "tradedeskId",
             ).containsAll(hSetKey.allValues),
         )
-        Assert.assertEquals(emptyList<String>(), fieldValue.allValues)
+        assertEquals(emptyList<String>(), fieldValue.allValues)
     }
 
     @Test
@@ -100,8 +101,8 @@ class MembershipConsumerTest {
         val hKeyDelete = argumentCaptor<String>()
         verify(redisClientMembershipTpa.sync(), times(1)).set(hKey.capture(), fieldValue.capture())
         verify(redisClientMembershipTpa.sync(), times(1)).del(hKeyDelete.capture())
-        Assert.assertEquals(listOf("154.130.20.55"), hKey.allValues)
-        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        assertEquals(listOf("154.130.20.55"), hKey.allValues)
+        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
     }
 
     /**
@@ -133,7 +134,7 @@ class MembershipConsumerTest {
         val hKeyDelete = argumentCaptor<String>()
         verify(redisClientMembershipTpa.sync(), times(1)).set(hKey.capture(), fieldValue.capture())
         verify(redisClientMembershipTpa.sync(), times(0)).del(hKeyDelete.capture())
-        Assert.assertEquals(listOf("154.130.20.55"), hKey.allValues)
-        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        assertEquals(listOf("154.130.20.55"), hKey.allValues)
+        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
     }
 }

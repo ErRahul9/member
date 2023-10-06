@@ -9,9 +9,10 @@ import io.lettuce.core.cluster.api.sync.NodeSelection
 import io.lettuce.core.cluster.api.sync.NodeSelectionCommands
 import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands
 import org.apache.commons.logging.Log
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.Status
 
@@ -31,7 +32,7 @@ class CustomHealthIndicatorTest {
 
     val membershipNodeSelectionCommands: NodeSelectionCommands<String, String> = mock()
 
-    @Before
+    @BeforeEach
     fun init() {
         whenever(redisClientMembership.sync()).thenReturn(membershipCommands)
 
@@ -52,8 +53,8 @@ class CustomHealthIndicatorTest {
         whenever(membershipNodeSelectionCommands.ping()).thenReturn(executions2)
 
         val builder = Health.Builder()
-        Assert.assertTrue(indicator.verifyConnections(builder, redisClientMembership))
-        Assert.assertTrue(builder.build().status == Status.UP)
+        assertTrue(indicator.verifyConnections(builder, redisClientMembership))
+        assertTrue(builder.build().status == Status.UP)
     }
 
     @Test
@@ -67,7 +68,7 @@ class CustomHealthIndicatorTest {
         whenever(membershipNodeSelectionCommands.ping()).thenReturn(executions2)
 
         val builder = Health.Builder()
-        Assert.assertFalse(indicator.verifyConnections(builder, redisClientMembership))
-        Assert.assertTrue(builder.build().status == Status.DOWN)
+        assertFalse(indicator.verifyConnections(builder, redisClientMembership))
+        assertTrue(builder.build().status == Status.DOWN)
     }
 }

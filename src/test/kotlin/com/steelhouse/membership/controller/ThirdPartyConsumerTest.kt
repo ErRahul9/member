@@ -11,9 +11,9 @@ import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class ThirdPartyConsumerTest {
 
@@ -31,7 +31,7 @@ class ThirdPartyConsumerTest {
 
     var redisConfig: RedisConfig = mock()
 
-    @Before
+    @BeforeEach
     fun init() {
         whenever(redisClientMembershipTpa.sync()).thenReturn(membershipCommands)
         whenever(redisClientMembershipTpa.async()).thenReturn(membershipAsyncCommands)
@@ -79,10 +79,10 @@ class ThirdPartyConsumerTest {
             hSetKeyScore.capture(),
             metadataValueMap.capture(),
         )
-        Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
-        Assert.assertEquals(1, metadataValueMap.firstValue.size)
-        Assert.assertEquals("80", metadataValueMap.firstValue["household_score"])
+        assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
+        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals("80", metadataValueMap.firstValue["household_score"])
     }
 
     @Test
@@ -120,8 +120,8 @@ class ThirdPartyConsumerTest {
         verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
         verify(redisClientMembershipTpa.sync(), times(1)).del(hSetKeyDelete.capture())
         verify(redisMetadataScore.sync(), times(0)).hset(any(), any())
-        Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
+        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
     }
 
     @Test
@@ -162,8 +162,8 @@ class ThirdPartyConsumerTest {
             metadataValueMap.capture(),
         )
 
-        Assert.assertEquals(1, metadataValueMap.firstValue.size)
-        Assert.assertEquals("80", metadataValueMap.firstValue["household_score"])
+        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals("80", metadataValueMap.firstValue["household_score"])
     }
 
     @Test
@@ -204,8 +204,8 @@ class ThirdPartyConsumerTest {
             metadataValueMap.capture(),
         )
 
-        Assert.assertEquals(1, metadataValueMap.firstValue.size)
-        Assert.assertEquals("80", metadataValueMap.firstValue["household_score"])
+        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals("80", metadataValueMap.firstValue["household_score"])
     }
 
     @Test
@@ -243,8 +243,8 @@ class ThirdPartyConsumerTest {
         verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
         verify(redisClientMembershipTpa.sync(), times(0)).del(hSetKeyDelete.capture())
         verify(redisMetadataScore.sync(), times(0)).hset(any(), any())
-        Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
+        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
     }
 
     @Test
@@ -271,10 +271,10 @@ class ThirdPartyConsumerTest {
 
         val valueMap = argumentCaptor<Map<String, String>>()
         verify(redisMetadataScore.sync(), times(1)).hset(any(), valueMap.capture())
-        Assert.assertEquals(3, valueMap.firstValue.size)
-        Assert.assertEquals(testMsg.householdScore.toString(), valueMap.firstValue["household_score"])
-        Assert.assertEquals(testMsg.geoVersion, valueMap.firstValue["geo_version"])
-        Assert.assertEquals(Gson().toJson(testMsg.metadataInfo), valueMap.firstValue["metadata_info"])
+        assertEquals(3, valueMap.firstValue.size)
+        assertEquals(testMsg.householdScore.toString(), valueMap.firstValue["household_score"])
+        assertEquals(testMsg.geoVersion, valueMap.firstValue["geo_version"])
+        assertEquals(Gson().toJson(testMsg.metadataInfo), valueMap.firstValue["metadata_info"])
     }
 
     @Test
@@ -318,12 +318,12 @@ class ThirdPartyConsumerTest {
             hSetKeyScore.capture(),
             metadataValueMap.capture(),
         )
-        Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
-        Assert.assertEquals(3, metadataValueMap.firstValue.size)
-        Assert.assertEquals("80", metadataValueMap.firstValue["household_score"])
-        Assert.assertEquals("55555", metadataValueMap.firstValue["geo_version"])
-        Assert.assertEquals(
+        assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
+        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        assertEquals(3, metadataValueMap.firstValue.size)
+        assertEquals("80", metadataValueMap.firstValue["household_score"])
+        assertEquals("55555", metadataValueMap.firstValue["geo_version"])
+        assertEquals(
             "{\"household_score\":\"50\",\"geo_version\":\"77777\"}",
             metadataValueMap.firstValue["metadata_info"],
         )

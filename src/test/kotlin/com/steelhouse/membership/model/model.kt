@@ -2,8 +2,8 @@ package com.steelhouse.membership.model
 
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class ModelTest {
 
@@ -33,14 +33,14 @@ class ModelTest {
             .create()
         val membershipUpdateMessage = gson.fromJson(message, MembershipUpdateMessage::class.java)
 
-        Assert.assertEquals(membershipUpdateMessage.guid, "7501cd62-7e55-3d27-9f08-135aa4370fa0")
-        Assert.assertEquals(membershipUpdateMessage.advertiserId, 21951)
-        Assert.assertEquals(membershipUpdateMessage.currentSegments, listOf(44577, 44971, 55291, 55293))
-        Assert.assertEquals(membershipUpdateMessage.oldSegments, listOf(42511, 42622, 43053))
-        Assert.assertEquals(membershipUpdateMessage.activityEpoch, 1626992631738255)
-        Assert.assertEquals(membershipUpdateMessage.epoch, 1626992698000397)
-        Assert.assertEquals(membershipUpdateMessage.ip, "68.74.197.31")
-        Assert.assertEquals(membershipUpdateMessage.householdScore, 80)
+        assertEquals(membershipUpdateMessage.guid, "7501cd62-7e55-3d27-9f08-135aa4370fa0")
+        assertEquals(membershipUpdateMessage.advertiserId, 21951)
+        assertEquals(membershipUpdateMessage.currentSegments, listOf(44577, 44971, 55291, 55293))
+        assertEquals(membershipUpdateMessage.oldSegments, listOf(42511, 42622, 43053))
+        assertEquals(membershipUpdateMessage.activityEpoch, 1626992631738255)
+        assertEquals(membershipUpdateMessage.epoch, 1626992698000397)
+        assertEquals(membershipUpdateMessage.ip, "68.74.197.31")
+        assertEquals(membershipUpdateMessage.householdScore, 80)
     }
 
     @Test
@@ -68,13 +68,13 @@ class ModelTest {
             .create()
         val membershipUpdateMessage = gson.fromJson(message, MembershipUpdateMessage::class.java)
 
-        Assert.assertEquals(membershipUpdateMessage.guid, "7501cd62-7e55-3d27-9f08-135aa4370fa0")
-        Assert.assertEquals(membershipUpdateMessage.advertiserId, 21951)
-        Assert.assertEquals(membershipUpdateMessage.currentSegments, listOf(44577, 44971, 55291, 55293))
-        Assert.assertEquals(membershipUpdateMessage.oldSegments, listOf(42511, 42622, 43053))
-        Assert.assertEquals(membershipUpdateMessage.activityEpoch, 1626992631738255)
-        Assert.assertEquals(membershipUpdateMessage.epoch, 1626992698000397)
-        Assert.assertEquals(membershipUpdateMessage.ip, "68.74.197.31")
-        Assert.assertEquals(membershipUpdateMessage.householdScore, null)
+        assertEquals(membershipUpdateMessage.guid, "7501cd62-7e55-3d27-9f08-135aa4370fa0")
+        assertEquals(membershipUpdateMessage.advertiserId, 21951)
+        assertEquals(membershipUpdateMessage.currentSegments, listOf(44577, 44971, 55291, 55293))
+        assertEquals(membershipUpdateMessage.oldSegments, listOf(42511, 42622, 43053))
+        assertEquals(membershipUpdateMessage.activityEpoch, 1626992631738255)
+        assertEquals(membershipUpdateMessage.epoch, 1626992698000397)
+        assertEquals(membershipUpdateMessage.ip, "68.74.197.31")
+        assertEquals(membershipUpdateMessage.householdScore, null)
     }
 }

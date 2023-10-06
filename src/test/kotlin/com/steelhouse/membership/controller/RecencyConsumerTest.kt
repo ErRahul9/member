@@ -11,9 +11,9 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 
 class RecencyConsumerTest {
@@ -26,7 +26,7 @@ class RecencyConsumerTest {
     val appConfig = AppConfig()
     var util: Util = mock()
 
-    @Before
+    @BeforeEach
     fun init() {
         whenever(redisConnectionRecency.sync()).thenReturn(recencyAsyncCommands)
         whenever(util.getEpochInMillis()).thenReturn(43534543)
@@ -45,9 +45,9 @@ class RecencyConsumerTest {
 
         val recencyMessage = consumer.extractRecency(message)
 
-        Assert.assertEquals(recencyMessage.advertiserID, 30619)
-        Assert.assertEquals(recencyMessage.ip, "173.94.245.18")
-        Assert.assertEquals(recencyMessage.epoch, 1667508238375)
+        assertEquals(recencyMessage.advertiserID, 30619)
+        assertEquals(recencyMessage.ip, "173.94.245.18")
+        assertEquals(recencyMessage.epoch, 1667508238375)
     }
 
     @Test
@@ -94,9 +94,9 @@ class RecencyConsumerTest {
 
         val recencyMessage = consumer.extractRecency(message)
 
-        Assert.assertEquals(recencyMessage.advertiserID, 32794)
-        Assert.assertEquals(recencyMessage.ip, "67.85.61.56")
-        Assert.assertEquals(recencyMessage.epoch, 1667508514896762)
+        assertEquals(recencyMessage.advertiserID, 32794)
+        assertEquals(recencyMessage.ip, "67.85.61.56")
+        assertEquals(recencyMessage.epoch, 1667508514896762)
     }
 
     @Test
