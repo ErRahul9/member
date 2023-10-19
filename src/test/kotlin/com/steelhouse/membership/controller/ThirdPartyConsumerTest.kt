@@ -1,14 +1,9 @@
 package com.steelhouse.membership.controller
 
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.argumentCaptor
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.same
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.whenever
-import com.steelhouse.membership.configuration.AppConfig
+import com.google.gson.Gson
+import com.nhaarman.mockitokotlin2.*
 import com.steelhouse.membership.configuration.RedisConfig
+import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
@@ -16,18 +11,15 @@ import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.apache.commons.logging.LogFactory
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class ThirdPartyConsumerTest {
 
-    var log = LogFactory.getLog(ThirdPartyConsumerTest::class.java)
-
     var redisClientMembershipTpa: StatefulRedisClusterConnection<String, String> = mock()
 
-    var redisClientUserScore: StatefulRedisClusterConnection<String, String> = mock()
+    var redisMetadataScore: StatefulRedisClusterConnection<String, String> = mock()
     var userScoreCommands: RedisAdvancedClusterCommands<String, String> = mock()
 
     var membershipCommands: RedisAdvancedClusterCommands<String, String> = mock()
@@ -39,13 +31,11 @@ class ThirdPartyConsumerTest {
 
     var redisConfig: RedisConfig = mock()
 
-    val appConfig = AppConfig()
-
-    @Before
+    @BeforeEach
     fun init() {
         whenever(redisClientMembershipTpa.sync()).thenReturn(membershipCommands)
         whenever(redisClientMembershipTpa.async()).thenReturn(membershipAsyncCommands)
-        whenever(redisClientUserScore.sync()).thenReturn(userScoreCommands)
+        whenever(redisMetadataScore.sync()).thenReturn(userScoreCommands)
         whenever(redisConfig.membershipTTL).thenReturn(5)
     }
 
@@ -67,11 +57,9 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
-            redisClientUserScore,
+            redisMetadataScore,
             redisConfig,
         )
         consumer.consume(message)
@@ -84,19 +72,17 @@ class ThirdPartyConsumerTest {
         val fieldValue = argumentCaptor<String>()
 
         val hSetKeyScore = argumentCaptor<String>()
-        val fieldKeyScore = argumentCaptor<String>()
-        val fieldValueScore = argumentCaptor<String>()
+        val metadataValueMap = argumentCaptor<Map<String, String>>()
 
-        verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
-        verify(redisClientUserScore.sync(), times(1)).hset(
+        verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
+        verify(redisMetadataScore.sync(), times(1)).hset(
             hSetKeyScore.capture(),
-            fieldKeyScore.capture(),
-            fieldValueScore.capture(),
+            metadataValueMap.capture(),
         )
-        Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
-        Assert.assertEquals("household_score", fieldKeyScore.firstValue)
-        Assert.assertEquals("80", fieldValueScore.firstValue)
+        assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
+        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals("80", metadataValueMap.firstValue["household_score"])
     }
 
     @Test
@@ -116,28 +102,26 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
-            redisClientUserScore,
+            redisMetadataScore,
             redisConfig,
         )
         consumer.consume(message)
 
         runBlocking {
-            delay(100)
+            delay(1000)
         }
 
         val hSetKey = argumentCaptor<String>()
         val hSetKeyDelete = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
 
-        verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
+        verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
         verify(redisClientMembershipTpa.sync(), times(1)).del(hSetKeyDelete.capture())
-        verify(redisClientUserScore.sync(), times(0)).hset(any(), any(), any())
-        Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
+        verify(redisMetadataScore.sync(), times(0)).hset(any(), any())
+        assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
+        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
     }
 
     @Test
@@ -158,11 +142,9 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
-            redisClientUserScore,
+            redisMetadataScore,
             redisConfig,
         )
         consumer.consume(message)
@@ -172,18 +154,16 @@ class ThirdPartyConsumerTest {
         }
 
         val hSetKeyScore = argumentCaptor<String>()
-        val fieldKeyScore = argumentCaptor<String>()
-        val fieldValueScore = argumentCaptor<String>()
+        val metadataValueMap = argumentCaptor<Map<String, String>>()
 
         verify(redisClientMembershipTpa.sync(), times(0)).sadd(any(), any())
-        verify(redisClientUserScore.sync(), times(1)).hset(
+        verify(redisMetadataScore.sync(), times(1)).hset(
             hSetKeyScore.capture(),
-            fieldKeyScore.capture(),
-            fieldValueScore.capture(),
+            metadataValueMap.capture(),
         )
 
-        Assert.assertEquals("household_score", fieldKeyScore.firstValue)
-        Assert.assertEquals("80", fieldValueScore.firstValue)
+        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals("80", metadataValueMap.firstValue["household_score"])
     }
 
     @Test
@@ -204,11 +184,9 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
-            redisClientUserScore,
+            redisMetadataScore,
             redisConfig,
         )
         consumer.consume(message)
@@ -218,18 +196,16 @@ class ThirdPartyConsumerTest {
         }
 
         val hSetKeyScore = argumentCaptor<String>()
-        val fieldKeyScore = argumentCaptor<String>()
-        val fieldValueScore = argumentCaptor<String>()
+        val metadataValueMap = argumentCaptor<Map<String, String>>()
 
         verify(redisClientMembershipTpa.sync(), times(0)).sadd(any(), any())
-        verify(redisClientUserScore.sync(), times(1)).hset(
+        verify(redisMetadataScore.sync(), times(1)).hset(
             hSetKeyScore.capture(),
-            fieldKeyScore.capture(),
-            fieldValueScore.capture(),
+            metadataValueMap.capture(),
         )
 
-        Assert.assertEquals("household_score", fieldKeyScore.firstValue)
-        Assert.assertEquals("80", fieldValueScore.firstValue)
+        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals("80", metadataValueMap.firstValue["household_score"])
     }
 
     @Test
@@ -249,11 +225,9 @@ class ThirdPartyConsumerTest {
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
         val consumer = ThirdPartyConsumer(
-            log,
             meterRegistry,
-            appConfig,
             redisClientMembershipTpa,
-            redisClientUserScore,
+            redisMetadataScore,
             redisConfig,
         )
         consumer.consume(message)
@@ -266,10 +240,92 @@ class ThirdPartyConsumerTest {
         val hSetKeyDelete = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
 
-        verify(redisClientMembershipTpa.sync(), times(1)).sadd(hSetKey.capture(), fieldValue.capture())
+        verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
         verify(redisClientMembershipTpa.sync(), times(0)).del(hSetKeyDelete.capture())
-        verify(redisClientUserScore.sync(), times(0)).hset(any(), any(), any())
-        Assert.assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
-        Assert.assertEquals(listOf("27797", "27798", "27801"), fieldValue.allValues)
+        verify(redisMetadataScore.sync(), times(0)).hset(any(), any())
+        assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
+        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+    }
+
+    @Test
+    fun writeDeviceMetadataToCache() {
+        val testMsg = MembershipUpdateMessage(
+            guid = "006866ac-cfb1-4639-99d3-c7948d7f5111",
+            advertiserId = 20460,
+            epoch = 1556195886916784L,
+            ip = "154.130.20.55",
+            householdScore = 33,
+            geoVersion = "43543543543",
+            activityEpoch = 1556195801515452L,
+            isDelta = false,
+            dataSource = 8,
+            metadataInfo = mapOf("household_score" to "55", "geo_version" to "76543543543"),
+        )
+
+        ThirdPartyConsumer(
+            meterRegistry,
+            redisClientMembershipTpa,
+            redisMetadataScore,
+            redisConfig,
+        ).writeDeviceMetadata(testMsg)
+
+        val valueMap = argumentCaptor<Map<String, String>>()
+        verify(redisMetadataScore.sync(), times(1)).hset(any(), valueMap.capture())
+        assertEquals(3, valueMap.firstValue.size)
+        assertEquals(testMsg.householdScore.toString(), valueMap.firstValue["household_score"])
+        assertEquals(testMsg.geoVersion, valueMap.firstValue["geo_version"])
+        assertEquals(Gson().toJson(testMsg.metadataInfo), valueMap.firstValue["metadata_info"])
+    }
+
+    @Test
+    fun hasHouseHoldScoreAndGeoVersionAndMetadataInfo() {
+        val message =
+            "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\"" +
+                ":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800," +
+                "27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452," +
+                "\"ip\":154.130.20.55,\"household_score\":80,\"geo_version\":55555,\"data_source\":3," +
+                "\"metadata_info\":{\"household_score\":50,\"geo_version\":77777}}"
+
+        val future2: RedisFuture<Boolean> = mock()
+        whenever(future2.get()).thenReturn(true)
+        whenever(membershipAsyncCommands.expire(any(), same(5))).thenReturn(future2)
+        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(true)
+
+        val segmentMappingFuture: RedisFuture<String> = mock()
+        whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
+        whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
+
+        val consumer = ThirdPartyConsumer(
+            meterRegistry,
+            redisClientMembershipTpa,
+            redisMetadataScore,
+            redisConfig,
+        )
+        consumer.consume(message)
+
+        runBlocking {
+            delay(100)
+        }
+
+        val hSetKey = argumentCaptor<String>()
+        val fieldValue = argumentCaptor<String>()
+
+        val hSetKeyScore = argumentCaptor<String>()
+        val metadataValueMap = argumentCaptor<Map<String, String>>()
+
+        verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
+        verify(redisMetadataScore.sync(), times(1)).hset(
+            hSetKeyScore.capture(),
+            metadataValueMap.capture(),
+        )
+        assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
+        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        assertEquals(3, metadataValueMap.firstValue.size)
+        assertEquals("80", metadataValueMap.firstValue["household_score"])
+        assertEquals("55555", metadataValueMap.firstValue["geo_version"])
+        assertEquals(
+            "{\"household_score\":\"50\",\"geo_version\":\"77777\"}",
+            metadataValueMap.firstValue["metadata_info"],
+        )
     }
 }

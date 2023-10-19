@@ -14,6 +14,7 @@ data class MembershipUpdateMessage(
     val householdScore: Int?,
     val geoVersion: String?,
     val isDelta: Boolean?,
+    val metadataInfo: Map<String, String>? = emptyMap(),
 )
 
 data class ImpressionMessage(

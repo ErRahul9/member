@@ -11,7 +11,7 @@ plugins {
     kotlin("plugin.serialization") version "1.6.21"
 //    id("org.jetbrains.kotlin.plugin.serialization") version "1.7.0"
     id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
-
+    jacoco
     java
 }
 
@@ -99,7 +99,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:1.9.3.kotlin12")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
-    implementation("junit:junit:4.13.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 }
 
 java {
@@ -166,7 +167,24 @@ tasks {
     test {
         useJUnitPlatform()
         testLogging {
-            events("passed", "skipped", "failed")
+            events(
+                "passed",
+                "skipped",
+                "failed",
+                "standardOut",
+                "standardError",
+            )
         }
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.9"
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
     }
 }

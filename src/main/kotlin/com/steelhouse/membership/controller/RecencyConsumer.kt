@@ -11,10 +11,8 @@ import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
-import org.apache.commons.logging.Log
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.annotation.KafkaListener
@@ -25,8 +23,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
 @Service
-class RecencyConsumer constructor(
-    @Qualifier("app") private val log: Log,
+class RecencyConsumer(
     private val meterRegistry: MeterRegistry,
     val appConfig: AppConfig,
     val util: Util,
@@ -49,29 +46,25 @@ class RecencyConsumer constructor(
 
         CoroutineScope(context).launch {
             try {
-                val recency = async {
-                    if (recencyMessage.advertiserID != null && recencyMessage.ip != null && recencyMessage.epoch != null) {
-                        val epochMillis = if (message.topic().equals("guidv2")) {
-                            recencyMessage.epoch / 1000
-                        } else {
-                            recencyMessage.epoch
-                        }
-
-                        val ip = if (message.topic().equals("guidv2")) {
-                            recencyMessage.ip
-                        } else {
-                            recencyMessage.ip + "_vast"
-                        }
-
-                        writeRecency(
-                            deviceID = ip,
-                            advertiserID = recencyMessage.advertiserID.toString(),
-                            recencyEpoch = epochMillis.toString(),
-                        )
+                if (recencyMessage.advertiserID != null && recencyMessage.ip != null && recencyMessage.epoch != null) {
+                    val epochMillis = if (message.topic().equals("guidv2")) {
+                        recencyMessage.epoch / 1000
+                    } else {
+                        recencyMessage.epoch
                     }
-                }
 
-                recency.await()
+                    val ip = if (message.topic().equals("guidv2")) {
+                        recencyMessage.ip
+                    } else {
+                        recencyMessage.ip + "_vast"
+                    }
+
+                    writeRecency(
+                        deviceID = ip,
+                        advertiserID = recencyMessage.advertiserID.toString(),
+                        recencyEpoch = epochMillis.toString(),
+                    )
+                }
             } finally {
                 lock.release()
             }
