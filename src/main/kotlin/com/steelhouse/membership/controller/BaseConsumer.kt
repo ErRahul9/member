@@ -1,6 +1,7 @@
 package com.steelhouse.membership.controller
 
 import com.google.common.base.Stopwatch
+import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
