@@ -73,10 +73,16 @@ class ThirdPartyConsumer(
     fun writeDeviceMetadata(message: MembershipUpdateMessage) {
         val stopwatch = Stopwatch.createStarted()
 
+        var metadata: MutableMap<String, String?> =
+            if (!message.metadataInfo.isNullOrEmpty()) message.metadataInfo.toMutableMap() else mutableMapOf()
+        metadata["household_score"] = message.householdScore?.toString()
+        metadata["geo_version"] = message.geoVersion
+        metadata = metadata.filterValues { it != null }.toMutableMap()
+
         val valuesToSet = mapOf(
             "household_score" to message.householdScore?.toString(),
             "geo_version" to message.geoVersion,
-            "metadata_info" to if (!message.metadataInfo.isNullOrEmpty()) Gson().toJson(message.metadataInfo) else null,
+            "metadata_info" to if (metadata.isNotEmpty()) Gson().toJson(metadata) else null,
         ).filterValues { it != null }
 
         if (valuesToSet.isNotEmpty()) {
