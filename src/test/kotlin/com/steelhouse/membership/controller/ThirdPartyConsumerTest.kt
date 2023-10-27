@@ -1,7 +1,12 @@
 package com.steelhouse.membership.controller
 
-import com.google.gson.Gson
-import com.nhaarman.mockitokotlin2.*
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.same
+import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.whenever
 import com.steelhouse.membership.configuration.RedisConfig
 import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.RedisFuture
