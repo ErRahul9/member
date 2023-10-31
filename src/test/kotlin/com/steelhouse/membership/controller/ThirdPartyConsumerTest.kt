@@ -1,7 +1,12 @@
 package com.steelhouse.membership.controller
 
-import com.google.gson.Gson
-import com.nhaarman.mockitokotlin2.*
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.same
+import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.whenever
 import com.steelhouse.membership.configuration.RedisConfig
 import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.RedisFuture
@@ -81,7 +86,7 @@ class ThirdPartyConsumerTest {
         )
         assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
         assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
-        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals(2, metadataValueMap.firstValue.size)
         assertEquals("80", metadataValueMap.firstValue["household_score"])
     }
 
@@ -162,7 +167,7 @@ class ThirdPartyConsumerTest {
             metadataValueMap.capture(),
         )
 
-        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals(2, metadataValueMap.firstValue.size)
         assertEquals("80", metadataValueMap.firstValue["household_score"])
     }
 
@@ -204,7 +209,7 @@ class ThirdPartyConsumerTest {
             metadataValueMap.capture(),
         )
 
-        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals(2, metadataValueMap.firstValue.size)
         assertEquals("80", metadataValueMap.firstValue["household_score"])
     }
 
@@ -259,7 +264,7 @@ class ThirdPartyConsumerTest {
             activityEpoch = 1556195801515452L,
             isDelta = false,
             dataSource = 8,
-            metadataInfo = mapOf("household_score" to "55", "geo_version" to "76543543543"),
+            metadataInfo = mapOf("_hh_score" to "55", "_geo_ver" to "76543543543"),
         )
 
         ThirdPartyConsumer(
@@ -274,7 +279,7 @@ class ThirdPartyConsumerTest {
         assertEquals(3, valueMap.firstValue.size)
         assertEquals(testMsg.householdScore.toString(), valueMap.firstValue["household_score"])
         assertEquals(testMsg.geoVersion, valueMap.firstValue["geo_version"])
-        assertEquals(Gson().toJson(testMsg.metadataInfo), valueMap.firstValue["metadata_info"])
+        assertEquals("{\"_hh_score\":\"55\",\"_geo_ver\":\"76543543543\",\"household_score\":\"33\",\"geo_version\":\"43543543543\"}", valueMap.firstValue["metadata_info"])
     }
 
     @Test
@@ -284,7 +289,7 @@ class ThirdPartyConsumerTest {
                 ":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800," +
                 "27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452," +
                 "\"ip\":154.130.20.55,\"household_score\":80,\"geo_version\":55555,\"data_source\":3," +
-                "\"metadata_info\":{\"household_score\":50,\"geo_version\":77777}}"
+                "\"metadata_info\":{\"_hh_score\":50,\"_geo_ver\":77777}}"
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
@@ -324,7 +329,7 @@ class ThirdPartyConsumerTest {
         assertEquals("80", metadataValueMap.firstValue["household_score"])
         assertEquals("55555", metadataValueMap.firstValue["geo_version"])
         assertEquals(
-            "{\"household_score\":\"50\",\"geo_version\":\"77777\"}",
+            "{\"_hh_score\":\"50\",\"_geo_ver\":\"77777\",\"household_score\":\"80\",\"geo_version\":\"55555\"}",
             metadataValueMap.firstValue["metadata_info"],
         )
     }

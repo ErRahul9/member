@@ -9,7 +9,6 @@ plugins {
     kotlin("plugin.spring") version "1.6.10"
     id("com.gorylenko.gradle-git-properties") version "2.2.2"
     kotlin("plugin.serialization") version "1.6.21"
-//    id("org.jetbrains.kotlin.plugin.serialization") version "1.7.0"
     id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
     jacoco
     java
@@ -89,13 +88,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.slf4j/api
     implementation("org.slf4j:slf4j-api:1.7.36")
 
-    // implementation("commons-validator:commons-validator:1.7.0")
-    // implementation("javax.validation:name:validation-api:2.0.1.Final")
-    // implementation("io.awspring.cloud:spring-cloud-starter-aws-messaging")
-
-    // implementation(platform("software.amazon.awssdk:bom:2.15.69"))
-    // implementation("software.amazon.awssdk:sqs")
-
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:1.9.3.kotlin12")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
@@ -172,7 +164,7 @@ tasks {
                 "skipped",
                 "failed",
                 "standardOut",
-                "standardError",
+                "standardError"
             )
         }
     }
