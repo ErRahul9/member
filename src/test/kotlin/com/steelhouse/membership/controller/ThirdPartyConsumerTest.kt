@@ -66,6 +66,7 @@ class ThirdPartyConsumerTest {
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
+            mock()
         )
         consumer.consume(message)
 
@@ -86,8 +87,8 @@ class ThirdPartyConsumerTest {
         )
         assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
         assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
-        assertEquals(2, metadataValueMap.firstValue.size)
-        assertEquals("80", metadataValueMap.firstValue["household_score"])
+        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals("{\"household_score\":\"80\"}", metadataValueMap.firstValue["metadata_info"])
     }
 
     @Test
@@ -111,6 +112,7 @@ class ThirdPartyConsumerTest {
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
+            mock(),
         )
         consumer.consume(message)
 
@@ -151,6 +153,7 @@ class ThirdPartyConsumerTest {
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
+            mock(),
         )
         consumer.consume(message)
 
@@ -167,8 +170,8 @@ class ThirdPartyConsumerTest {
             metadataValueMap.capture(),
         )
 
-        assertEquals(2, metadataValueMap.firstValue.size)
-        assertEquals("80", metadataValueMap.firstValue["household_score"])
+        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals("{\"household_score\":\"80\"}", metadataValueMap.firstValue["metadata_info"])
     }
 
     @Test
@@ -193,6 +196,7 @@ class ThirdPartyConsumerTest {
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
+            mock(),
         )
         consumer.consume(message)
 
@@ -209,8 +213,8 @@ class ThirdPartyConsumerTest {
             metadataValueMap.capture(),
         )
 
-        assertEquals(2, metadataValueMap.firstValue.size)
-        assertEquals("80", metadataValueMap.firstValue["household_score"])
+        assertEquals(1, metadataValueMap.firstValue.size)
+        assertEquals("{\"household_score\":\"80\"}", metadataValueMap.firstValue["metadata_info"])
     }
 
     @Test
@@ -234,6 +238,7 @@ class ThirdPartyConsumerTest {
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
+            mock(),
         )
         consumer.consume(message)
 
@@ -272,13 +277,12 @@ class ThirdPartyConsumerTest {
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
+            mock(),
         ).writeDeviceMetadata(testMsg)
 
         val valueMap = argumentCaptor<Map<String, String>>()
         verify(redisMetadataScore.sync(), times(1)).hset(any(), valueMap.capture())
-        assertEquals(3, valueMap.firstValue.size)
-        assertEquals(testMsg.householdScore.toString(), valueMap.firstValue["household_score"])
-        assertEquals(testMsg.geoVersion, valueMap.firstValue["geo_version"])
+        assertEquals(1, valueMap.firstValue.size)
         assertEquals("{\"_hh_score\":\"55\",\"_geo_ver\":\"76543543543\",\"household_score\":\"33\",\"geo_version\":\"43543543543\"}", valueMap.firstValue["metadata_info"])
     }
 
@@ -305,6 +309,7 @@ class ThirdPartyConsumerTest {
             redisClientMembershipTpa,
             redisMetadataScore,
             redisConfig,
+            mock(),
         )
         consumer.consume(message)
 
@@ -325,9 +330,7 @@ class ThirdPartyConsumerTest {
         )
         assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
         assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
-        assertEquals(3, metadataValueMap.firstValue.size)
-        assertEquals("80", metadataValueMap.firstValue["household_score"])
-        assertEquals("55555", metadataValueMap.firstValue["geo_version"])
+        assertEquals(1, metadataValueMap.firstValue.size)
         assertEquals(
             "{\"_hh_score\":\"50\",\"_geo_ver\":\"77777\",\"household_score\":\"80\",\"geo_version\":\"55555\"}",
             metadataValueMap.firstValue["metadata_info"],
