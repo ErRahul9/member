@@ -32,7 +32,7 @@ class ImpressionConsumer(
     val context = newFixedThreadPoolContext(1, "write-impression-thread-pool")
     val lock = Semaphore(4000)
 
-    @KafkaListener(topics = ["vastimpression"], autoStartup = "\${membership.impressionConsumer:false}")
+    @KafkaListener(topics = ["vastimpression", "impression"], autoStartup = "\${membership.impressionConsumer:false}")
     @Throws(IOException::class)
     fun consume(message: String) {
         val impression = gson.fromJson(message, ImpressionMessage::class.java)
@@ -54,13 +54,22 @@ class ImpressionConsumer(
         val expirationWindow = System.currentTimeMillis() - appConfig.frequencyExpirationWindowMilliSeconds!!
 
         if (impression.remoteIp != null && impression.cid != null && impression.epoch != null &&
-            impression.tdImpressionId != null
+            impression.tdImpressionId != null && impression.cgid != null
         ) {
             impression.apply { impression.epoch /= 1000 } // Convert epoch micro to millis
             redisConnectionFrequencyCap.sync().evalsha<String>(
                 appConfig.frequencySha,
                 ScriptOutputType.VALUE,
-                arrayOf(impression.remoteIp + ":" + impression.cid.toString()),
+                arrayOf("${impression.remoteIp}:${impression.cid}_cid"),
+                impression.epoch.toString(),
+                expirationWindow.toString(),
+                appConfig.frequencyDeviceIDTTLSeconds.toString(),
+                impression.tdImpressionId.toString(),
+            )
+            redisConnectionFrequencyCap.sync().evalsha<String>(
+                appConfig.frequencySha,
+                ScriptOutputType.VALUE,
+                arrayOf("${impression.remoteIp}:${impression.cgid}_cgid"),
                 impression.epoch.toString(),
                 expirationWindow.toString(),
                 appConfig.frequencyDeviceIDTTLSeconds.toString(),
