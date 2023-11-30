@@ -53,8 +53,7 @@ class ImpressionConsumer(
 
         val expirationWindow = System.currentTimeMillis() - appConfig.frequencyExpirationWindowMilliSeconds!!
 
-        if (impression.remoteIp != null && impression.cid != null && impression.epoch != null &&
-            impression.tdImpressionId != null && impression.cgid != null
+        if (impression.remoteIp != null && impression.cid != null && impression.epoch != null && impression.tdImpressionId != null
         ) {
             impression.apply { impression.epoch /= 1000 } // Convert epoch micro to millis
             redisConnectionFrequencyCap.sync().evalsha<String>(
@@ -66,15 +65,17 @@ class ImpressionConsumer(
                 appConfig.frequencyDeviceIDTTLSeconds.toString(),
                 impression.tdImpressionId.toString(),
             )
-            redisConnectionFrequencyCap.sync().evalsha<String>(
-                appConfig.frequencySha,
-                ScriptOutputType.VALUE,
-                arrayOf("${impression.remoteIp}:${impression.cgid}_cgid"),
-                impression.epoch.toString(),
-                expirationWindow.toString(),
-                appConfig.frequencyDeviceIDTTLSeconds.toString(),
-                impression.tdImpressionId.toString(),
-            )
+            if (impression.cgid != null) {
+                redisConnectionFrequencyCap.sync().evalsha<String>(
+                    appConfig.frequencySha,
+                    ScriptOutputType.VALUE,
+                    arrayOf("${impression.remoteIp}:${impression.cgid}_cgid"),
+                    impression.epoch.toString(),
+                    expirationWindow.toString(),
+                    appConfig.frequencyDeviceIDTTLSeconds.toString(),
+                    impression.tdImpressionId.toString(),
+                )
+            }
         } else {
             log.info("impression message has null values impression object $impression")
         }

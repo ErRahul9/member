@@ -33,7 +33,10 @@ class ImpressionConsumerTest {
 
     @Test
     fun testConsume() {
-        val message = "{\"GUID\":\"1\", \"EPOCH\":\"1000000\", \"CID\":\"$CID\", \"AID\":\"1\", \"REMOTE_IP\":\"$REMOTE_IP\", \"TTD_IMPRESSION_ID\":\"1\", \"CGID\":\"$CGID\"}"
+        val remoteIP = "172.1.1"
+        val cid = 1
+        val cgid = 2
+        val message = "{\"GUID\":\"1\", \"EPOCH\":\"1000000\", \"CID\":\"$cid\", \"AID\":\"1\", \"REMOTE_IP\":\"$remoteIP\", \"TTD_IMPRESSION_ID\":\"1\", \"CGID\":\"$cgid\"}"
         appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
         appConfig.frequencyDeviceIDTTLSeconds = 604800
         appConfig.frequencyExpirationWindowMilliSeconds = 55444
@@ -46,7 +49,7 @@ class ImpressionConsumerTest {
         verify(frequencyCapSyncCommands).evalsha<String>(
             eq(appConfig.frequencySha),
             eq(ScriptOutputType.VALUE),
-            eq(arrayOf("$REMOTE_IP:${CID}_cid")),
+            eq(arrayOf("$remoteIP:${cid}_cid")),
             eq("1000"),
             any(),
             eq(appConfig.frequencyDeviceIDTTLSeconds.toString()),
@@ -55,16 +58,36 @@ class ImpressionConsumerTest {
         verify(frequencyCapSyncCommands).evalsha<String>(
             eq(appConfig.frequencySha),
             eq(ScriptOutputType.VALUE),
-            eq(arrayOf("$REMOTE_IP:${CGID}_cgid")),
+            eq(arrayOf("$remoteIP:${cgid}_cgid")),
             eq("1000"),
             any(),
             eq(appConfig.frequencyDeviceIDTTLSeconds.toString()),
             eq("1")
         )
     }
-    companion object {
-        private const val REMOTE_IP = "172.1.1"
-        private const val CID = 1
-        private const val CGID = 2
+
+    @Test
+    fun testConsumeWhenMissingCGID() {
+        val remoteIP = "172.1.1"
+        val cid = 1
+        val message = "{\"GUID\":\"1\", \"EPOCH\":\"1000000\", \"CID\":\"$cid\", \"AID\":\"1\", \"REMOTE_IP\":\"$remoteIP\", \"TTD_IMPRESSION_ID\":\"1\"}"
+        appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
+        appConfig.frequencyDeviceIDTTLSeconds = 604800
+        appConfig.frequencyExpirationWindowMilliSeconds = 55444
+
+        impressionConsumer.consume(message)
+
+        runBlocking {
+            delay(100)
+        }
+        verify(frequencyCapSyncCommands).evalsha<String>(
+            eq(appConfig.frequencySha),
+            eq(ScriptOutputType.VALUE),
+            eq(arrayOf("$remoteIP:${cid}_cid")),
+            eq("1000"),
+            any(),
+            eq(appConfig.frequencyDeviceIDTTLSeconds.toString()),
+            eq("1")
+        )
     }
 }
