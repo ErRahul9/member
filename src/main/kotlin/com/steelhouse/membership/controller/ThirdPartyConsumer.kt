@@ -78,7 +78,6 @@ class ThirdPartyConsumer(
 
         var metadata: MutableMap<String, String?> =
             if (!message.metadataInfo.isNullOrEmpty()) message.metadataInfo.toMutableMap() else mutableMapOf()
-        metadata.putIfAbsent("household_score", message.householdScore?.toString())
         metadata.putIfAbsent("geo_version", message.geoVersion)
 
         metadata = metadata.filterValues { it != null }.toMutableMap()
@@ -86,6 +85,15 @@ class ThirdPartyConsumer(
         val valuesToSet = mapOf(
             "metadata_info" to if (metadata.isNotEmpty()) Gson().toJson(metadata) else null,
         ).filterValues { it != null }
+
+        if (!message.cData.isNullOrEmpty()) {
+            message.cData.entries.forEach {
+                val campaignDataKey = "${message.ip}-${it.key}"
+                val scoreMap = it.value.map { it.key to it.value.toString() }.toMap()
+                redisConnectionDeviceInfo.sync().hset(campaignDataKey, scoreMap)
+                redisConnectionDeviceInfo.sync().expire(campaignDataKey, redisConfig.membershipTTL!!)
+            }
+        }
 
         if (valuesToSet.isNotEmpty()) {
             val ip = message.ip
