@@ -78,6 +78,7 @@ class ThirdPartyConsumer(
 
         var metadata: MutableMap<String, String?> =
             if (!message.metadataInfo.isNullOrEmpty()) message.metadataInfo.toMutableMap() else mutableMapOf()
+        metadata.putIfAbsent("household_score", message.householdScore?.toString())
         metadata.putIfAbsent("geo_version", message.geoVersion)
 
         metadata = metadata.filterValues { it != null }.toMutableMap()

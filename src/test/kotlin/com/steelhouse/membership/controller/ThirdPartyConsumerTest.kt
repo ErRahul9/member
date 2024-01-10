@@ -81,7 +81,7 @@ class ThirdPartyConsumerTest {
         val metadataValueMap = argumentCaptor<Map<String, String>>()
 
         verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
-        verify(redisMetadataScore.sync(), times(1)).hset(
+        verify(redisMetadataScore.sync(), times(2)).hset(
             hSetKeyScore.capture(),
             metadataValueMap.capture(),
         )
@@ -90,6 +90,7 @@ class ThirdPartyConsumerTest {
         assertEquals("154.130.20.55-34343", hSetKeyScore.firstValue)
         assertEquals(1, metadataValueMap.firstValue.size)
         assertEquals("60", metadataValueMap.firstValue["household_score"])
+        assertEquals("{\"household_score\":\"80\"}", metadataValueMap.secondValue["metadata_info"])
     }
 
     @Test
@@ -167,7 +168,7 @@ class ThirdPartyConsumerTest {
         val metadataValueMap = argumentCaptor<Map<String, String>>()
 
         verify(redisClientMembershipTpa.sync(), times(0)).sadd(any(), any())
-        verify(redisMetadataScore.sync(), times(1)).hset(
+        verify(redisMetadataScore.sync(), times(2)).hset(
             hSetKeyScore.capture(),
             metadataValueMap.capture(),
         )
@@ -175,6 +176,7 @@ class ThirdPartyConsumerTest {
         assertEquals("154.130.20.55-34343", hSetKeyScore.firstValue)
         assertEquals(1, metadataValueMap.firstValue.size)
         assertEquals("60", metadataValueMap.firstValue["household_score"])
+        assertEquals("{\"household_score\":\"80\"}", metadataValueMap.secondValue["metadata_info"])
     }
 
     @Test
@@ -212,7 +214,7 @@ class ThirdPartyConsumerTest {
         val metadataValueMap = argumentCaptor<Map<String, String>>()
 
         verify(redisClientMembershipTpa.sync(), times(0)).sadd(any(), any())
-        verify(redisMetadataScore.sync(), times(1)).hset(
+        verify(redisMetadataScore.sync(), times(2)).hset(
             hSetKeyScore.capture(),
             metadataValueMap.capture(),
         )
@@ -220,6 +222,7 @@ class ThirdPartyConsumerTest {
         assertEquals("154.130.20.55-34343", hSetKeyScore.firstValue)
         assertEquals(1, metadataValueMap.firstValue.size)
         assertEquals("60", metadataValueMap.firstValue["household_score"])
+        assertEquals("{\"household_score\":\"80\"}", metadataValueMap.secondValue["metadata_info"])
     }
 
     @Test
@@ -299,7 +302,7 @@ class ThirdPartyConsumerTest {
         assertEquals("55", valueMap.firstValue["household_score"])
 
         assertEquals(1, valueMap.secondValue.size)
-        assertEquals("{\"_hh_score\":\"55\",\"_geo_ver\":\"76543543543\",\"geo_version\":\"43543543543\"}", valueMap.secondValue["metadata_info"])
+        assertEquals("{\"_hh_score\":\"55\",\"_geo_ver\":\"76543543543\",\"household_score\":\"33\",\"geo_version\":\"43543543543\"}", valueMap.secondValue["metadata_info"])
         assertEquals("154.130.20.55", key.secondValue)
 
     }
@@ -352,7 +355,7 @@ class ThirdPartyConsumerTest {
         assertEquals("154.130.20.55", hSetKeyScore.secondValue)
         assertEquals(1, metadataValueMap.secondValue.size)
         assertEquals(
-            "{\"_hh_score\":\"50\",\"_geo_ver\":\"77777\",\"geo_version\":\"55555\"}",
+            "{\"_hh_score\":\"50\",\"_geo_ver\":\"77777\",\"household_score\":\"80\",\"geo_version\":\"55555\"}",
             metadataValueMap.secondValue["metadata_info"],
         )
 
