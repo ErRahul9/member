@@ -52,15 +52,21 @@ class ImpressionConsumer(
         val stopwatch = Stopwatch.createStarted()
 
         val expirationWindow = System.currentTimeMillis() - appConfig.frequencyExpirationWindowMilliSeconds!!
+        val auctionEpoch = try {
+            impression.tdImpressionId?.split(".")?.get(0)?.toLong()
+        } catch (e: Exception) {
+            log.error("Failed to get auction epoch from ${impression.tdImpressionId}", e)
+            null
+        }
 
-        if (impression.remoteIp != null && impression.cid != null && impression.epoch != null && impression.tdImpressionId != null
+        if (impression.remoteIp.isNotEmpty() && impression.cid != null && auctionEpoch != null && !impression.tdImpressionId.isNullOrEmpty()
         ) {
-            impression.apply { impression.epoch /= 1000 } // Convert epoch micro to millis
+            val auctionEpochMillis = auctionEpoch / 1000 // convert micro epoch to millis
             redisConnectionFrequencyCap.sync().evalsha<String>(
                 appConfig.frequencySha,
                 ScriptOutputType.VALUE,
                 arrayOf("${impression.remoteIp}:${impression.cid}_cid"),
-                impression.epoch.toString(),
+                auctionEpochMillis.toString(),
                 expirationWindow.toString(),
                 appConfig.frequencyDeviceIDTTLSeconds.toString(),
                 impression.tdImpressionId.toString(),
@@ -70,7 +76,7 @@ class ImpressionConsumer(
                     appConfig.frequencySha,
                     ScriptOutputType.VALUE,
                     arrayOf("${impression.remoteIp}:${impression.cgid}_cgid"),
-                    impression.epoch.toString(),
+                    auctionEpochMillis.toString(),
                     expirationWindow.toString(),
                     appConfig.frequencyDeviceIDTTLSeconds.toString(),
                     impression.tdImpressionId.toString(),
