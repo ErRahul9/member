@@ -21,7 +21,7 @@ data class MembershipUpdateMessage(
 data class ImpressionMessage(
     @SerializedName("GUID") val guid: String,
     @SerializedName("EPOCH") var epoch: Long,
-    @SerializedName("CID") val cid: Long,
+    @SerializedName("CID") val cid: Long?,
     @SerializedName("AID") val aid: Long,
     @SerializedName("REMOTE_IP") val remoteIp: String,
     @SerializedName("TTD_IMPRESSION_ID") val tdImpressionId: String?,

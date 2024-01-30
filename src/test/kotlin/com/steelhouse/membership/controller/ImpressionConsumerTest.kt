@@ -98,6 +98,33 @@ class ImpressionConsumerTest {
     }
 
     @Test
+    fun testConsumeWhenMissingCID() {
+        val remoteIP = "172.1.1"
+        val cid = 1
+        val ttdImpressionId = "1706220285992216.59847714.9356.steelhouse"
+        val message = "{\"GUID\":\"1\", \"EPOCH\":\"1000000\", \"AID\":\"1\", \"REMOTE_IP\":\"$remoteIP\"" +
+                ", \"TTD_IMPRESSION_ID\":\"$ttdImpressionId\"}"
+        appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
+        appConfig.frequencyDeviceIDTTLSeconds = 604800
+        appConfig.frequencyExpirationWindowMilliSeconds = 55444
+
+        impressionConsumer.consume(message)
+
+        runBlocking {
+            delay(100)
+        }
+        verify(frequencyCapSyncCommands, never()).evalsha<String>(
+            any(),
+            any(),
+            anyArray(),
+            any(),
+            any(),
+            any(),
+            any()
+        )
+    }
+
+    @Test
     fun testConsumeWithInvalidTtdImpressionId() {
         val remoteIP = "172.1.1"
         val cid = 1
