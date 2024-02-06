@@ -32,7 +32,7 @@ class ImpressionConsumer(
     val context = newFixedThreadPoolContext(1, "write-impression-thread-pool")
     val lock = Semaphore(4000)
 
-    @KafkaListener(topics = ["vastimpression", "impression"], autoStartup = "\${membership.impressionConsumer:false}")
+    @KafkaListener(topics = ["beeswax-spend-logs-prod"], autoStartup = "\${membership.impressionConsumer:false}")
     @Throws(IOException::class)
     fun consume(message: String) {
         val impression = gson.fromJson(message, ImpressionMessage::class.java)
@@ -52,34 +52,32 @@ class ImpressionConsumer(
         val stopwatch = Stopwatch.createStarted()
 
         val expirationWindow = System.currentTimeMillis() - appConfig.frequencyExpirationWindowMilliSeconds!!
-        val auctionEpoch = try {
-            impression.tdImpressionId?.split(".")?.get(0)?.toLong()
-        } catch (e: Exception) {
-            log.error("Failed to get auction epoch from ${impression.tdImpressionId}", e)
-            null
-        }
 
-        if (impression.remoteIp.isNotEmpty() && impression.cid != null && auctionEpoch != null && !impression.tdImpressionId.isNullOrEmpty()
-        ) {
-            val auctionEpochMillis = auctionEpoch / 1000 // convert micro epoch to millis
-            redisConnectionFrequencyCap.sync().evalsha<String>(
-                appConfig.frequencySha,
-                ScriptOutputType.VALUE,
-                arrayOf("${impression.remoteIp}:${impression.cid}_cid"),
-                auctionEpochMillis.toString(),
-                expirationWindow.toString(),
-                appConfig.frequencyDeviceIDTTLSeconds.toString(),
-                impression.tdImpressionId.toString(),
-            )
-            if (impression.cgid != null) {
+        val campaignId = impression.agentParams.campaignId
+        val campaignGroupId = impression.agentParams.campaignGroupId
+
+        if (!impression.deviceIp.isNullOrEmpty() && !impression.impressionId.isNullOrEmpty() && impression.impressionTime != null) {
+            val epoch = impression.impressionTime / 1000 // convert micro epoch to millis
+            if (campaignId != null) {
                 redisConnectionFrequencyCap.sync().evalsha<String>(
                     appConfig.frequencySha,
                     ScriptOutputType.VALUE,
-                    arrayOf("${impression.remoteIp}:${impression.cgid}_cgid"),
-                    auctionEpochMillis.toString(),
+                    arrayOf("${impression.deviceIp}:${campaignId}_cid"),
+                    epoch.toString(),
                     expirationWindow.toString(),
                     appConfig.frequencyDeviceIDTTLSeconds.toString(),
-                    impression.tdImpressionId.toString(),
+                    impression.impressionId.toString(),
+                )
+            }
+            if (campaignGroupId != null) {
+                redisConnectionFrequencyCap.sync().evalsha<String>(
+                    appConfig.frequencySha,
+                    ScriptOutputType.VALUE,
+                    arrayOf("${impression.deviceIp}:${campaignGroupId}_cgid"),
+                    epoch.toString(),
+                    expirationWindow.toString(),
+                    appConfig.frequencyDeviceIDTTLSeconds.toString(),
+                    impression.impressionId.toString(),
                 )
             }
         } else {
