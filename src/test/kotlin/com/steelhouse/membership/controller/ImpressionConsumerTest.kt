@@ -38,9 +38,11 @@ class ImpressionConsumerTest {
         val remoteIP = "172.1.1"
         val cid = 1
         val cgid = 2
-        val ttdImpressionId = "1706220285992216.59847714.9356.steelhouse"
-        val message = "{\"GUID\":\"1\", \"EPOCH\":\"1000000\", \"CID\":\"$cid\", \"AID\":\"1\", \"REMOTE_IP\":\"$remoteIP\"" +
-                ", \"TTD_IMPRESSION_ID\":\"$ttdImpressionId\", \"CGID\":\"$cgid\"}"
+        val impressionTime = 1707255347727544
+        val impressionId = "1706220285992216.59847714.9356.steelhouse"
+        val message = "{\"DW_AgentParams\":{\"_geo_ver\":\"1640995200\",\"_hh_score\":\"9\",\"household_score\":\"9\",\"geo_version\":\"1640995200\"" +
+                ",\"device_type_group\":\"CONNECTED_TV\",\"campaign_id\":\"$cid\",\"campaign_group_id\":\"$cgid\"}," +
+                "\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
         appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
         appConfig.frequencyDeviceIDTTLSeconds = 604800
         appConfig.frequencyExpirationWindowMilliSeconds = 55444
@@ -54,19 +56,19 @@ class ImpressionConsumerTest {
             eq(appConfig.frequencySha),
             eq(ScriptOutputType.VALUE),
             eq(arrayOf("$remoteIP:${cid}_cid")),
-            eq("1706220285992"),
+            eq((impressionTime/1000).toString()),
             any(),
             eq(appConfig.frequencyDeviceIDTTLSeconds.toString()),
-            eq(ttdImpressionId)
+            eq(impressionId)
         )
         verify(frequencyCapSyncCommands).evalsha<String>(
             eq(appConfig.frequencySha),
             eq(ScriptOutputType.VALUE),
             eq(arrayOf("$remoteIP:${cgid}_cgid")),
-            eq("1706220285992"),
+            eq((impressionTime/1000).toString()),
             any(),
             eq(appConfig.frequencyDeviceIDTTLSeconds.toString()),
-            eq(ttdImpressionId)
+            eq(impressionId)
         )
     }
 
@@ -74,9 +76,12 @@ class ImpressionConsumerTest {
     fun testConsumeWhenMissingCGID() {
         val remoteIP = "172.1.1"
         val cid = 1
-        val ttdImpressionId = "1706220285992216.59847714.9356.steelhouse"
-        val message = "{\"GUID\":\"1\", \"EPOCH\":\"1000000\", \"CID\":\"$cid\", \"AID\":\"1\", \"REMOTE_IP\":\"$remoteIP\"" +
-                ", \"TTD_IMPRESSION_ID\":\"$ttdImpressionId\"}"
+        val impressionId = "1706220285992216.59847714.9356.steelhouse"
+        val impressionTime = 1707255347727544
+        val expectedEpoch = "1707255347727"
+        val message = "{\"DW_AgentParams\":{\"_geo_ver\":\"1640995200\",\"_hh_score\":\"9\",\"household_score\":\"9\",\"geo_version\":\"1640995200\"" +
+                ",\"device_type_group\":\"CONNECTED_TV\",\"campaign_id\":\"$cid\"}," +
+                "\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
         appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
         appConfig.frequencyDeviceIDTTLSeconds = 604800
         appConfig.frequencyExpirationWindowMilliSeconds = 55444
@@ -90,20 +95,53 @@ class ImpressionConsumerTest {
             eq(appConfig.frequencySha),
             eq(ScriptOutputType.VALUE),
             eq(arrayOf("$remoteIP:${cid}_cid")),
-            eq("1706220285992"),
+            eq(expectedEpoch),
             any(),
             eq(appConfig.frequencyDeviceIDTTLSeconds.toString()),
-            eq(ttdImpressionId)
+            eq(impressionId)
         )
     }
 
     @Test
     fun testConsumeWhenMissingCID() {
         val remoteIP = "172.1.1"
-        val cid = 1
-        val ttdImpressionId = "1706220285992216.59847714.9356.steelhouse"
-        val message = "{\"GUID\":\"1\", \"EPOCH\":\"1000000\", \"AID\":\"1\", \"REMOTE_IP\":\"$remoteIP\"" +
-                ", \"TTD_IMPRESSION_ID\":\"$ttdImpressionId\"}"
+        val cgid = 99
+        val impressionId = "1706220285992216.59847714.9356.steelhouse"
+        val impressionTime = 1707255347727544
+        val expectedEpoch = "1707255347727"
+        val message = "{\"DW_AgentParams\":{\"_geo_ver\":\"1640995200\",\"_hh_score\":\"9\",\"household_score\":\"9\",\"geo_version\":\"1640995200\"" +
+                ",\"device_type_group\":\"CONNECTED_TV\",\"campaign_group_id\":\"$cgid\"}," +
+                "\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
+        appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
+        appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
+        appConfig.frequencyDeviceIDTTLSeconds = 604800
+        appConfig.frequencyExpirationWindowMilliSeconds = 55444
+
+        impressionConsumer.consume(message)
+
+        runBlocking {
+            delay(100)
+        }
+        verify(frequencyCapSyncCommands).evalsha<String>(
+            eq(appConfig.frequencySha),
+            eq(ScriptOutputType.VALUE),
+            eq(arrayOf("$remoteIP:${cgid}_cgid")),
+            eq(expectedEpoch),
+            any(),
+            eq(appConfig.frequencyDeviceIDTTLSeconds.toString()),
+            eq(impressionId)
+        )
+    }
+
+    @Test
+    fun testConsumeWhenMissingCIDAndCGID() {
+        val remoteIP = "172.1.1"
+        val impressionId = "1706220285992216.59847714.9356.steelhouse"
+        val impressionTime = 1707255347727544
+        val message = "{\"DW_AgentParams\":{\"_geo_ver\":\"1640995200\",\"_hh_score\":\"9\",\"household_score\":\"9\",\"geo_version\":\"1640995200\"" +
+                ",\"device_type_group\":\"CONNECTED_TV\"}," +
+                "\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
+        appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
         appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
         appConfig.frequencyDeviceIDTTLSeconds = 604800
         appConfig.frequencyExpirationWindowMilliSeconds = 55444
@@ -125,12 +163,11 @@ class ImpressionConsumerTest {
     }
 
     @Test
-    fun testConsumeWithInvalidTtdImpressionId() {
+    fun testConsumeWhenMissingAgentParams() {
         val remoteIP = "172.1.1"
-        val cid = 1
-        val ttdImpressionId = "a.59847714.9356.steelhouse"
-        val message = "{\"GUID\":\"1\", \"EPOCH\":\"1000000\", \"CID\":\"$cid\", \"AID\":\"1\", \"REMOTE_IP\":\"$remoteIP\"" +
-                ", \"TTD_IMPRESSION_ID\":\"$ttdImpressionId\"}"
+        val impressionId = "1706220285992216.59847714.9356.steelhouse"
+        val impressionTime = 1707255347727544
+        val message = "{\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
         appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
         appConfig.frequencyDeviceIDTTLSeconds = 604800
         appConfig.frequencyExpirationWindowMilliSeconds = 55444
