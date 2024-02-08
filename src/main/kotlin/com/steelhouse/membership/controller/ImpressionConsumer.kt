@@ -35,7 +35,12 @@ class ImpressionConsumer(
     @KafkaListener(topics = ["beeswax-spend-logs-prod"], autoStartup = "\${membership.impressionConsumer:false}")
     @Throws(IOException::class)
     fun consume(message: String) {
-        val impression = gson.fromJson(message, ImpressionMessage::class.java)
+        val impression = try {
+            gson.fromJson(message, ImpressionMessage::class.java)
+        } catch (_: Exception) {
+            log.error("failed to convert json massage $message")
+            ImpressionMessage(null, null, null, null)
+        }
 
         lock.acquire()
 
@@ -53,8 +58,8 @@ class ImpressionConsumer(
 
         val expirationWindow = System.currentTimeMillis() - appConfig.frequencyExpirationWindowMilliSeconds!!
 
-        val campaignId = impression.agentParams.campaignId
-        val campaignGroupId = impression.agentParams.campaignGroupId
+        val campaignId = impression.agentParams?.campaignId
+        val campaignGroupId = impression.agentParams?.campaignGroupId
 
         if (!impression.deviceIp.isNullOrEmpty() && !impression.impressionId.isNullOrEmpty() && impression.impressionTime != null) {
             val epoch = impression.impressionTime / 1000 // convert micro epoch to millis

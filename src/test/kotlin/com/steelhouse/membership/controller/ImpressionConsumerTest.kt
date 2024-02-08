@@ -161,4 +161,30 @@ class ImpressionConsumerTest {
             any()
         )
     }
+
+    @Test
+    fun testConsumeWhenMissingAgentParams() {
+        val remoteIP = "172.1.1"
+        val impressionId = "1706220285992216.59847714.9356.steelhouse"
+        val impressionTime = 1707255347727544
+        val message = "{\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
+        appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
+        appConfig.frequencyDeviceIDTTLSeconds = 604800
+        appConfig.frequencyExpirationWindowMilliSeconds = 55444
+
+        impressionConsumer.consume(message)
+
+        runBlocking {
+            delay(100)
+        }
+        verify(frequencyCapSyncCommands, never()).evalsha<String>(
+            any(),
+            any(),
+            anyArray(),
+            any(),
+            any(),
+            any(),
+            any()
+        )
+    }
 }
