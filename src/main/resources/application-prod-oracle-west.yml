@@ -19,7 +19,7 @@ redis:
   membershipTTL: 5184000
   deviceInfoConnection: redis://rtb-prod-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   recencyConnection: redis://core-prod-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  frequencyCapConnection: redis://core-prod-frequency-caps.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  frequencyCapConnection: redis://rtb-prod-bidder-frequency-caps.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   partnerTTL: 15552000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
