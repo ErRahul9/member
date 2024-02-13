@@ -40,7 +40,8 @@ class ImpressionConsumer(
             gson.fromJson(message, ImpressionMessage::class.java)
         } catch (_: Exception) {
             log.warn("failed to convert json message $message")
-            ImpressionMessage(null, null, null, null)
+            meterRegistry.counter("frequency.message.error").increment()
+            return
         }
 
         lock.acquire()
