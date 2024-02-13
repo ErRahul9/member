@@ -19,7 +19,7 @@ data class MembershipUpdateMessage(
 )
 
 data class ImpressionMessage(
-    @SerializedName("DW_AgentParams") val agentParams: AgentParams?,
+    @SerializedName("DW_AgentParams") val agentParams: String?,
     @SerializedName("DW_ImpressionTime") val impressionTime: Long?,
     @SerializedName("DW_ImpressionAuctionId") var impressionId: String?,
     @SerializedName("DW_BidRequestDeviceIp") var deviceIp: String?,
