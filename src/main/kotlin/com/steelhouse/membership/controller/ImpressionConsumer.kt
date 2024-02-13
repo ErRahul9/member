@@ -3,6 +3,7 @@ package com.steelhouse.membership.controller
 import com.google.common.base.Stopwatch
 import com.google.gson.GsonBuilder
 import com.steelhouse.membership.configuration.AppConfig
+import com.steelhouse.membership.model.AgentParams
 import com.steelhouse.membership.model.ImpressionMessage
 import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
@@ -38,7 +39,7 @@ class ImpressionConsumer(
         val impression = try {
             gson.fromJson(message, ImpressionMessage::class.java)
         } catch (_: Exception) {
-            log.error("failed to convert json massage $message")
+            log.warn("failed to convert json message $message")
             ImpressionMessage(null, null, null, null)
         }
 
@@ -58,8 +59,9 @@ class ImpressionConsumer(
 
         val expirationWindow = System.currentTimeMillis() - appConfig.frequencyExpirationWindowMilliSeconds!!
 
-        val campaignId = impression.agentParams?.campaignId
-        val campaignGroupId = impression.agentParams?.campaignGroupId
+        val agentParams = gson.fromJson(impression.agentParams, AgentParams::class.java)
+        val campaignId = agentParams?.campaignId
+        val campaignGroupId = agentParams?.campaignGroupId
 
         if (!impression.deviceIp.isNullOrEmpty() && !impression.impressionId.isNullOrEmpty() && impression.impressionTime != null) {
             val epoch = impression.impressionTime / 1000 // convert micro epoch to millis

@@ -1,5 +1,7 @@
 package com.steelhouse.membership.model
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
 
 data class MembershipUpdateMessage(
@@ -19,7 +21,7 @@ data class MembershipUpdateMessage(
 )
 
 data class ImpressionMessage(
-    @SerializedName("DW_AgentParams") val agentParams: AgentParams?,
+    @SerializedName("DW_AgentParams") val agentParams: String?,
     @SerializedName("DW_ImpressionTime") val impressionTime: Long?,
     @SerializedName("DW_ImpressionAuctionId") var impressionId: String?,
     @SerializedName("DW_BidRequestDeviceIp") var deviceIp: String?,
