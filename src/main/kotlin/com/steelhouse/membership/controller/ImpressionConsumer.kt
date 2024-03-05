@@ -3,6 +3,7 @@ package com.steelhouse.membership.controller
 import com.google.common.base.Stopwatch
 import com.google.gson.GsonBuilder
 import com.steelhouse.membership.configuration.AppConfig
+import com.steelhouse.membership.model.AgentParams
 import com.steelhouse.membership.model.ImpressionMessage
 import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
@@ -32,10 +33,16 @@ class ImpressionConsumer(
     val context = newFixedThreadPoolContext(1, "write-impression-thread-pool")
     val lock = Semaphore(4000)
 
-    @KafkaListener(topics = ["vastimpression"], autoStartup = "\${membership.impressionConsumer:false}")
+    @KafkaListener(topics = ["beeswax-spend-logs-prod"], autoStartup = "\${membership.impressionConsumer:false}")
     @Throws(IOException::class)
     fun consume(message: String) {
-        val impression = gson.fromJson(message, ImpressionMessage::class.java)
+        val impression = try {
+            gson.fromJson(message, ImpressionMessage::class.java)
+        } catch (_: Exception) {
+            log.warn("failed to convert json message $message")
+            meterRegistry.counter("frequency.message.error").increment()
+            return
+        }
 
         lock.acquire()
 
@@ -53,19 +60,34 @@ class ImpressionConsumer(
 
         val expirationWindow = System.currentTimeMillis() - appConfig.frequencyExpirationWindowMilliSeconds!!
 
-        if (impression.remoteIp != null && impression.cid != null && impression.epoch != null &&
-            impression.tdImpressionId != null
-        ) {
-            impression.apply { impression.epoch /= 1000 } // Convert epoch micro to millis
-            redisConnectionFrequencyCap.sync().evalsha<String>(
-                appConfig.frequencySha,
-                ScriptOutputType.VALUE,
-                arrayOf(impression.remoteIp + ":" + impression.cid.toString()),
-                impression.epoch.toString(),
-                expirationWindow.toString(),
-                appConfig.frequencyDeviceIDTTLSeconds.toString(),
-                impression.tdImpressionId.toString(),
-            )
+        val agentParams = gson.fromJson(impression.agentParams, AgentParams::class.java)
+        val campaignId = agentParams?.campaignId
+        val campaignGroupId = agentParams?.campaignGroupId
+
+        if (!impression.deviceIp.isNullOrEmpty() && !impression.impressionId.isNullOrEmpty() && impression.impressionTime != null) {
+            val epoch = impression.impressionTime / 1000 // convert micro epoch to millis
+            if (campaignId != null) {
+                redisConnectionFrequencyCap.sync().evalsha<String>(
+                    appConfig.frequencySha,
+                    ScriptOutputType.VALUE,
+                    arrayOf("${impression.deviceIp}:${campaignId}_cid"),
+                    epoch.toString(),
+                    expirationWindow.toString(),
+                    appConfig.frequencyDeviceIDTTLSeconds.toString(),
+                    impression.impressionId.toString(),
+                )
+            }
+            if (campaignGroupId != null) {
+                redisConnectionFrequencyCap.sync().evalsha<String>(
+                    appConfig.frequencySha,
+                    ScriptOutputType.VALUE,
+                    arrayOf("${impression.deviceIp}:${campaignGroupId}_cgid"),
+                    epoch.toString(),
+                    expirationWindow.toString(),
+                    appConfig.frequencyDeviceIDTTLSeconds.toString(),
+                    impression.impressionId.toString(),
+                )
+            }
         } else {
             log.info("impression message has null values impression object $impression")
         }

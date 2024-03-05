@@ -15,15 +15,19 @@ data class MembershipUpdateMessage(
     val geoVersion: String?,
     val isDelta: Boolean?,
     val metadataInfo: Map<String, String>? = emptyMap(),
+    val cData: Map<String, Map<String, Int>>? = emptyMap(),
 )
 
 data class ImpressionMessage(
-    @SerializedName("GUID") val guid: String,
-    @SerializedName("EPOCH") var epoch: Long,
-    @SerializedName("CID") val cid: Long,
-    @SerializedName("AID") val aid: Long,
-    @SerializedName("REMOTE_IP") val remoteIp: String,
-    @SerializedName("TTD_IMPRESSION_ID") val tdImpressionId: String?,
+    @SerializedName("DW_AgentParams") val agentParams: String?,
+    @SerializedName("DW_ImpressionTime") val impressionTime: Long?,
+    @SerializedName("DW_ImpressionAuctionId") var impressionId: String?,
+    @SerializedName("DW_BidRequestDeviceIp") var deviceIp: String?,
+)
+
+data class AgentParams(
+    @SerializedName("campaign_id") val campaignId: Long?,
+    @SerializedName("campaign_group_id") val campaignGroupId: Long?,
 )
 
 data class RecencyMessage(val ip: String, val advertiserID: Int?, val epoch: Long?)

@@ -4,6 +4,7 @@ import com.google.common.base.Stopwatch
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonSyntaxException
 import com.steelhouse.membership.configuration.RedisConfig
 import com.steelhouse.membership.model.MembershipUpdateMessage
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
@@ -12,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import org.apache.commons.logging.Log
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
@@ -25,6 +27,7 @@ class ThirdPartyConsumer(
     @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
     @Qualifier("redisConnectionDeviceInfo") private val redisConnectionDeviceInfo: StatefulRedisClusterConnection<String, String>,
     private val redisConfig: RedisConfig,
+    @Qualifier("app") private val log: Log,
 ) : BaseConsumer(
     meterRegistry = meterRegistry,
     redisConnectionMembershipTpa = redisConnectionMembershipTpa,
@@ -38,13 +41,11 @@ class ThirdPartyConsumer(
     @KafkaListener(topics = ["sh-dw-generated-audiences"], autoStartup = "\${membership.oracleConsumer:false}")
     @Throws(IOException::class)
     override fun consume(message: String) {
-        val oracleMembership = gson.fromJson(message, MembershipUpdateMessage::class.java)
-        val results = mutableListOf<Deferred<Any>>()
-
         lock.acquire()
-
         CoroutineScope(context).launch {
             try {
+                val oracleMembership = gson.fromJson(message, MembershipUpdateMessage::class.java)
+                val results = mutableListOf<Deferred<Any>>()
                 if (oracleMembership.currentSegments != null) {
                     if (oracleMembership.dataSource in tpaCacheSources) {
                         val overwrite = !(oracleMembership?.isDelta ?: true)
@@ -64,7 +65,9 @@ class ThirdPartyConsumer(
                 }
 
                 results.forEach { it.await() }
-            } finally {
+            } catch (ex: JsonSyntaxException){
+                meterRegistry.counter("invalid.audience.records").increment()
+            }finally {
                 lock.release()
             }
         }
@@ -75,15 +78,23 @@ class ThirdPartyConsumer(
 
         var metadata: MutableMap<String, String?> =
             if (!message.metadataInfo.isNullOrEmpty()) message.metadataInfo.toMutableMap() else mutableMapOf()
-        metadata["household_score"] = message.householdScore?.toString()
-        metadata["geo_version"] = message.geoVersion
+        metadata.putIfAbsent("household_score", message.householdScore?.toString())
+        metadata.putIfAbsent("geo_version", message.geoVersion)
+
         metadata = metadata.filterValues { it != null }.toMutableMap()
 
         val valuesToSet = mapOf(
-            "household_score" to message.householdScore?.toString(),
-            "geo_version" to message.geoVersion,
             "metadata_info" to if (metadata.isNotEmpty()) Gson().toJson(metadata) else null,
         ).filterValues { it != null }
+
+        if (!message.cData.isNullOrEmpty()) {
+            message.cData.entries.forEach {
+                val campaignDataKey = "${message.ip}-${it.key}"
+                val scoreMap = it.value.map { it.key to it.value.toString() }.toMap()
+                redisConnectionDeviceInfo.sync().hset(campaignDataKey, scoreMap)
+                redisConnectionDeviceInfo.sync().expire(campaignDataKey, redisConfig.membershipTTL!!)
+            }
+        }
 
         if (valuesToSet.isNotEmpty()) {
             val ip = message.ip
