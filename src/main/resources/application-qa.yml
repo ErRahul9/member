@@ -37,6 +37,6 @@ app:
   recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
   recencyDeviceIDTTLSeconds: 604800
   recencyExpirationWindowMilliSeconds: 60480000
-  frequencySha: ebdab639a5a6a3e9781cb71fedf413cb9485adc5
+  frequencySha: 22242d94dc42e02a0fb3c21bfaa0d77f3237d869
   frequencyDeviceIDTTLSeconds: 3600000
   frequencyExpirationWindowMilliSeconds: 864000000
