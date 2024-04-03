@@ -71,58 +71,26 @@ class ImpressionConsumer(
             val epoch = impression.impressionTime / 1000 // convert micro epoch to millis
             if (campaignId != null) {
                 try {
-                    redisConnectionFrequencyCap.sync().evalsha<String>(
-                        appConfig.frequencySha,
-                        ScriptOutputType.VALUE,
-                        arrayOf("${impression.deviceIp}:${campaignId}_cid"),
-                        epoch.toString(),
-                        expirationWindow.toString(),
-                        appConfig.frequencyDeviceIDTTLSeconds.toString(),
-                        impression.impressionId.toString(),
-                    )
+                    writeCidToFrequencyRedis(impression, campaignId, epoch, expirationWindow)
                 } catch (e: RedisNoScriptException) {
                     // Reload the script and save sha if the script is not in the cache
                     val script = File("./frequency.lua").readText(StandardCharsets.UTF_8)
                     val newSha = redisConnectionFrequencyCap.sync().scriptLoad(script)
-                    // sha should be consistent for same script, here to store sha in appConfig until next restart
+                    // sha should be same if script stays same, here to store sha in appConfig until next restart
                     appConfig.frequencySha = newSha
-                    redisConnectionFrequencyCap.sync().evalsha<String>(
-                        newSha,
-                        ScriptOutputType.VALUE,
-                        arrayOf("${impression.deviceIp}:${campaignId}_cid"),
-                        epoch.toString(),
-                        expirationWindow.toString(),
-                        appConfig.frequencyDeviceIDTTLSeconds.toString(),
-                        impression.impressionId.toString(),
-                    )
+                    writeCidToFrequencyRedis(impression, campaignId, epoch, expirationWindow)
                 }
             }
             if (campaignGroupId != null) {
                 try {
-                    redisConnectionFrequencyCap.sync().evalsha<String>(
-                        appConfig.frequencySha,
-                        ScriptOutputType.VALUE,
-                        arrayOf("${impression.deviceIp}:${campaignGroupId}_cgid"),
-                        epoch.toString(),
-                        expirationWindow.toString(),
-                        appConfig.frequencyDeviceIDTTLSeconds.toString(),
-                        impression.impressionId.toString(),
-                    )
+                    writeCGidToFrequencyRedis(impression, campaignGroupId, epoch, expirationWindow)
                 } catch (e: RedisNoScriptException) {
                     // Reload the script and save sha if the script is not in the cache
                     val script = File("./frequency.lua").readText(StandardCharsets.UTF_8)
                     val newSha = redisConnectionFrequencyCap.sync().scriptLoad(script)
-                    // sha should be consistent for same script, here to store sha in appConfig until next restart
+                    // sha should be same if script stays same, here to store sha in appConfig until next restart
                     appConfig.frequencySha = newSha
-                    redisConnectionFrequencyCap.sync().evalsha<String>(
-                        newSha,
-                        ScriptOutputType.VALUE,
-                        arrayOf("${impression.deviceIp}:${campaignGroupId}_cgid"),
-                        epoch.toString(),
-                        expirationWindow.toString(),
-                        appConfig.frequencyDeviceIDTTLSeconds.toString(),
-                        impression.impressionId.toString(),
-                    )
+                    writeCGidToFrequencyRedis(impression, campaignGroupId, epoch, expirationWindow)
                 }
             }
         } else {
@@ -131,5 +99,39 @@ class ImpressionConsumer(
 
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
         meterRegistry.timer("write.frequency.latency").record(Duration.ofMillis(responseTime))
+    }
+
+    private fun writeCidToFrequencyRedis(
+        impression: ImpressionMessage,
+        campaignId: Long,
+        epoch: Long,
+        expirationWindow: Long
+    ) {
+        redisConnectionFrequencyCap.sync().evalsha<String>(
+            appConfig.frequencySha,
+            ScriptOutputType.VALUE,
+            arrayOf("${impression.deviceIp}:${campaignId}_cid"),
+            epoch.toString(),
+            expirationWindow.toString(),
+            appConfig.frequencyDeviceIDTTLSeconds.toString(),
+            impression.impressionId.toString(),
+        )
+    }
+
+    private fun writeCGidToFrequencyRedis(
+        impression: ImpressionMessage,
+        campaignGroupId: Long,
+        epoch: Long,
+        expirationWindow: Long
+    ) {
+        redisConnectionFrequencyCap.sync().evalsha<String>(
+            appConfig.frequencySha,
+            ScriptOutputType.VALUE,
+            arrayOf("${impression.deviceIp}:${campaignGroupId}_cgid"),
+            epoch.toString(),
+            expirationWindow.toString(),
+            appConfig.frequencyDeviceIDTTLSeconds.toString(),
+            impression.impressionId.toString(),
+        )
     }
 }

@@ -80,30 +80,14 @@ class RecencyConsumer(
         val expirationWindow = util.getEpochInMillis() - appConfig.recencyExpirationWindowMilliSeconds!!
 
         try {
-            redisConnectionRecency.sync().evalsha<String>(
-                appConfig.recencySha,
-                ScriptOutputType.VALUE,
-                arrayOf(deviceID),
-                advertiserID,
-                recencyEpoch,
-                expirationWindow.toString(),
-                appConfig.recencyDeviceIDTTLSeconds.toString(),
-            )
+            writeToRecencyRedis(deviceID, advertiserID, recencyEpoch, expirationWindow)
         } catch (e: RedisNoScriptException) {
             // Reload the script and save sha if the script is not in the cache
             val script = File("./recency.lua").readText(StandardCharsets.UTF_8)
             val newSha = redisConnectionRecency.sync().scriptLoad(script)
-            // sha should be consistent for same script, here to store sha in appConfig until next restart
+            // sha should be same if script stays same, here to store sha in appConfig until next restart
             appConfig.recencySha = newSha
-            redisConnectionRecency.sync().evalsha<String>(
-                newSha,
-                ScriptOutputType.VALUE,
-                arrayOf(deviceID),
-                advertiserID,
-                recencyEpoch,
-                expirationWindow.toString(),
-                appConfig.recencyDeviceIDTTLSeconds.toString(),
-            )
+            writeToRecencyRedis(deviceID, advertiserID, recencyEpoch, expirationWindow)
         }
 
 
@@ -139,5 +123,22 @@ class RecencyConsumer(
         }
 
         return RecencyMessage(ip = ip.toString(), advertiserID = advertiserId, epoch = epoch)
+    }
+
+    private fun writeToRecencyRedis(
+        deviceID: String,
+        advertiserID: String,
+        recencyEpoch: String,
+        expirationWindow: Long
+    ) {
+        redisConnectionRecency.sync().evalsha<String>(
+            appConfig.recencySha,
+            ScriptOutputType.VALUE,
+            arrayOf(deviceID),
+            advertiserID,
+            recencyEpoch,
+            expirationWindow.toString(),
+            appConfig.recencyDeviceIDTTLSeconds.toString(),
+        )
     }
 }
