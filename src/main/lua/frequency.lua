@@ -14,14 +14,14 @@ local impressionIdEpochs = redis.call("HGETALL", key)
 local validImpressionEpochs = {}
 
 for i = 1, #impressionIdEpochs, 2 do
-    local recordKey = impressionIdEpochs[i]
-    local recordValue = impressionIdEpochs[i + 1]
+  local recordKey = impressionIdEpochs[i]
+  local recordValue = impressionIdEpochs[i + 1]
 
-    if tonumber(recordValue) < epochExpirationLimit then
-        redis.call("HDEL", key, recordKey)
-    else
-        validImpressionEpochs[#validImpressionEpochs+1] = recordValue
-    end
+  if tonumber(recordValue) < epochExpirationLimit then
+    redis.call("HDEL", key, recordKey)
+   else
+    validImpressionEpochs[#validImpressionEpochs+1] = recordValue
+  end
 end
 
 -- set expire on deviceId
