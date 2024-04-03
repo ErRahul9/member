@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken
 import com.steelhouse.membership.configuration.AppConfig
 import com.steelhouse.membership.model.RecencyMessage
 import com.steelhouse.membership.util.Util
+import io.lettuce.core.RedisNoScriptException
 import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
@@ -17,7 +18,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
+import java.io.File
 import java.io.IOException
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -76,15 +79,33 @@ class RecencyConsumer(
 
         val expirationWindow = util.getEpochInMillis() - appConfig.recencyExpirationWindowMilliSeconds!!
 
-        redisConnectionRecency.sync().evalsha<String>(
-            appConfig.recencySha,
-            ScriptOutputType.VALUE,
-            arrayOf(deviceID),
-            advertiserID,
-            recencyEpoch,
-            expirationWindow.toString(),
-            appConfig.recencyDeviceIDTTLSeconds.toString(),
-        )
+        try {
+            redisConnectionRecency.sync().evalsha<String>(
+                appConfig.recencySha,
+                ScriptOutputType.VALUE,
+                arrayOf(deviceID),
+                advertiserID,
+                recencyEpoch,
+                expirationWindow.toString(),
+                appConfig.recencyDeviceIDTTLSeconds.toString(),
+            )
+        } catch (e: RedisNoScriptException) {
+            // Reload the script and save sha if the script is not in the cache
+            val script = File("./recency.lua").readText(StandardCharsets.UTF_8)
+            val newSha = redisConnectionRecency.sync().scriptLoad(script)
+            // sha should be consistent for same script, here to store sha in appConfig until next restart
+            appConfig.recencySha = newSha
+            redisConnectionRecency.sync().evalsha<String>(
+                newSha,
+                ScriptOutputType.VALUE,
+                arrayOf(deviceID),
+                advertiserID,
+                recencyEpoch,
+                expirationWindow.toString(),
+                appConfig.recencyDeviceIDTTLSeconds.toString(),
+            )
+        }
+
 
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
         meterRegistry.timer("write.recency.latency").record(Duration.ofMillis(responseTime))

@@ -65,9 +65,9 @@ class ThirdPartyConsumer(
                 }
 
                 results.forEach { it.await() }
-            } catch (ex: JsonSyntaxException){
+            } catch (ex: JsonSyntaxException) {
                 meterRegistry.counter("invalid.audience.records").increment()
-            }finally {
+            } finally {
                 lock.release()
             }
         }

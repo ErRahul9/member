@@ -136,7 +136,7 @@ tasks.withType<KotlinCompile> {
 
 tasks {
     register<Zip>("fatZip") {
-        from("src/main/resources", "build/libs")
+        from("src/main/resources", "src/main/lua", "build/libs")
         include("*")
         exclude("application-local.yml", "application-pass.yml")
         into("/")

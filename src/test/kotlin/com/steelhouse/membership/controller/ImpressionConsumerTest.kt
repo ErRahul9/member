@@ -41,8 +41,8 @@ class ImpressionConsumerTest {
         val impressionTime = 1707255347727544
         val impressionId = "1706220285992216.59847714.9356.steelhouse"
         val message = "{\"DW_AgentParams\": \"{\\\"_geo_ver\\\": \\\"1640995200\\\", \\\"_hh_score\\\": \\\"30\\\", \\\"household_score\\\": \\\"30\\\", " +
-                "\\\"geo_version\\\": \\\"1640995200\\\", \\\"device_type_group\\\": \\\"COMPUTER\\\", \\\"campaign_id\\\":\\\"$cid\\\" ,\\\"campaign_group_id\\\":\\\"$cgid\\\"}\"," +
-                "\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
+            "\\\"geo_version\\\": \\\"1640995200\\\", \\\"device_type_group\\\": \\\"COMPUTER\\\", \\\"campaign_id\\\":\\\"$cid\\\" ,\\\"campaign_group_id\\\":\\\"$cgid\\\"}\"," +
+            "\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
         appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
         appConfig.frequencyDeviceIDTTLSeconds = 604800
         appConfig.frequencyExpirationWindowMilliSeconds = 55444
@@ -56,7 +56,7 @@ class ImpressionConsumerTest {
             eq(appConfig.frequencySha),
             eq(ScriptOutputType.VALUE),
             eq(arrayOf("$remoteIP:${cid}_cid")),
-            eq((impressionTime/1000).toString()),
+            eq((impressionTime / 1000).toString()),
             any(),
             eq(appConfig.frequencyDeviceIDTTLSeconds.toString()),
             eq(impressionId)
@@ -65,7 +65,7 @@ class ImpressionConsumerTest {
             eq(appConfig.frequencySha),
             eq(ScriptOutputType.VALUE),
             eq(arrayOf("$remoteIP:${cgid}_cgid")),
-            eq((impressionTime/1000).toString()),
+            eq((impressionTime / 1000).toString()),
             any(),
             eq(appConfig.frequencyDeviceIDTTLSeconds.toString()),
             eq(impressionId)
@@ -80,8 +80,8 @@ class ImpressionConsumerTest {
         val impressionTime = 1707255347727544
         val expectedEpoch = "1707255347727"
         val message = "{\"DW_AgentParams\": \"{\\\"_geo_ver\\\": \\\"1640995200\\\", \\\"_hh_score\\\": \\\"30\\\", \\\"household_score\\\": \\\"30\\\", " +
-                "\\\"geo_version\\\": \\\"1640995200\\\", \\\"device_type_group\\\": \\\"COMPUTER\\\",\\\"campaign_id\\\":\\\"$cid\\\"}\"," +
-                "\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
+            "\\\"geo_version\\\": \\\"1640995200\\\", \\\"device_type_group\\\": \\\"COMPUTER\\\",\\\"campaign_id\\\":\\\"$cid\\\"}\"," +
+            "\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
         appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
         appConfig.frequencyDeviceIDTTLSeconds = 604800
         appConfig.frequencyExpirationWindowMilliSeconds = 55444
@@ -110,8 +110,8 @@ class ImpressionConsumerTest {
         val impressionTime = 1707255347727544
         val expectedEpoch = "1707255347727"
         val message = "{\"DW_AgentParams\": \"{\\\"_geo_ver\\\": \\\"1640995200\\\", \\\"_hh_score\\\": \\\"30\\\", \\\"household_score\\\": \\\"30\\\", " +
-                "\\\"geo_version\\\": \\\"1640995200\\\", \\\"device_type_group\\\": \\\"COMPUTER\\\",\\\"campaign_group_id\\\":\\\"$cgid\\\"}\"," +
-                "\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
+            "\\\"geo_version\\\": \\\"1640995200\\\", \\\"device_type_group\\\": \\\"COMPUTER\\\",\\\"campaign_group_id\\\":\\\"$cgid\\\"}\"," +
+            "\"DW_ImpressionWinPriceMicrosUsd\":\"12000\",\"DW_BidRequestDeviceIp\":\"$remoteIP\",\"DW_ImpressionAuctionId\":\"$impressionId\",\"DW_ImpressionTime\":\"$impressionTime\"}\n"
         appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
         appConfig.frequencySha = "d0092a4b68842a839daa2cf020983b8c0872f0db"
         appConfig.frequencyDeviceIDTTLSeconds = 604800
@@ -135,7 +135,8 @@ class ImpressionConsumerTest {
 
     @Test
     fun testConsumeWhenMissingCIDAndCGID() {
-        val message = "{\"DW_AgentParams\": \"{\\\"_geo_ver\\\": \\\"1640995200\\\", \\\"_hh_score\\\": \\\"30\\\", \\\"household_score\\\": \\\"30\\\", " +
+        val message =
+            "{\"DW_AgentParams\": \"{\\\"_geo_ver\\\": \\\"1640995200\\\", \\\"_hh_score\\\": \\\"30\\\", \\\"household_score\\\": \\\"30\\\", " +
                 "\\\"geo_version\\\": \\\"1640995200\\\", \\\"device_type_group\\\": \\\"COMPUTER\\\"}\", \"DW_ImpressionWinPriceMicrosUsd\": \"2570\", " +
                 "\"DW_BidRequestDeviceIp\": \"145.14.135.225\", \"DW_ImpressionAuctionId\": \"1707488594342213.3674259501.781551.steelhouse\", " +
                 "\"DW_BidRequestDeviceType\": \"PC\", \"DW_BidRequestId\": \"b46c407d-925e-4f7f-acdf-2a72b9ee9b99\", \"DW_ImpressionAdGroupIdLineItemId\": \"33101\"," +

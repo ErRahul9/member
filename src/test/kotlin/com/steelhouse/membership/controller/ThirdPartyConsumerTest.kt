@@ -48,9 +48,9 @@ class ThirdPartyConsumerTest {
     fun hasHouseHoldScore() {
         val message =
             "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\"" +
-                    ":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800," +
-                    "27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452," +
-                    "\"ip\":154.130.20.55,\"household_score\":80,\"data_source\":3,\"c_data\":{\"34343\":{\"household_score\":60}}}"
+                ":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800," +
+                "27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452," +
+                "\"ip\":154.130.20.55,\"household_score\":80,\"data_source\":3,\"c_data\":{\"34343\":{\"household_score\":60}}}"
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
@@ -137,10 +137,10 @@ class ThirdPartyConsumerTest {
     fun nonDataSourceThree() {
         val message =
             "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\"" +
-                    ":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800," +
-                    "27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452," +
-                    "\"ip\":154.130.20.55,\"household_score\":80,\"data_source\":1,\"c_data\":{\"34343\":" +
-                    "{\"household_score\": 60}}}"
+                ":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800," +
+                "27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452," +
+                "\"ip\":154.130.20.55,\"household_score\":80,\"data_source\":1,\"c_data\":{\"34343\":" +
+                "{\"household_score\": 60}}}"
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
@@ -304,17 +304,16 @@ class ThirdPartyConsumerTest {
         assertEquals(1, valueMap.secondValue.size)
         assertEquals("{\"_hh_score\":\"55\",\"_geo_ver\":\"76543543543\",\"household_score\":\"33\",\"geo_version\":\"43543543543\"}", valueMap.secondValue["metadata_info"])
         assertEquals("154.130.20.55", key.secondValue)
-
     }
 
     @Test
     fun hasHouseHoldScoreAndGeoVersionAndMetadataInfo() {
         val message =
             "{\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\"" +
-                    ":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800," +
-                    "27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452," +
-                    "\"ip\":154.130.20.55,\"household_score\":80,\"geo_version\":55555,\"data_source\":3," +
-                    "\"metadata_info\":{\"_hh_score\":50,\"_geo_ver\":77777},\"c_data\":{\"34343\":{\"household_score\": 60}}}"
+                ":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800," +
+                "27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452," +
+                "\"ip\":154.130.20.55,\"household_score\":80,\"geo_version\":55555,\"data_source\":3," +
+                "\"metadata_info\":{\"_hh_score\":50,\"_geo_ver\":77777},\"c_data\":{\"34343\":{\"household_score\": 60}}}"
 
         val future2: RedisFuture<Boolean> = mock()
         whenever(future2.get()).thenReturn(true)
@@ -361,7 +360,8 @@ class ThirdPartyConsumerTest {
 
         assertEquals("154.130.20.55-34343", hSetKeyScore.firstValue)
         assertEquals(1, metadataValueMap.firstValue.size)
-        assertEquals( "60", metadataValueMap.firstValue["household_score"],
+        assertEquals(
+            "60", metadataValueMap.firstValue["household_score"],
         )
     }
 }
