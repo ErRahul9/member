@@ -20,7 +20,7 @@ spring:
       security:
         protocol: SASL_SSL
     consumer:
-      bootstrap-servers: [ 'pkc-4n7ze.us-west-2.aws.confluent.cloud:9092' ]
+      bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9094,b-6.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9094,b-2.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9094' ]
       group-id: membership-consumer-prod-frequency-west
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer

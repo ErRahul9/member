@@ -1,5 +1,5 @@
 replicaCount: 20
-nameSpace: prod-targeting
+nameSpace: tmp-targeting
 container:
   annotations:
     prometheus.io/path: /prometheus
