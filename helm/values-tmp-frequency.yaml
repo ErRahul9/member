@@ -8,7 +8,7 @@ container:
     prometheus.io/prefix: "membership-consumer-frequency."
 image:
   repository: steelhousedev/membership-consumer
-  tag: tmp-latest
+  tag: prod-latest
   pullPolicy: Always
 service:
   type: LoadBalancer
@@ -53,7 +53,7 @@ env:
       secretKeyRef:
         name: data-prod-msk
         key: password
-imagePullSecrets: codefresh-generated-docker.io-dockerhub-tmp-targeting
+imagePullSecrets: codefresh-generated-docker.io-dockerhub-prod-targeting
 istio:
   enabled: false
 autoscaling:
