@@ -1,11 +1,13 @@
 package com.steelhouse.membership
 
+import org.apache.kafka.common.config.SaslConfigs
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 import org.springframework.scheduling.annotation.EnableScheduling
+
 
 @EnableScheduling
 @SpringBootApplication(
@@ -22,6 +24,8 @@ open class Application {
         fun main(args: Array<String>) {
             println("Username: " + System.getenv("USERNAME"))
             println("Password: " + System.getenv("PASSWORD"))
+            val jaasConfig = System.getProperty(SaslConfigs.SASL_JAAS_CONFIG)
+            println("Current JAAS Config: " + jaasConfig);
             SpringApplication.run(Application::class.java, *args)
         }
     }
