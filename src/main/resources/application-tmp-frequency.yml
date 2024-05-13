@@ -16,7 +16,7 @@ spring:
       sasl:
         jaas:
           config: org.apache.kafka.common.security.plain.PlainLoginModule required username='${env:USERNAME}' password='${env:PASSWORD}';
-        mechanism: SCRAM
+        mechanism: SCRAM-SHA-512
       security:
         protocol: SASL_SSL
     consumer:
