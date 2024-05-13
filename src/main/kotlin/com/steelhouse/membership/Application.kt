@@ -20,6 +20,7 @@ open class Application {
 
         @JvmStatic
         fun main(args: Array<String>) {
+            println("Username: " + System.getenv("USERNAME"))
             SpringApplication.run(Application::class.java, *args)
         }
     }

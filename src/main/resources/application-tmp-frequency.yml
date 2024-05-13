@@ -15,7 +15,7 @@ spring:
             algorithm: HTTPS
       sasl:
         jaas:
-          config: org.apache.kafka.common.security.plain.PlainLoginModule required username=${USERNAME} password=${PASSWORD};
+          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="${USERNAME}" password="${PASSWORD}";
         mechanism: PLAIN
       security:
         protocol: SASL_SSL
