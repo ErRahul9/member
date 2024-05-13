@@ -8,7 +8,7 @@ container:
     prometheus.io/prefix: "membership-consumer-frequency."
 image:
   repository: steelhousedev/membership-consumer
-  tag: prod-latest
+  tag: tmp-latest
   pullPolicy: Always
 service:
   type: LoadBalancer
@@ -38,7 +38,7 @@ resources:
     memory: 4Gi
 env:
   - name: SPRING_PROFILES_ACTIVE
-    value: "prod-frequency-west"
+    value: "tmp-frequency"
   - name: SECURITY_BASIC_ENABLED
     value: "false"
   - name: MANAGEMENT_SECURITY_ENABLED
@@ -53,7 +53,7 @@ env:
       secretKeyRef:
         name: data-prod-msk
         key: password
-imagePullSecrets: codefresh-generated-docker.io-dockerhub-prod-targeting
+imagePullSecrets: codefresh-generated-docker.io-dockerhub-tmp-targeting
 istio:
   enabled: false
 autoscaling:
