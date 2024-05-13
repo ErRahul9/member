@@ -15,12 +15,12 @@ spring:
             algorithm: HTTPS
       sasl:
         jaas:
-          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="${USERNAME}" password="${PASSWORD}";
+          config: org.apache.kafka.common.security.plain.PlainLoginModule required username='${env:USERNAME}' password='${env:PASSWORD}';
         mechanism: PLAIN
       security:
         protocol: SASL_SSL
     consumer:
-      bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9094,b-6.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9094,b-2.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9094' ]
+      bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9092,b-6.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9092,b-2.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9092' ]
       group-id: membership-consumer-prod-frequency-west
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
