@@ -7,8 +7,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+import org.springframework.context.ApplicationListener
+import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.EnableScheduling
+import org.springframework.stereotype.Component
 
 
 @EnableScheduling
@@ -24,14 +27,6 @@ open class Application {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            println("Username: " + System.getenv("USERNAME"))
-            println("Password: " + System.getenv("PASSWORD"))
-            val jaasConfig = System.getProperty(SaslConfigs.SASL_JAAS_CONFIG)
-            val jassMec = System.getProperty(SaslConfigs.SASL_MECHANISM)
-
-//            println("Current JAAS Config: " + jaasConfig);
-            println("Current JAAS Config: $jaasConfig")
-            println("Current JAAS Mechanism: $jassMec")
             SpringApplication.run(Application::class.java, *args)
         }
     }
