@@ -15,17 +15,16 @@ spring:
             algorithm: HTTPS
       sasl:
         jaas:
-          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="4H4YY5F3FLITE2KG" password="gwL8gRW9jXoVLodcjPq7UM4Lp1yjrkt8rTBfAvtbXmgNO7sTwJwRV/VLORHZsmkH";
-        mechanism: PLAIN
+          config: org.apache.kafka.common.security.scram.ScramLoginModule required username='${USERNAME}' password='${PASSWORD}';
+        mechanism: SCRAM-SHA-512
       security:
         protocol: SASL_SSL
     consumer:
-      bootstrap-servers: [ 'pkc-4n7ze.us-west-2.aws.confluent.cloud:9092' ]
-      group-id: membership-consumer-prod-frequency-west
+      bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-6.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-2.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096' ]
+      group-id: membership-consumer-prod-oracle-west
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
 
 logging:
   level:
@@ -43,15 +42,15 @@ redis:
   requestTimeoutSeconds: 10
 
 membership:
-  oracleConsumer: false
+  oracleConsumer: true
   membershipConsumer: false
-  impressionConsumer: true
+  impressionConsumer: false
   recencyConsumer: false
 
 app:
   recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
-  recencyDeviceIDTTLSeconds: 604800
-  recencyExpirationWindowMilliSeconds: 604800000
+  recencyDeviceIDTTLSeconds: 2592000
+  recencyExpirationWindowMilliSeconds: 2592000000
   frequencySha: 22242d94dc42e02a0fb3c21bfaa0d77f3237d869
   frequencyDeviceIDTTLSeconds: 3600000
   frequencyExpirationWindowMilliSeconds: 864000000

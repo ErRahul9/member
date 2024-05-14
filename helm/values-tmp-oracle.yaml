@@ -1,24 +1,24 @@
 replicaCount: 20
-nameSpace: prod-targeting
+nameSpace: tmp-targeting
 container:
   annotations:
     prometheus.io/path: /prometheus
     prometheus.io/scrape: "true"
     prometheus.io/port: "8080"
-    prometheus.io/prefix: "membership-consumer-frequency."
+    prometheus.io/prefix: "membership-consumer-oracle."
 image:
   repository: steelhousedev/membership-consumer
-  tag: prod-latest
+  tag: tmp-latest
   pullPolicy: Always
 service:
   type: LoadBalancer
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
     service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
-    external-dns.alpha.kubernetes.io/hostname: membership-consumer-frequency.coreprod.west2.steelhouse.com
+    external-dns.alpha.kubernetes.io/hostname: membership-consumer-oracle.coreprod.west2.steelhouse.com
     iam.amazonaws.com/role: core-dev-dynamo-access-pod-role
     iam.amazonaws.com/permitted: ".*"
-  name: membership-consumer-frequency
+  name: membership-consumer-oracle
   externalPort: 80
   internalPort: 8080
   probePath: /health
@@ -38,17 +38,27 @@ resources:
     memory: 4Gi
 env:
   - name: SPRING_PROFILES_ACTIVE
-    value: "prod-frequency-west"
+    value: "tmp-oracle"
   - name: SECURITY_BASIC_ENABLED
     value: "false"
   - name: MANAGEMENT_SECURITY_ENABLED
     value: "false"
-imagePullSecrets: codefresh-generated-docker.io-dockerhub-prod-targeting
+  - name: USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: data-prod-msk
+        key: username
+  - name: PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: data-prod-msk
+        key: password
+imagePullSecrets: codefresh-generated-docker.io-dockerhub-tmp-targeting
 istio:
   enabled: false
 autoscaling:
   enabled: true
-  minReplicas: 12
+  minReplicas: 5
   maxReplicas: 60
   metrics:
     averageUtilization: 40
