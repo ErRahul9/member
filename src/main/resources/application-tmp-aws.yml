@@ -21,7 +21,7 @@ spring:
         protocol: SASL_SSL
     consumer:
       bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-6.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-2.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096' ]
-      group-id: membership-consumer-prod-oracle-west
+      group-id: membership-consumer-prod-aws-west
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -43,8 +43,8 @@ redis:
   requestTimeoutSeconds: 10
 
 membership:
-  oracleConsumer: true
-  membershipConsumer: false
+  oracleConsumer: false
+  membershipConsumer: true
   impressionConsumer: false
   recencyConsumer: false
 

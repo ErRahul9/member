@@ -5,7 +5,7 @@ container:
     prometheus.io/path: /prometheus
     prometheus.io/scrape: "true"
     prometheus.io/port: "8080"
-    prometheus.io/prefix: "membership-consumer-oracle."
+    prometheus.io/prefix: "membership-consumer."
 image:
   repository: steelhousedev/membership-consumer
   tag: tmp-latest
@@ -15,10 +15,10 @@ service:
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
     service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
-    external-dns.alpha.kubernetes.io/hostname: membership-consumer-oracle.coreprod.west2.steelhouse.com
+    external-dns.alpha.kubernetes.io/hostname: membership-consumer.coreprod.west2.steelhouse.com
     iam.amazonaws.com/role: core-dev-dynamo-access-pod-role
     iam.amazonaws.com/permitted: ".*"
-  name: membership-consumer-oracle
+  name: membership-consumer
   externalPort: 80
   internalPort: 8080
   probePath: /health
@@ -38,7 +38,7 @@ resources:
     memory: 4Gi
 env:
   - name: SPRING_PROFILES_ACTIVE
-    value: "tmp-oracle"
+    value: "tmp-aws"
   - name: SECURITY_BASIC_ENABLED
     value: "false"
   - name: MANAGEMENT_SECURITY_ENABLED
@@ -58,7 +58,7 @@ istio:
   enabled: false
 autoscaling:
   enabled: true
-  minReplicas: 5
+  minReplicas: 20
   maxReplicas: 60
   metrics:
     averageUtilization: 40
