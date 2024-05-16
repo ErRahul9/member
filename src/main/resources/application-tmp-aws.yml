@@ -1,0 +1,57 @@
+---
+spring:
+  kafka:
+    listener:
+      concurrency=: 1
+    properties:
+      ssl:
+        protocol: TLSv1.2
+        enabled:
+          protocols: TLSv1.2
+        truststore:
+          type: JKS
+        endpoint:
+          identification:
+            algorithm: HTTPS
+      sasl:
+        jaas:
+          config: org.apache.kafka.common.security.scram.ScramLoginModule required username='${USERNAME}' password='${PASSWORD}';
+        mechanism: SCRAM-SHA-512
+      security:
+        protocol: SASL_SSL
+    consumer:
+      bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-6.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-2.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096' ]
+      group-id: membership-consumer-prod-aws-west
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      client-id: membership-consumer
+
+logging:
+  level:
+    app: INFO
+
+redis:
+  membershipConnectionTpa: redis://core-prod-membership-compression.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  membershipTTL: 5184000
+  deviceInfoConnection: redis://rtb-prod-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  recencyConnection: redis://core-prod-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  frequencyCapConnection: redis://rtb-prod-bidder-frequency-caps-b.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
+  partnerTTL: 15552000
+  topologyRefreshHours: 1
+  clientShutdownSeconds: 60
+  requestTimeoutSeconds: 10
+
+membership:
+  oracleConsumer: false
+  membershipConsumer: true
+  impressionConsumer: false
+  recencyConsumer: false
+
+app:
+  recencySha: d0092a4b68842a839daa2cf020983b8c0872f0db
+  recencyDeviceIDTTLSeconds: 2592000
+  recencyExpirationWindowMilliSeconds: 2592000000
+  frequencySha: 22242d94dc42e02a0fb3c21bfaa0d77f3237d869
+  frequencyDeviceIDTTLSeconds: 3600000
+  frequencyExpirationWindowMilliSeconds: 864000000

@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerA
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 import org.springframework.scheduling.annotation.EnableScheduling
 
+
 @EnableScheduling
 @SpringBootApplication(
     exclude = [
