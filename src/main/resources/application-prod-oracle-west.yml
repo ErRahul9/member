@@ -16,7 +16,7 @@ logging:
 
 redis:
   membershipConnectionTpa: redis://core-prod-membership-compression.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  membershipTTL: 5184000
+  membershipTTL: 604800
   deviceInfoConnection: redis://rtb-prod-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   recencyConnection: redis://core-prod-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   frequencyCapConnection: redis://rtb-prod-bidder-frequency-caps-b.pid24g.clustercfg.usw2.cache.amazonaws.com:6379

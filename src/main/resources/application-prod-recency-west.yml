@@ -15,21 +15,23 @@ spring:
             algorithm: HTTPS
       sasl:
         jaas:
-          config: org.apache.kafka.common.security.plain.PlainLoginModule required username="4H4YY5F3FLITE2KG" password="gwL8gRW9jXoVLodcjPq7UM4Lp1yjrkt8rTBfAvtbXmgNO7sTwJwRV/VLORHZsmkH";
-        mechanism: PLAIN
+          config: org.apache.kafka.common.security.scram.ScramLoginModule required username='${USERNAME}' password='${PASSWORD}';
+        mechanism: SCRAM-SHA-512
       security:
         protocol: SASL_SSL
     consumer:
-      bootstrap-servers: [ 'pkc-4n7ze.us-west-2.aws.confluent.cloud:9092' ]
+      bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-6.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-2.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096' ]
       group-id: membership-consumer-prod-recency-west
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      client-id: membership-consumer
     producer:
-      bootstrap-servers: [ 'pkc-4n7ze.us-west-2.aws.confluent.cloud:9092' ]
+      bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-6.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-2.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096' ]
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       retries: 3
+      client-id: membership-consumer
 
 logging:
   level:
@@ -37,7 +39,7 @@ logging:
 
 redis:
   membershipConnectionTpa: redis://core-prod-membership-compression.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  membershipTTL: 5184000
+  membershipTTL: 604800
   deviceInfoConnection: redis://rtb-prod-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   recencyConnection: redis://core-prod-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   frequencyCapConnection: redis://rtb-prod-bidder-frequency-caps-b.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
