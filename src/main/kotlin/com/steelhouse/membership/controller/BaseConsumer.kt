@@ -5,7 +5,6 @@ import com.steelhouse.membership.configuration.RedisConfig
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.newFixedThreadPoolContext
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import java.io.IOException

@@ -46,10 +46,10 @@ class ThirdPartyConsumer(
             try {
                 val oracleMembership = gson.fromJson(message, MembershipUpdateMessage::class.java)
                 val results = mutableListOf<Deferred<Any>>()
-                val overwrite = !(oracleMembership?.isDelta ?: true)
 
                 if (oracleMembership.currentSegments != null) {
                     if (oracleMembership.dataSource in tpaCacheSources) {
+                        val overwrite = !(oracleMembership?.isDelta ?: true)
                         results += async {
                             writeMemberships(
                                 oracleMembership.ip,
