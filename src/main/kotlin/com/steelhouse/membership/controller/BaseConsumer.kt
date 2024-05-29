@@ -44,6 +44,10 @@ abstract class BaseConsumer(
                 "cookieType",
                 cookieType,
             ).record(Duration.ofMillis(responseTime))
+        } else {
+            if (!overwrite) {
+                deleteIp(ip)
+            }
         }
     }
 
