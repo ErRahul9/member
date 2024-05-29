@@ -25,9 +25,6 @@ abstract class BaseConsumer(
 
     val tpaCacheSources = setOf(3) // TPA datasources
 
-//    @Autowired
-//    @Qualifier("redisConnectionDeviceInfo") private lateinit var redisConnectionDeviceInfo: StatefulRedisClusterConnection<String, String>
-
     @Throws(IOException::class)
     abstract fun consume(message: String)
 
@@ -55,7 +52,6 @@ abstract class BaseConsumer(
         val stopwatch = Stopwatch.createStarted()
 
         redisConnectionMembershipTpa.sync().del(ip)
-//        redisConnectionDeviceInfo.sync().del(ip)
 
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
         meterRegistry.timer("delete.membership.match.latency").record(Duration.ofMillis(responseTime))

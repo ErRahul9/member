@@ -61,13 +61,15 @@ class ThirdPartyConsumer(
                     }
                 }
 
-                // if the ip is deleted in function writeMemberships, we should not write into device metadata
-                if (!overwrite) {
-                    results += async {
+                // if the currentSegments is empty, we should not write into device metadata and delete the ip
+                results += if (oracleMembership.currentSegments.isNotEmpty()) {
+                    async {
                         writeDeviceMetadata(oracleMembership)
                     }
                 } else {
-                    redisConnectionDeviceInfo.sync().del(oracleMembership.ip)
+                    async {
+                        redisConnectionDeviceInfo.sync().del(oracleMembership.ip)
+                    }
                 }
 
                 results.forEach { it.await() }
