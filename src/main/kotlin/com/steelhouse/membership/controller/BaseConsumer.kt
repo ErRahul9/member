@@ -29,9 +29,6 @@ abstract class BaseConsumer(
 
     fun writeMemberships(ip: String, currentSegments: List<Int>, cookieType: String, overwrite: Boolean) {
         if (currentSegments.isNotEmpty()) {
-            if (overwrite) {
-                deleteIp(ip)
-            }
             val stopwatch = Stopwatch.createStarted()
 
             redisConnectionMembershipTpa.sync().set(ip, currentSegments.joinToString(",") { it.toString() })
