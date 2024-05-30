@@ -28,11 +28,10 @@ abstract class BaseConsumer(
     abstract fun consume(message: String)
 
     fun writeMemberships(ip: String, currentSegments: List<Int>, cookieType: String, overwrite: Boolean) {
-        if (overwrite) {
-            deleteIp(ip)
-        }
-
         if (currentSegments.isNotEmpty()) {
+            if (overwrite) {
+                deleteIp(ip)
+            }
             val stopwatch = Stopwatch.createStarted()
 
             redisConnectionMembershipTpa.sync().set(ip, currentSegments.joinToString(",") { it.toString() })
@@ -45,9 +44,7 @@ abstract class BaseConsumer(
                 cookieType,
             ).record(Duration.ofMillis(responseTime))
         } else {
-            if (!overwrite) {
-                deleteIp(ip)
-            }
+            deleteIp(ip)
         }
     }
 
