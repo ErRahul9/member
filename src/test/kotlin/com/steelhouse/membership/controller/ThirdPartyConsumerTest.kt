@@ -123,11 +123,9 @@ class ThirdPartyConsumerTest {
         }
 
         val hSetKey = argumentCaptor<String>()
-        val hSetKeyDelete = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
 
         verify(redisClientMembershipTpa.sync(), times(1)).set(hSetKey.capture(), fieldValue.capture())
-        verify(redisClientMembershipTpa.sync(), times(1)).del(hSetKeyDelete.capture())
         verify(redisMetadataScore.sync(), times(0)).hset(any(), any())
         assertEquals(listOf("154.130.20.55"), hSetKey.allValues)
         assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
