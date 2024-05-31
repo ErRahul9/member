@@ -98,9 +98,7 @@ class MembershipConsumerTest {
 
         val hKey = argumentCaptor<String>()
         val fieldValue = argumentCaptor<String>()
-        val hKeyDelete = argumentCaptor<String>()
         verify(redisClientMembershipTpa.sync(), times(1)).set(hKey.capture(), fieldValue.capture())
-        verify(redisClientMembershipTpa.sync(), times(1)).del(hKeyDelete.capture())
         assertEquals(listOf("154.130.20.55"), hKey.allValues)
         assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
     }

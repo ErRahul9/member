@@ -28,10 +28,6 @@ abstract class BaseConsumer(
     abstract fun consume(message: String)
 
     fun writeMemberships(ip: String, currentSegments: List<Int>, cookieType: String, overwrite: Boolean) {
-        if (overwrite) {
-            deleteIp(ip)
-        }
-
         if (currentSegments.isNotEmpty()) {
             val stopwatch = Stopwatch.createStarted()
 
@@ -44,6 +40,8 @@ abstract class BaseConsumer(
                 "cookieType",
                 cookieType,
             ).record(Duration.ofMillis(responseTime))
+        } else {
+            deleteIp(ip)
         }
     }
 

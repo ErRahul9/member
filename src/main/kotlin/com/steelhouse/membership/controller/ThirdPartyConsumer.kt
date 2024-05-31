@@ -46,6 +46,7 @@ class ThirdPartyConsumer(
             try {
                 val oracleMembership = gson.fromJson(message, MembershipUpdateMessage::class.java)
                 val results = mutableListOf<Deferred<Any>>()
+
                 if (oracleMembership.currentSegments != null) {
                     if (oracleMembership.dataSource in tpaCacheSources) {
                         val overwrite = !(oracleMembership?.isDelta ?: true)
@@ -60,11 +61,19 @@ class ThirdPartyConsumer(
                     }
                 }
 
-                results += async {
-                    writeDeviceMetadata(oracleMembership)
+                // if the currentSegments is empty, we should not write into device metadata and delete the ip
+                results += if (oracleMembership.currentSegments.isNotEmpty()) {
+                    async {
+                        writeDeviceMetadata(oracleMembership)
+                    }
+                } else {
+                    async {
+                        redisConnectionDeviceInfo.sync().del(oracleMembership.ip)
+                    }
                 }
 
                 results.forEach { it.await() }
+
             } catch (ex: JsonSyntaxException) {
                 meterRegistry.counter("invalid.audience.records").increment()
             } finally {
