@@ -2,7 +2,6 @@ package com.steelhouse.membership.controller
 
 import com.google.common.base.Stopwatch
 import com.google.gson.FieldNamingPolicy
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonSyntaxException
 import com.steelhouse.membership.configuration.RedisConfig
@@ -12,6 +11,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import org.apache.commons.logging.Log
 import org.springframework.beans.factory.annotation.Qualifier
@@ -34,7 +34,7 @@ class ThirdPartyConsumer(
     redisConfig = redisConfig,
 ) {
 
-    val gson = GsonBuilder()
+    private val gson = GsonBuilder()
         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .create()
 
@@ -47,17 +47,15 @@ class ThirdPartyConsumer(
                 val oracleMembership = gson.fromJson(message, MembershipUpdateMessage::class.java)
                 val results = mutableListOf<Deferred<Any>>()
 
-                if (oracleMembership.currentSegments != null) {
-                    if (oracleMembership.dataSource in tpaCacheSources) {
-                        val overwrite = !(oracleMembership?.isDelta ?: true)
-                        results += async {
-                            writeMemberships(
-                                oracleMembership.ip,
-                                oracleMembership.currentSegments,
-                                "ip",
-                                overwrite,
-                            )
-                        }
+                if (oracleMembership.currentSegments != null && oracleMembership.dataSource in tpaCacheSources) {
+                    val overwrite = !(oracleMembership?.isDelta ?: true)
+                    results += async {
+                        writeMemberships(
+                            oracleMembership.ip,
+                            oracleMembership.currentSegments,
+                            "ip",
+                            overwrite,
+                        )
                     }
                 }
 
@@ -72,8 +70,7 @@ class ThirdPartyConsumer(
                     }
                 }
 
-                results.forEach { it.await() }
-
+                results.awaitAll()
             } catch (ex: JsonSyntaxException) {
                 meterRegistry.counter("invalid.audience.records").increment()
             } finally {
@@ -85,30 +82,34 @@ class ThirdPartyConsumer(
     fun writeDeviceMetadata(message: MembershipUpdateMessage) {
         val stopwatch = Stopwatch.createStarted()
 
-        var metadata: MutableMap<String, String?> =
-            if (!message.metadataInfo.isNullOrEmpty()) message.metadataInfo.toMutableMap() else mutableMapOf()
-        metadata.putIfAbsent("household_score", message.householdScore?.toString())
-        metadata.putIfAbsent("geo_version", message.geoVersion)
-
-        metadata = metadata.filterValues { it != null }.toMutableMap()
-
-        val valuesToSet = mapOf(
-            "metadata_info" to if (metadata.isNotEmpty()) Gson().toJson(metadata) else null,
+        // TODO: Delete after migration
+        val ipKey = message.ip
+        val ipValue = mapOf(
+            "geo_version" to message.geoVersion,
         ).filterValues { it != null }
-
-        if (!message.cData.isNullOrEmpty()) {
-            message.cData.entries.forEach {
-                val campaignDataKey = "${message.ip}-${it.key}"
-                val scoreMap = it.value.map { it.key to it.value.toString() }.toMap()
-                redisConnectionDeviceInfo.sync().hset(campaignDataKey, scoreMap)
-                redisConnectionDeviceInfo.sync().expire(campaignDataKey, redisConfig.membershipTTL!!)
-            }
+        if (ipValue.isNotEmpty()) {
+            redisConnectionDeviceInfo.sync().hset(ipKey, ipValue)
+            redisConnectionDeviceInfo.sync().expire(ipKey, redisConfig.membershipTTL!!)
         }
 
-        if (valuesToSet.isNotEmpty()) {
-            val ip = message.ip
-            redisConnectionDeviceInfo.sync().hset(ip, valuesToSet)
-            redisConnectionDeviceInfo.sync().expire(ip, redisConfig.membershipTTL!!)
+        // Insert geo version
+        val ipGeoVersionKey = "${message.ip}:geo_version"
+        val ipGeoVersionValue = message.geoVersion
+        if (!ipGeoVersionValue.isNullOrEmpty()) {
+            redisConnectionDeviceInfo.sync().set(ipGeoVersionKey, ipGeoVersionValue)
+            redisConnectionDeviceInfo.sync().expire(ipGeoVersionKey, redisConfig.membershipTTL!!)
+        }
+
+        // Insert household score
+        val ipHouseholdScoreKey = "${message.ip}:household_score:campaign"
+        val ipHouseholdScoreValue = message.metadataInfo?.filterKeys {
+            it.startsWith("cs_")
+        }?.mapKeys {
+            it.key.split("_").last()
+        }
+        if (!ipHouseholdScoreValue.isNullOrEmpty()) {
+            redisConnectionDeviceInfo.sync().hset(ipHouseholdScoreKey, ipHouseholdScoreValue)
+            redisConnectionDeviceInfo.sync().expire(ipHouseholdScoreKey, redisConfig.membershipTTL!!)
         }
 
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)

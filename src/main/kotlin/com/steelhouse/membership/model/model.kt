@@ -15,7 +15,6 @@ data class MembershipUpdateMessage(
     val geoVersion: String?,
     val isDelta: Boolean?,
     val metadataInfo: Map<String, String>? = emptyMap(),
-    val cData: Map<String, Map<String, Int>>? = emptyMap(),
 )
 
 data class ImpressionMessage(
@@ -30,4 +29,8 @@ data class AgentParams(
     @SerializedName("campaign_group_id") val campaignGroupId: Long?,
 )
 
-data class RecencyMessage(val ip: String, val advertiserID: Int?, val epoch: Long?)
+data class RecencyMessage(
+    val ip: String,
+    val advertiserID: Int?,
+    val epoch: Long?,
+)

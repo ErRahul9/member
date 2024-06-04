@@ -5,7 +5,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/64630f46927f4810890872dd384985a5)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=SteelHouse/membership-consumer&amp;utm_campaign=Badge_Grade)
 
 ## Description
-Houses services which loads data points from various sources into Redis cache for bidder/augmenter to consume at high thr'put/low latency requirement.
-1. membership information from Kafka membership-updates topic
-2. TPA S3 bucket sh-dw-generated-audiences-prod into the membership (metadata) Redis cache.
+Houses services which loads data points from various sources into Redis cache for bidder/augmenter to consume at high throughput/low latency requirement.
+1. membership information from Kafka `membership-updates` topic
+2. TPA S3 bucket `sh-dw-generated-audiences-prod` into the membership (metadata) Redis cache.
 3. writes recency/impression data for recency calculation in bidder system from vastimpression
