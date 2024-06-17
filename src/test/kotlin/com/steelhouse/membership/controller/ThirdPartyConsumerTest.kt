@@ -22,13 +22,13 @@ class ThirdPartyConsumerTest {
 
     private val meterRegistry = SimpleMeterRegistry()
 
-    private val redisClientMembershipTpa: StatefulRedisClusterConnection<String, String> = mock()
-    private val membershipCommands: RedisAdvancedClusterCommands<String, String> = mock()
+    private val redisClientMembershipTpa = mock<StatefulRedisClusterConnection<String, String>>()
+    private val membershipCommands = mock<RedisAdvancedClusterCommands<String, String>>()
 
-    private val redisClientDeviceInfo: StatefulRedisClusterConnection<String, String> = mock()
-    private val deviceCommands: RedisAdvancedClusterCommands<String, String> = mock()
+    private val redisClientDeviceInfo = mock<StatefulRedisClusterConnection<String, String>>()
+    private val deviceCommands = mock<RedisAdvancedClusterCommands<String, String>>()
 
-    private val redisConfig: RedisConfig = mock()
+    private val redisConfig = mock<RedisConfig>()
 
     private val gson = Gson()
 
@@ -74,8 +74,6 @@ class ThirdPartyConsumerTest {
             delay(100)
         }
 
-        val membershipDelKey = argumentCaptor<String>()
-
         val membershipSetKey = argumentCaptor<String>()
         val membershipSetValue = argumentCaptor<String>()
 
@@ -86,7 +84,7 @@ class ThirdPartyConsumerTest {
         val deviceHsetValue = argumentCaptor<Map<String, String>>()
 
         verify(redisClientMembershipTpa.sync(), times(0)).del(
-            membershipDelKey.capture(),
+            any(),
         )
 
         verify(redisClientMembershipTpa.sync(), times(1)).set(
@@ -99,7 +97,7 @@ class ThirdPartyConsumerTest {
             deviceSetValue.capture(),
         )
 
-        verify(redisClientDeviceInfo.sync(), times(2)).hset(
+        verify(redisClientDeviceInfo.sync(), times(1)).hset(
             deviceHsetKey.capture(),
             deviceHsetValue.capture(),
         )
@@ -110,10 +108,8 @@ class ThirdPartyConsumerTest {
         assertEquals("154.130.20.55:geo_version", deviceSetKey.firstValue)
         assertEquals("1556195600", deviceSetValue.firstValue)
 
-        assertEquals("154.130.20.55", deviceHsetKey.firstValue)
-        assertEquals(mapOf("geo_version" to "1556195600"), deviceHsetValue.firstValue)
-        assertEquals("154.130.20.55:household_score:campaign", deviceHsetKey.secondValue)
-        assertEquals(mapOf("123" to "10", "321" to "20"), deviceHsetValue.secondValue)
+        assertEquals("154.130.20.55:household_score:campaign", deviceHsetKey.firstValue)
+        assertEquals(mapOf("123" to "10", "321" to "20"), deviceHsetValue.firstValue)
     }
 
     @Test
@@ -155,9 +151,6 @@ class ThirdPartyConsumerTest {
         val deviceSetKey = argumentCaptor<String>()
         val deviceSetValue = argumentCaptor<String>()
 
-        val deviceHsetKey = argumentCaptor<String>()
-        val deviceHsetValue = argumentCaptor<Map<String, String>>()
-
         verify(redisClientMembershipTpa.sync(), times(1)).del(
             membershipDelKey.capture(),
         )
@@ -172,9 +165,9 @@ class ThirdPartyConsumerTest {
             deviceSetValue.capture(),
         )
 
-        verify(redisClientDeviceInfo.sync(), times(1)).hset(
-            deviceHsetKey.capture(),
-            deviceHsetValue.capture(),
+        verify(redisClientDeviceInfo.sync(), times(0)).hset(
+            any(),
+            any(),
         )
 
         assertEquals("154.130.20.55", membershipSetKey.firstValue)
@@ -182,9 +175,6 @@ class ThirdPartyConsumerTest {
 
         assertEquals("154.130.20.55:geo_version", deviceSetKey.firstValue)
         assertEquals("1556195600", deviceSetValue.firstValue)
-
-        assertEquals("154.130.20.55", deviceHsetKey.firstValue)
-        assertEquals(mapOf("geo_version" to "1556195600"), deviceHsetValue.firstValue)
     }
 
     @Test
@@ -238,7 +228,7 @@ class ThirdPartyConsumerTest {
             deviceSetValue.capture(),
         )
 
-        verify(redisClientDeviceInfo.sync(), times(2)).hset(
+        verify(redisClientDeviceInfo.sync(), times(1)).hset(
             deviceHsetKey.capture(),
             deviceHsetValue.capture(),
         )
@@ -246,10 +236,8 @@ class ThirdPartyConsumerTest {
         assertEquals("154.130.20.55:geo_version", deviceSetKey.firstValue)
         assertEquals("1556195600", deviceSetValue.firstValue)
 
-        assertEquals("154.130.20.55", deviceHsetKey.firstValue)
-        assertEquals(mapOf("geo_version" to "1556195600"), deviceHsetValue.firstValue)
-        assertEquals("154.130.20.55:household_score:campaign", deviceHsetKey.secondValue)
-        assertEquals(mapOf("123" to "10", "321" to "20"), deviceHsetValue.secondValue)
+        assertEquals("154.130.20.55:household_score:campaign", deviceHsetKey.firstValue)
+        assertEquals(mapOf("123" to "10", "321" to "20"), deviceHsetValue.firstValue)
     }
 
     @Test
@@ -289,7 +277,7 @@ class ThirdPartyConsumerTest {
             deviceSetValue.capture(),
         )
 
-        verify(redisClientDeviceInfo.sync(), times(2)).hset(
+        verify(redisClientDeviceInfo.sync(), times(1)).hset(
             deviceHsetKey.capture(),
             deviceHsetValue.capture(),
         )
@@ -297,9 +285,7 @@ class ThirdPartyConsumerTest {
         assertEquals("154.130.20.55:geo_version", deviceSetKey.firstValue)
         assertEquals("43543543543", deviceSetValue.firstValue)
 
-        assertEquals("154.130.20.55", deviceHsetKey.firstValue)
-        assertEquals(mapOf("geo_version" to "43543543543"), deviceHsetValue.firstValue)
-        assertEquals("154.130.20.55:household_score:campaign", deviceHsetKey.secondValue)
-        assertEquals(mapOf("123" to "10", "321" to "20"), deviceHsetValue.secondValue)
+        assertEquals("154.130.20.55:household_score:campaign", deviceHsetKey.firstValue)
+        assertEquals(mapOf("123" to "10", "321" to "20"), deviceHsetValue.firstValue)
     }
 }

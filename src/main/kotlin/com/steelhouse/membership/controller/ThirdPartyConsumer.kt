@@ -82,16 +82,6 @@ class ThirdPartyConsumer(
     fun writeDeviceMetadata(message: MembershipUpdateMessage) {
         val stopwatch = Stopwatch.createStarted()
 
-        // TODO: Delete after migration
-        val ipKey = message.ip
-        val ipValue = mapOf(
-            "geo_version" to message.geoVersion,
-        ).filterValues { it != null }
-        if (ipValue.isNotEmpty()) {
-            redisConnectionDeviceInfo.sync().hset(ipKey, ipValue)
-            redisConnectionDeviceInfo.sync().expire(ipKey, redisConfig.membershipTTL!!)
-        }
-
         // Insert geo version
         val ipGeoVersionKey = "${message.ip}:geo_version"
         val ipGeoVersionValue = message.geoVersion
