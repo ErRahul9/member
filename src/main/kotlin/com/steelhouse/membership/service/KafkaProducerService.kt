@@ -19,9 +19,9 @@ class KafkaProducerService(
         return template.send(topic, message)
             .whenComplete { _, thrown ->
                 if (thrown != null) {
-                    log.error("Error sending message: ${thrown.message}")
+                    log.error("Error sending message", thrown)
                 } else {
-                    log.info("Message sent successfully")
+                    log.debug("Message sent successfully")
                 }
             }
     }

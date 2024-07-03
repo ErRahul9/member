@@ -69,6 +69,10 @@ class MembershipConsumer(
             segmentVersions = membership.segmentVersions
         )
         val logMessage = gson.toJson(messageUpdateLog)
-        kafkaProducerService.sendMessage("membership-updates-log", logMessage)
+        kafkaProducerService.sendMessage(MEMBERSHIP_UPDATES_LOG_TOPIC, logMessage)
+    }
+
+    companion object {
+        const val MEMBERSHIP_UPDATES_LOG_TOPIC = "membership-updates-log"
     }
 }
