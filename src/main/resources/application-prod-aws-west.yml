@@ -26,6 +26,13 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       client-id: membership-consumer
+    producer:
+      bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-6.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-2.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096' ]
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 3
+      client-id: membership-consumer
+
 
 logging:
   level:

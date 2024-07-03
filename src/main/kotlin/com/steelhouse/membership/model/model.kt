@@ -15,6 +15,21 @@ data class MembershipUpdateMessage(
     val geoVersion: String?,
     val isDelta: Boolean?,
     val metadataInfo: Map<String, String>? = emptyMap(),
+    val segmentVersions: List<SegmentVersion>?
+)
+
+data class MembershipUpdateLogMessage(
+    var guid: String,
+    val advertiserId: Int,
+    val epoch: Long,
+    val activityEpoch: Long,
+    val ip: String,
+    val geoVersion: String?,
+    val segmentVersions: List<SegmentVersion>?
+)
+data class SegmentVersion(
+    val segmentId: Int,
+    val version: Long
 )
 
 data class ImpressionMessage(

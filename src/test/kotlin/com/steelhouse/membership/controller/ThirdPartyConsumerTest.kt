@@ -256,6 +256,7 @@ class ThirdPartyConsumerTest {
                 "cs_123" to "10",
                 "cs_321" to "20",
             ),
+            segmentVersions = emptyList()
         )
 
         ThirdPartyConsumer(

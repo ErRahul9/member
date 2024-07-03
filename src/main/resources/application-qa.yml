@@ -9,6 +9,12 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      bootstrap-servers: [ 'b-1.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092','b-2.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092' ]
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 3
+      client-id: membership-consumer
 
 
 logging:
