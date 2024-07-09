@@ -2,12 +2,14 @@ package com.steelhouse.membership.controller
 
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.same
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
 import com.steelhouse.membership.configuration.RedisConfig
+import com.steelhouse.membership.service.KafkaProducerService
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
@@ -33,6 +35,8 @@ class MembershipConsumerTest {
 
     var redisConfig: RedisConfig = mock()
 
+    val kafkaProducerService: KafkaProducerService = mock()
+
     @BeforeEach
     fun init() {
         whenever(redisClientMembershipTpa.sync()).thenReturn(membershipCommands)
@@ -54,7 +58,7 @@ class MembershipConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig)
+        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig, kafkaProducerService)
         consumer.consume(message)
 
         runBlocking {
@@ -73,6 +77,7 @@ class MembershipConsumerTest {
             ).containsAll(hSetKey.allValues),
         )
         assertEquals(emptyList<String>(), fieldValue.allValues)
+        verify(kafkaProducerService, times(0)).sendMessage(eq("membership-updates-log"), any())
     }
 
     @Test
@@ -89,7 +94,7 @@ class MembershipConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig)
+        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig, kafkaProducerService)
         consumer.consume(message)
 
         runBlocking {
@@ -103,6 +108,7 @@ class MembershipConsumerTest {
         verify(redisClientMembershipTpa.sync(), times(1)).del(hKeyDelete.capture())
         assertEquals(listOf("154.130.20.55"), hKey.allValues)
         assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        verify(kafkaProducerService, times(1)).sendMessage(eq("membership-updates-log"), any())
     }
 
     /**
@@ -122,7 +128,7 @@ class MembershipConsumerTest {
         whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
         whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
 
-        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig)
+        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig, kafkaProducerService)
         consumer.consume(message)
 
         runBlocking {
@@ -136,5 +142,6 @@ class MembershipConsumerTest {
         verify(redisClientMembershipTpa.sync(), times(0)).del(hKeyDelete.capture())
         assertEquals(listOf("154.130.20.55"), hKey.allValues)
         assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        verify(kafkaProducerService, times(1)).sendMessage(eq("membership-updates-log"), any())
     }
 }
