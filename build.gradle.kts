@@ -57,6 +57,8 @@ dependencies {
         exclude(module = "spring-boot-starter-tomcat")
     }
 
+    implementation("com.aerospike:aerospike-client-jdk8:8.1.3")
+
     implementation("com.github.ben-manes.caffeine:caffeine:2.7.0")
     implementation("io.micrometer:micrometer-core")
     implementation("io.micrometer:micrometer-registry-prometheus")

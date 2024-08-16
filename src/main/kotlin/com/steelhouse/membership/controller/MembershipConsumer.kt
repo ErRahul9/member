@@ -1,16 +1,16 @@
 package com.steelhouse.membership.controller
 
+import com.aerospike.client.AerospikeClient
+import com.aerospike.client.policy.WritePolicy
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
-import com.steelhouse.membership.configuration.RedisConfig
+import com.steelhouse.membership.configuration.AerospikeConfig
 import com.steelhouse.membership.model.MembershipUpdateLogMessage
 import com.steelhouse.membership.model.MembershipUpdateMessage
 import com.steelhouse.membership.service.KafkaProducerService
-import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Service
 import java.io.IOException
@@ -19,13 +19,15 @@ import java.time.Instant
 @Service
 class MembershipConsumer(
     meterRegistry: MeterRegistry,
-    @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
-    redisConfig: RedisConfig,
+    aerospikeClient: AerospikeClient,
+    aerospikeConfig: AerospikeConfig,
+    private val writePolicy: WritePolicy,
     private val kafkaProducerService: KafkaProducerService
 ) : BaseConsumer(
     meterRegistry = meterRegistry,
-    redisConnectionMembershipTpa = redisConnectionMembershipTpa,
-    redisConfig = redisConfig,
+    aerospikeClient = aerospikeClient,
+    aerospikeConfig = aerospikeConfig,
+    writePolicy = writePolicy,
 ) {
 
     val gson = GsonBuilder()

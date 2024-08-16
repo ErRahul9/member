@@ -1,12 +1,15 @@
 package com.steelhouse.membership.controller
 
+import com.aerospike.client.AerospikeClient
+import com.aerospike.client.Bin
+import com.aerospike.client.Key
+import com.aerospike.client.policy.WritePolicy
 import com.google.common.base.Stopwatch
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonSyntaxException
-import com.steelhouse.membership.configuration.RedisConfig
+import com.steelhouse.membership.configuration.AerospikeConfig
 import com.steelhouse.membership.model.MembershipUpdateMessage
-import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -24,14 +27,15 @@ import java.util.concurrent.TimeUnit
 @Service
 class ThirdPartyConsumer(
     private val meterRegistry: MeterRegistry,
-    @Qualifier("redisConnectionMembershipTpa") private val redisConnectionMembershipTpa: StatefulRedisClusterConnection<String, String>,
-    @Qualifier("redisConnectionDeviceInfo") private val redisConnectionDeviceInfo: StatefulRedisClusterConnection<String, String>,
-    private val redisConfig: RedisConfig,
+    private val aerospikeClient: AerospikeClient,
+    private val aerospikeConfig: AerospikeConfig,
+    private val writePolicy: WritePolicy,
     @Qualifier("app") private val log: Log,
 ) : BaseConsumer(
     meterRegistry = meterRegistry,
-    redisConnectionMembershipTpa = redisConnectionMembershipTpa,
-    redisConfig = redisConfig,
+    aerospikeClient = aerospikeClient,
+    aerospikeConfig = aerospikeConfig,
+    writePolicy = writePolicy,
 ) {
 
     private val gson = GsonBuilder()
@@ -66,7 +70,7 @@ class ThirdPartyConsumer(
                     }
                 } else {
                     async {
-                        redisConnectionDeviceInfo.sync().del(oracleMembership.ip)
+                        deleteIp(oracleMembership.ip)
                     }
                 }
 
@@ -82,24 +86,24 @@ class ThirdPartyConsumer(
     fun writeDeviceMetadata(message: MembershipUpdateMessage) {
         val stopwatch = Stopwatch.createStarted()
 
+        val key = Key(aerospikeConfig.namespace, aerospikeConfig.setName, message.ip)
+
         // Insert geo version
-        val ipGeoVersionKey = "${message.ip}:geo_version"
         val ipGeoVersionValue = message.geoVersion
         if (!ipGeoVersionValue.isNullOrEmpty()) {
-            redisConnectionDeviceInfo.sync().set(ipGeoVersionKey, ipGeoVersionValue)
-            redisConnectionDeviceInfo.sync().expire(ipGeoVersionKey, redisConfig.membershipTTL!!)
+            val geoVersion = Bin("geo_version", ipGeoVersionValue)
+            aerospikeClient.put(writePolicy, key, geoVersion)
         }
 
         // Insert household score
-        val ipHouseholdScoreKey = "${message.ip}:household_score:campaign"
         val ipHouseholdScoreValue = message.metadataInfo?.filterKeys {
             it.startsWith("cs_")
         }?.mapKeys {
             it.key.split("_").last()
         }
         if (!ipHouseholdScoreValue.isNullOrEmpty()) {
-            redisConnectionDeviceInfo.sync().hset(ipHouseholdScoreKey, ipHouseholdScoreValue)
-            redisConnectionDeviceInfo.sync().expire(ipHouseholdScoreKey, redisConfig.membershipTTL!!)
+            val householdScore = Bin("household_score:campaign", ipHouseholdScoreValue)
+            aerospikeClient.put(writePolicy, key, householdScore)
         }
 
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)

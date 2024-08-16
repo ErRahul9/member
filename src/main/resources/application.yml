@@ -50,3 +50,9 @@ redis:
   topologyRefreshHours: 1
   clientShutdownSeconds: 10
 
+aerospike:
+  hostnames: [localhost]
+  port: 3000
+  namespace: rtb
+  set-name: household_profile
+  ttl-seconds: 7776000

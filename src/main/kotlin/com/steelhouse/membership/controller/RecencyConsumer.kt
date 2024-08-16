@@ -90,7 +90,6 @@ class RecencyConsumer(
             writeToRecencyRedis(deviceID, advertiserID, recencyEpoch, expirationWindow)
         }
 
-
         val responseTime = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS)
         meterRegistry.timer("write.recency.latency").record(Duration.ofMillis(responseTime))
     }
