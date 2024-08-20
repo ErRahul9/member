@@ -1,47 +1,46 @@
 package com.steelhouse.membership.controller
 
+import com.aerospike.client.AerospikeClient
+import com.aerospike.client.Bin
+import com.aerospike.client.Key
+import com.aerospike.client.policy.WritePolicy
 import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.anyOrNull
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.same
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.whenever
-import com.steelhouse.membership.configuration.RedisConfig
+import com.steelhouse.membership.configuration.AerospikeConfig
 import com.steelhouse.membership.service.KafkaProducerService
-import io.lettuce.core.RedisFuture
-import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
-import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
-import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+private const val NAMESPACE = "rtb"
+private const val SET_NAME = "household-profile"
+
 class MembershipConsumerTest {
 
-    var redisClientMembershipTpa: StatefulRedisClusterConnection<String, String> = mock()
+    private val aerospikeClient: AerospikeClient = mock<AerospikeClient>()
 
-    var membershipCommands: RedisAdvancedClusterCommands<String, String> = mock()
-    var membershipAsyncCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
+    private val meterRegistry = SimpleMeterRegistry()
 
-    var segmentMappingCommands: RedisAdvancedClusterAsyncCommands<String, String> = mock()
+    private val aerospikeConfig = mock<AerospikeConfig>()
 
-    val meterRegistry = SimpleMeterRegistry()
+    private var writePolicy = mock<WritePolicy>()
 
-    var redisConfig: RedisConfig = mock()
-
-    val kafkaProducerService: KafkaProducerService = mock()
+    private val kafkaProducerService: KafkaProducerService = mock()
 
     @BeforeEach
     fun init() {
-        whenever(redisClientMembershipTpa.sync()).thenReturn(membershipCommands)
-        whenever(redisClientMembershipTpa.async()).thenReturn(membershipAsyncCommands)
-        whenever(redisConfig.membershipTTL).thenReturn(5)
+        whenever(aerospikeConfig.namespace).thenReturn(NAMESPACE)
+        whenever(aerospikeConfig.setName).thenReturn(SET_NAME)
     }
 
     @Test
@@ -49,34 +48,23 @@ class MembershipConsumerTest {
         val message =
             "{\"data_source\":\"1\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
 
-        val future2: RedisFuture<Boolean> = mock()
-        whenever(future2.get()).thenReturn(true)
-        whenever(membershipAsyncCommands.expire(any(), same(5))).thenReturn(future2)
-        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(true)
-
-        val segmentMappingFuture: RedisFuture<String> = mock()
-        whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
-        whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
-
-        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig, kafkaProducerService)
+        val consumer = MembershipConsumer(meterRegistry, aerospikeClient, aerospikeConfig, writePolicy, kafkaProducerService)
         consumer.consume(message)
 
         runBlocking {
             delay(1000)
         }
 
-        val hSetKey = argumentCaptor<String>()
-        val fieldValue = argumentCaptor<String>()
-        verify(redisClientMembershipTpa.sync(), times(0)).sadd(hSetKey.capture(), fieldValue.capture())
-        assertTrue(
-            listOf(
-                "006866ac-cfb1-4639-99d3-c7948d7f5111",
-                "154.130.20.55",
-                "beeswaxId",
-                "tradedeskId",
-            ).containsAll(hSetKey.allValues),
+        val aerospikeKey = Key(NAMESPACE, SET_NAME, "154.130.20.55")
+        val aerospikeValues = argumentCaptor<Bin>()
+
+        verify(aerospikeClient, times(0)).put(
+            eq(writePolicy),
+            eq(aerospikeKey),
+            aerospikeValues.capture()
         )
-        assertEquals(emptyList<String>(), fieldValue.allValues)
+
+        assertThat(aerospikeValues.allValues).isEmpty()
         verify(kafkaProducerService, times(0)).sendMessage(eq("membership-updates-log"), any())
     }
 
@@ -85,29 +73,33 @@ class MembershipConsumerTest {
         val message =
             "{\"data_source\":\"3\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55,\"is_delta\":false}"
 
-        val future2: RedisFuture<Boolean> = mock()
-        whenever(future2.get()).thenReturn(true)
-        whenever(membershipAsyncCommands.expire(any(), same(5))).thenReturn(future2)
-        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(true)
-
-        val segmentMappingFuture: RedisFuture<String> = mock()
-        whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
-        whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
-
-        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig, kafkaProducerService)
+        val consumer = MembershipConsumer(meterRegistry, aerospikeClient, aerospikeConfig, writePolicy, kafkaProducerService)
         consumer.consume(message)
 
         runBlocking {
             delay(1000)
         }
 
-        val hKey = argumentCaptor<String>()
-        val fieldValue = argumentCaptor<String>()
-        val hKeyDelete = argumentCaptor<String>()
-        verify(redisClientMembershipTpa.sync(), times(1)).set(hKey.capture(), fieldValue.capture())
-        verify(redisClientMembershipTpa.sync(), times(1)).del(hKeyDelete.capture())
-        assertEquals(listOf("154.130.20.55"), hKey.allValues)
-        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        val aerospikeKey = Key(NAMESPACE, SET_NAME, "154.130.20.55")
+        val aerospikeValues = argumentCaptor<Bin>()
+
+        val delKey = argumentCaptor<Key>()
+
+        verify(aerospikeClient, times(1)).put(
+            eq(writePolicy),
+            eq(aerospikeKey),
+            aerospikeValues.capture()
+        )
+
+        verify(aerospikeClient, times(1)).delete(
+            eq(writePolicy),
+            delKey.capture(),
+        )
+
+        assertThat(aerospikeValues.allValues).containsExactlyInAnyOrder(
+            Bin("segments", listOf(27797, 27798, 27801).joinToString(",")),
+        )
+        assertEquals("154.130.20.55", delKey.firstValue.userKey.toString())
         verify(kafkaProducerService, times(1)).sendMessage(eq("membership-updates-log"), any())
     }
 
@@ -119,29 +111,31 @@ class MembershipConsumerTest {
         val message =
             "{\"data_source\":\"3\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55,\"is_delta\":true}"
 
-        val future2: RedisFuture<Boolean> = mock()
-        whenever(future2.get()).thenReturn(true)
-        whenever(membershipAsyncCommands.expire(any(), same(5))).thenReturn(future2)
-        whenever(membershipCommands.hset(any(), any(), any())).thenReturn(true)
-
-        val segmentMappingFuture: RedisFuture<String> = mock()
-        whenever(segmentMappingFuture.get()).thenReturn("steelhouse-4")
-        whenever(segmentMappingCommands.get(any())).thenReturn(segmentMappingFuture)
-
-        val consumer = MembershipConsumer(meterRegistry, redisClientMembershipTpa, redisConfig, kafkaProducerService)
+        val consumer = MembershipConsumer(meterRegistry, aerospikeClient, aerospikeConfig, writePolicy, kafkaProducerService)
         consumer.consume(message)
 
         runBlocking {
             delay(1000)
         }
 
-        val hKey = argumentCaptor<String>()
-        val fieldValue = argumentCaptor<String>()
-        val hKeyDelete = argumentCaptor<String>()
-        verify(redisClientMembershipTpa.sync(), times(1)).set(hKey.capture(), fieldValue.capture())
-        verify(redisClientMembershipTpa.sync(), times(0)).del(hKeyDelete.capture())
-        assertEquals(listOf("154.130.20.55"), hKey.allValues)
-        assertEquals(listOf(27797, 27798, 27801).joinToString(",") { it.toString() }, fieldValue.allValues[0])
+        val aerospikeKey = Key(NAMESPACE, SET_NAME, "154.130.20.55")
+        val aerospikeValues = argumentCaptor<Bin>()
+
+        verify(aerospikeClient, times(1)).put(
+            eq(writePolicy),
+            eq(aerospikeKey),
+            aerospikeValues.capture()
+        )
+
+        verify(aerospikeClient, times(0)).delete(
+            anyOrNull(),
+            any()
+        )
+
+        assertThat(aerospikeValues.allValues).containsExactlyInAnyOrder(
+            Bin("segments", listOf(27797, 27798, 27801).joinToString(",")),
+        )
+
         verify(kafkaProducerService, times(1)).sendMessage(eq("membership-updates-log"), any())
     }
 }

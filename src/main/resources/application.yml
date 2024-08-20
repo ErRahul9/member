@@ -42,10 +42,6 @@ kafka:
   subscribe-topic: membership-updates
 
 redis:
-  membershipConnectionTpa: redis://core-dev-redis-1.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  membershipTTL: 7776000
-  partnerConnection: redis://core-dev-redis-0.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  partnerTTL: 7776000
   requestTimeoutSeconds: 10
   topologyRefreshHours: 1
   clientShutdownSeconds: 10
@@ -54,5 +50,5 @@ aerospike:
   hostnames: [localhost]
   port: 3000
   namespace: rtb
-  set-name: household_profile
+  set-name: household-profile
   ttl-seconds: 7776000

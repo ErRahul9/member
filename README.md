@@ -12,6 +12,10 @@ Houses services which loads data points from various sources into Redis cache fo
 
 ## Aerospike
 
+### Notes
+
+The prior Redis caches for `membership` (containing segments) and `device-info` (containing geo_version and household_score) have been replaced with Aerospike, combined under the set `household-profile`.
+
 ### Local Development
 
 `docker run -d --name aerospike -e "NAMESPACE=rtb" -p 3000-3002:3000-3002 aerospike/aerospike-server`

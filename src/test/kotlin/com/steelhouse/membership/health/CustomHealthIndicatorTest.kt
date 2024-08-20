@@ -1,8 +1,7 @@
-package com.steelhouse.augmentor.health
+package com.steelhouse.membership.health
 
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
-import com.steelhouse.membership.health.CustomHealthIndicator
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection
 import io.lettuce.core.cluster.api.sync.Executions
 import io.lettuce.core.cluster.api.sync.NodeSelection
@@ -18,57 +17,67 @@ import org.springframework.boot.actuate.health.Status
 
 class CustomHealthIndicatorTest {
 
-    var log: Log = mock()
+    val log: Log = mock()
 
-    var redisClientMembership: StatefulRedisClusterConnection<String, String> = mock()
+    val redisClientRecency: StatefulRedisClusterConnection<String, String> = mock()
 
-    var membershipCommands: RedisAdvancedClusterCommands<String, String> = mock()
+    val redisClientFrequencyCap: StatefulRedisClusterConnection<String, String> = mock()
+
+    val recencyCommands: RedisAdvancedClusterCommands<String, String> = mock()
+
+    val frequencyCapCommands: RedisAdvancedClusterCommands<String, String> = mock()
 
     val executions: Executions<String> = mock()
 
     val executions2: Executions<String> = mock()
 
-    val partnerNodeSelectionCommands: NodeSelectionCommands<String, String> = mock()
+    val recencyNodeSelectionCommands: NodeSelectionCommands<String, String> = mock()
 
-    val membershipNodeSelectionCommands: NodeSelectionCommands<String, String> = mock()
+    val frequencyCapNodeSelectionCommands: NodeSelectionCommands<String, String> = mock()
 
     @BeforeEach
     fun init() {
-        whenever(redisClientMembership.sync()).thenReturn(membershipCommands)
+        whenever(redisClientRecency.sync()).thenReturn(recencyCommands)
+        whenever(redisClientFrequencyCap.sync()).thenReturn(frequencyCapCommands)
 
-        val membershipMasters: NodeSelection<String, String> = mock()
-        whenever(membershipCommands.masters()).thenReturn(membershipMasters)
+        val recencyMasters: NodeSelection<String, String> = mock()
+        whenever(recencyCommands.masters()).thenReturn(recencyMasters)
+        whenever(recencyMasters.commands()).thenReturn(recencyNodeSelectionCommands)
 
-        whenever(membershipMasters.commands()).thenReturn(membershipNodeSelectionCommands)
+        val frequencyCapMasters: NodeSelection<String, String> = mock()
+        whenever(frequencyCapCommands.masters()).thenReturn(frequencyCapMasters)
+        whenever(frequencyCapMasters.commands()).thenReturn(frequencyCapNodeSelectionCommands)
     }
 
     @Test
     fun healthyRedisConnections() {
-        val indicator = CustomHealthIndicator(log, redisClientMembership)
+        val indicator = CustomHealthIndicator(log, redisClientRecency, redisClientFrequencyCap)
 
         whenever(executions.iterator()).thenReturn(mutableListOf("PONG", "PONG", "PONG").iterator())
         whenever(executions2.iterator()).thenReturn(mutableListOf("PONG", "PONG", "PONG").iterator())
 
-        whenever(partnerNodeSelectionCommands.ping()).thenReturn(executions)
-        whenever(membershipNodeSelectionCommands.ping()).thenReturn(executions2)
+        whenever(recencyNodeSelectionCommands.ping()).thenReturn(executions)
+        whenever(frequencyCapNodeSelectionCommands.ping()).thenReturn(executions2)
 
         val builder = Health.Builder()
-        assertTrue(indicator.verifyConnections(builder, redisClientMembership))
+        assertTrue(indicator.verifyConnections(builder, redisClientRecency))
+        assertTrue(indicator.verifyConnections(builder, redisClientFrequencyCap))
         assertTrue(builder.build().status == Status.UP)
     }
 
     @Test
     fun unHealthyRedisConnections() {
-        val indicator = CustomHealthIndicator(log, redisClientMembership)
+        val indicator = CustomHealthIndicator(log, redisClientRecency, redisClientFrequencyCap)
 
         whenever(executions.iterator()).thenReturn(mutableListOf("PONG", "PONG", "PONG").iterator())
         whenever(executions2.iterator()).thenReturn(mutableListOf("PONG", "BOOM", "PONG").iterator())
 
-        whenever(partnerNodeSelectionCommands.ping()).thenReturn(executions)
-        whenever(membershipNodeSelectionCommands.ping()).thenReturn(executions2)
+        whenever(recencyNodeSelectionCommands.ping()).thenReturn(executions)
+        whenever(frequencyCapNodeSelectionCommands.ping()).thenReturn(executions2)
 
         val builder = Health.Builder()
-        assertFalse(indicator.verifyConnections(builder, redisClientMembership))
+        assertTrue(indicator.verifyConnections(builder, redisClientRecency))
+        assertFalse(indicator.verifyConnections(builder, redisClientFrequencyCap))
         assertTrue(builder.build().status == Status.DOWN)
     }
 }

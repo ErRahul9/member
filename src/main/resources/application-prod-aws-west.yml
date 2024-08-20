@@ -39,15 +39,18 @@ logging:
     app: INFO
 
 redis:
-  membershipConnectionTpa: redis://core-prod-membership-compression.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  membershipTTL: 604800
-  deviceInfoConnection: redis://rtb-prod-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   recencyConnection: redis://core-prod-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   frequencyCapConnection: redis://rtb-prod-bidder-frequency-caps-b.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  partnerTTL: 15552000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
   requestTimeoutSeconds: 10
+
+aerospike:
+  hostnames: [localhost]
+  port: 3000
+  namespace: rtb
+  set-name: household-profile
+  ttl-seconds: 604800
 
 membership:
   oracleConsumer: false

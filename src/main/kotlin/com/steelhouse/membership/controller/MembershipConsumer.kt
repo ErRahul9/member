@@ -21,7 +21,7 @@ class MembershipConsumer(
     meterRegistry: MeterRegistry,
     aerospikeClient: AerospikeClient,
     aerospikeConfig: AerospikeConfig,
-    private val writePolicy: WritePolicy,
+    writePolicy: WritePolicy,
     private val kafkaProducerService: KafkaProducerService
 ) : BaseConsumer(
     meterRegistry = meterRegistry,

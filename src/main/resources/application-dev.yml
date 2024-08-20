@@ -7,7 +7,7 @@ spring:
       retries: 3
     consumer:
       bootstrap-servers: [ 'b-1.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092','b-2.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092' ]
-      group-id: membership-consumer-dev-aerospike
+      group-id: membership-consumer-dev
       auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -17,15 +17,18 @@ logging:
     app: TRACE
 
 redis:
-  membershipConnectionTpa: redis://core-dev-membership.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  membershipTTL: 5184000
-  deviceInfoConnection: redis://rtb-dev-device-info.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   recencyConnection: redis://core-dev-recency.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
   frequencyCapConnection: redis://core-dev-frequency-caps.pid24g.clustercfg.usw2.cache.amazonaws.com:6379
-  partnerTTL: 7776000
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
   requestTimeoutSeconds: 10
+
+aerospike:
+  hostnames: [localhost]
+  port: 3000
+  namespace: rtb
+  set-name: household-profile
+  ttl-seconds: 5184000
 
 membership:
   oracleConsumer: false
