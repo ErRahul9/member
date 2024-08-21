@@ -46,7 +46,7 @@ class MembershipConsumerTest {
     @Test
     fun noValidDataSource() {
         val message =
-            "{\"data_source\":\"1\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55}"
+            "{\"data_source\":\"1\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":\"154.130.20.55\"}"
 
         val consumer = MembershipConsumer(meterRegistry, aerospikeClient, aerospikeConfig, writePolicy, kafkaProducerService)
         consumer.consume(message)
@@ -71,7 +71,7 @@ class MembershipConsumerTest {
     @Test
     fun tpaDataSourceWrite() {
         val message =
-            "{\"data_source\":\"3\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55,\"is_delta\":false}"
+            "{\"data_source\":\"3\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":\"154.130.20.55\",\"is_delta\":false}"
 
         val consumer = MembershipConsumer(meterRegistry, aerospikeClient, aerospikeConfig, writePolicy, kafkaProducerService)
         consumer.consume(message)
@@ -109,7 +109,7 @@ class MembershipConsumerTest {
     @Test
     fun deltaIsTrue() {
         val message =
-            "{\"data_source\":\"3\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":154.130.20.55,\"is_delta\":true}"
+            "{\"data_source\":\"3\",\"guid\":\"006866ac-cfb1-4639-99d3-c7948d7f5111\",\"advertiser_id\":20460,\"current_segments\":[27797,27798,27801],\"old_segments\":[28579,29060,32357,42631,43527,42825,43508,27702,27799,27800,27992,28571,29595,28572,44061],\"epoch\":1556195886916784,\"activity_epoch\":1556195801515452,\"ip\":\"154.130.20.55\",\"is_delta\":true}"
 
         val consumer = MembershipConsumer(meterRegistry, aerospikeClient, aerospikeConfig, writePolicy, kafkaProducerService)
         consumer.consume(message)
