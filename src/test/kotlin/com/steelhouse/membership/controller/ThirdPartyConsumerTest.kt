@@ -95,7 +95,7 @@ class ThirdPartyConsumerTest {
         assertThat(aerospikeValues.allValues).containsExactlyInAnyOrder(
             Bin("segments", listOf(27797, 27798, 27801).joinToString(",")),
             Bin("geo_version", "1556195600"),
-            Bin("household_score:campaign", mapOf("123" to "10", "321" to "20")),
+            Bin("hhs:campaign", mapOf("123" to "10", "321" to "20")),
         )
     }
 
@@ -199,7 +199,7 @@ class ThirdPartyConsumerTest {
 
         assertThat(aerospikeValues.allValues).containsExactlyInAnyOrder(
             Bin("geo_version", "1556195600"),
-            Bin("household_score:campaign", mapOf("123" to "10", "321" to "20")),
+            Bin("hhs:campaign", mapOf("123" to "10", "321" to "20")),
         )
     }
 
@@ -241,7 +241,7 @@ class ThirdPartyConsumerTest {
 
         assertThat(aerospikeValues.allValues).containsExactlyInAnyOrder(
             Bin("geo_version", "43543543543"),
-            Bin("household_score:campaign", mapOf("123" to "10", "321" to "20")),
+            Bin("hhs:campaign", mapOf("123" to "10", "321" to "20")),
         )
     }
 }

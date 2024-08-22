@@ -102,7 +102,7 @@ class ThirdPartyConsumer(
             it.key.split("_").last()
         }
         if (!ipHouseholdScoreValue.isNullOrEmpty()) {
-            val householdScore = Bin("household_score:campaign", ipHouseholdScoreValue)
+            val householdScore = Bin("hhs:campaign", ipHouseholdScoreValue)
             aerospikeClient.put(writePolicy, key, householdScore)
         }
 
