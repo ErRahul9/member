@@ -4,15 +4,15 @@ spring:
     listener:
       concurrency=: 1
     consumer:
-      bootstrap-servers: [ 'b-1.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092,b-2.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092' ]
+      bootstrap-servers: [ 'b-1.mskrtbdev2.apc8bs.c14.kafkaConf.us-west-2.amazonaws.com:9092,b-2.mskrtbdev2.apc8bs.c14.kafkaConf.us-west-2.amazonaws.com:9092' ]
       group-id: membership-consumer-dev-oracle-west
       auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      key-deserializer: org.apache.kafkaConf.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafkaConf.common.serialization.StringDeserializer
     producer:
-      bootstrap-servers: [ 'b-1.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092','b-2.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092' ]
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      bootstrap-servers: [ 'b-1.mskrtbdev2.apc8bs.c14.kafkaConf.us-west-2.amazonaws.com:9092','b-2.mskrtbdev2.apc8bs.c14.kafkaConf.us-west-2.amazonaws.com:9092' ]
+      key-serializer: org.apache.kafkaConf.common.serialization.StringSerializer
+      value-serializer: org.apache.kafkaConf.common.serialization.StringSerializer
       retries: 3
       client-id: membership-consumer
 

@@ -1,16 +1,16 @@
 spring:
   kafka:
     producer:
-      bootstrap-servers: [ 'b-1.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092,b-2.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092' ]
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      bootstrap-servers: [ 'b-1.mskrtbdev2.apc8bs.c14.kafkaConf.us-west-2.amazonaws.com:9092,b-2.mskrtbdev2.apc8bs.c14.kafkaConf.us-west-2.amazonaws.com:9092' ]
+      key-serializer: org.apache.kafkaConf.common.serialization.StringSerializer
+      value-serializer: org.apache.kafkaConf.common.serialization.StringSerializer
       retries: 3
     consumer:
-      bootstrap-servers: [ 'b-1.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092','b-2.mskrtbdev2.apc8bs.c14.kafka.us-west-2.amazonaws.com:9092' ]
+      bootstrap-servers: [ 'b-1.mskrtbdev2.apc8bs.c14.kafkaConf.us-west-2.amazonaws.com:9092','b-2.mskrtbdev2.apc8bs.c14.kafkaConf.us-west-2.amazonaws.com:9092' ]
       group-id: membership-consumer-dev
       auto-offset-reset: latest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      key-deserializer: org.apache.kafkaConf.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafkaConf.common.serialization.StringDeserializer
 
 logging:
   level:

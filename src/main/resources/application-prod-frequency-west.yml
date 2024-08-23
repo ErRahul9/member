@@ -15,16 +15,16 @@ spring:
             algorithm: HTTPS
       sasl:
         jaas:
-          config: org.apache.kafka.common.security.scram.ScramLoginModule required username='${USERNAME}' password='${PASSWORD}';
+          config: org.apache.kafkaConf.common.security.scram.ScramLoginModule required username='${USERNAME}' password='${PASSWORD}';
         mechanism: SCRAM-SHA-512
       security:
         protocol: SASL_SSL
     consumer:
-      bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-6.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096,b-2.mskprod.0xzjsz.c12.kafka.us-west-2.amazonaws.com:9096' ]
+      bootstrap-servers: [ 'b-3.mskprod.0xzjsz.c12.kafkaConf.us-west-2.amazonaws.com:9096,b-6.mskprod.0xzjsz.c12.kafkaConf.us-west-2.amazonaws.com:9096,b-2.mskprod.0xzjsz.c12.kafkaConf.us-west-2.amazonaws.com:9096' ]
       group-id: membership-consumer-prod-frequency-west
       auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      key-deserializer: org.apache.kafkaConf.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafkaConf.common.serialization.StringDeserializer
       client-id: membership-consumer
 
 logging:

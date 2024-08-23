@@ -33,10 +33,10 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: 127.0.0.1:9092
       SPRING_KAFKA_CONSUMER_GROUP_ID: membership-consumer
       SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
-      SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
-      SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
-      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
-      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+      SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafkaConf.common.serialization.StringDeserializer
+      SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.apache.kafkaConf.common.serialization.StringDeserializer
+      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafkaConf.common.serialization.StringSerializer
+      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.apache.kafkaConf.common.serialization.StringSerializer
       SPRING_KAFKA_LISTENER_MISSING_TOPICS_FATAL: false
 
 
@@ -78,12 +78,12 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.3.2
-    container_name: kafka
+    container_name: kafkaConf
     ports:
       - "9092:9092"
       - "29092:29092"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafkaConf:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
@@ -115,22 +115,22 @@ services:
 
   aerospikedb:
       image: aerospike/aerospike-server:latest
-      container_name: aerospike
+      container_name: aero
       networks:
       - redis-net
       labels:
           com.aerospike.description: "rtb_membership_consumer"
-      command: [ "--config-file","/run/secrets/aerospike.conf"]
+      command: [ "--config-file","/run/secrets/aero.conf"]
       ports:
         - "3000:3000"
         - "3001:3001"
         - "3002:3002"
         - "3003:3003"
       volumes:
-      - ./aerospike/data:/opt/aerospike/data/
+      - ./aero/data:/opt/aero/data/
       secrets:
       - source: conffile
-        target: aerospike.conf
+        target: aero.conf
 
   meshworker:
       image: aerospike/aerospike-tools:3.15.0.3
@@ -141,7 +141,7 @@ services:
       entrypoint:
       - /run/secrets/discovery
       - "--servicename"
-      - aerospike
+      - aero
       - "-i"
       - "5"
       - "-v"
@@ -152,6 +152,6 @@ services:
 
 secrets:
     conffile:
-        file: ./aerospike/aerospike.conf
+        file: aero/aerospike.conf
     discoveryfile:
-        file: ./aerospike/discovery.py
+        file: aero/discovery.py
