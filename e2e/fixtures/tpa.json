@@ -18,5 +18,16 @@
         "cs_9981111": "20"
 
     }
+  },
+   "testGeoVersionMetaWithoutcs": {
+      "geo_version": "1232445",
+      "is_delta": false,
+      "current_segments": ["100000","100001"],
+      "metadata_info":{
+        "cs_998123": "10",
+        "9981123": "90",
+        "cs_9981111": "20"
+
+    }
   }
 }
