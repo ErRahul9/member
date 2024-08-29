@@ -4,16 +4,17 @@ import time
 
 import pytest
 
-from e2e.helpers.aero import AerospikeDataAccess
-from e2e.helpers.kafka_messages import MembershipMessage
+from helpers.aero import AerospikeDataAccess
+# from helpers.aero import AerospikeDataAccess
+from helpers.kafka_messages import MembershipMessage
 
 config = {
     'hosts': [('127.0.0.1', 3000)]
 }
 
 
-ROOTDIR = os.path.realpath(os.path.join(os.path.dirname(__file__)))
-jsonfile = os.path.join(ROOTDIR, "fixtures/membership_updates.json")
+
+jsonfile = "fixtures/membership_updates.json"
 with open(jsonfile) as jsonFile:
     test_cases = json.load(jsonFile)
 

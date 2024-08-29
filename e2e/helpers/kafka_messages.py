@@ -2,15 +2,23 @@ import enum
 import json
 import os
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
+
+import pytz
 from kafka import KafkaProducer, KafkaConsumer
-from e2e.helpers.date_utils import epoch_in_microseconds
+# from date_utils import epoch_in_microseconds
 from dotenv import load_dotenv
 import logging
 
 logger = logging.getLogger(__name__)
 
+def epoch_in_microseconds(timestamp=None, days=0, hours=0, minutes=0, seconds=0, milliseconds=0):
+    now = timestamp or datetime.now(pytz.utc)
+    time_delta = timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds, milliseconds=milliseconds)
+    adjusted_time = now + time_delta
+    epoch_microseconds = int(adjusted_time.timestamp()) * 1000
+    return epoch_microseconds
 
 class KafkaMessage:
     def __init__(self, host, topic):

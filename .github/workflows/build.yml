@@ -58,3 +58,37 @@ jobs:
           CODACY_PROJECT_NAME: ${{ github.event.repository.name }}
         run: |
           bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r jacocoTestReport.xml
+          
+
+  run-regression:
+    runs-on: ubuntu-latest
+    container: ubuntu:latest
+    steps:
+      - name: Install docker & docker compose
+        run: |
+          apt -y update 
+          apt -y install sudo curl
+          curl --version
+          curl -fsSL https://get.docker.com -o get-docker.sh
+          sudo sh ./get-docker.sh
+          apt-get install docker-compose-plugin
+          docker --version
+          docker compose version
+      - name: Checkout bidder repo
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 11
+      - name: Execute Gradle assemble
+        run: ./gradlew clean assemble -x test -x generateGitProperties
+      - name: Docker hub Login
+        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Run integration test
+        run: |
+          docker compose --verbose -f ./e2e/docker-compose-github.yml up  --abort-on-container-exit --exit-code-from tests
+      - name: docker compose down
+        if: ${{ success() || failure() }}
+        run: |
+          docker compose -f ./e2e/docker-compose-regression.yml down -v --rmi all --remove-orphans
