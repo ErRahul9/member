@@ -26,9 +26,10 @@ RUN poetry add protobuf
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY . .
+COPY .. .
 
 
-CMD ["poetry", "run", "pytest","test_beeswax_Bidder_Regression.py","--html=report_regression.html"]
+CMD ["poetry", "run", "pytest","test_membership_consumer.py","--html=report_regression.html"]
+CMD ["poetry", "run", "pytest","test_tpa_consumer.py","--html=report_regression.html"]
 
 #CMD ["poetry", "run", "pytest","test_single_run.py","--html=report_regression.html"]
