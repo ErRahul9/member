@@ -1,0 +1,16 @@
+{
+  "testsegments": {
+    "is_delta": false,
+     "current_segments": ["1000192"]
+  },
+
+  "testSegmentsMultiple": {
+    "is_delta": false,
+     "current_segments": ["1000192","1000193"]
+  },
+  "testSegmentsMultipleIsDeltaEqualsTrue": {
+     "current_segments": ["998899","99889911"],
+     "is_delta": true
+  }
+
+}
