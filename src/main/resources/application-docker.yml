@@ -31,7 +31,7 @@ aerospike:
   ttl-seconds: 5184000
 
 membership:
-  oracleConsumer: false
+  oracleConsumer: true
   membershipConsumer: true
   impressionConsumer: false
   recencyConsumer: false
