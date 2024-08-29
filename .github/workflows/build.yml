@@ -74,7 +74,7 @@ jobs:
           apt-get install docker-compose-plugin
           docker --version
           docker compose version
-      - name: Checkout bidder repo
+      - name: Checkout membership-consumer repo
         uses: actions/checkout@v4
       - name: Set up JDK
         uses: actions/setup-java@v3
@@ -90,5 +90,6 @@ jobs:
           docker compose --verbose -f ./e2e/docker-compose-github.yml up  --abort-on-container-exit --exit-code-from tests
       - name: docker compose down
         if: ${{ success() || failure() }}
+
         run: |
-          docker compose -f ./e2e/docker-compose-regression.yml down -v --rmi all --remove-orphans
+          docker compose -f ./e2e/docker-compose-github.yml down -v --rmi all --remove-orphans
