@@ -18,7 +18,7 @@ jsonfile = "fixtures/membership_updates.json"
 with open(jsonfile) as jsonFile:
     test_cases = json.load(jsonFile)
 
-testSet = ["testSegmentsMultiple"]
+testSet = []
 
 @pytest.mark.parametrize(
     "scenario_name,test_data",
