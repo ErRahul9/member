@@ -131,7 +131,7 @@ services:
       - aerospikedb
       - recency
       - frequency
-      - kafka
+#      - kafka
       - membership-consumer
     environment:
       ENVIRONMENT: docker
