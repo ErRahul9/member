@@ -42,14 +42,16 @@ services:
     container_name: recencySettings
     environment:
       REDIS_START_PORT: 40001
-    network_mode: host
+    networks:
+      - redis-net
 
   frequency:
     image: steelhousedev/local-redis-cluster
     container_name: frequency
     environment:
       REDIS_START_PORT: 40011
-    network_mode: host
+    networks:
+      - redis-net
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -59,7 +61,8 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
-    network_mode: host
+    networks:
+      - redis-net
 
   kafka:
     image: confluentinc/cp-kafka:7.3.2
@@ -76,12 +79,15 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-    network_mode: host
+    networks:
+      - redis-net
     depends_on:
       - zookeeper
 
   init-kafka:
     image: confluentinc/cp-kafka:7.3.2
+    networks:
+      - redis-net
     depends_on:
       - kafka
     entrypoint: [ "/bin/sh", "-c" ]
@@ -99,7 +105,8 @@ services:
   aerospikedb:
     image: aerospike/aerospike-server:latest
     container_name: aero
-    network_mode: host
+    networks:
+      - redis-net
     labels:
       com.aerospike.description: "rtb_membership_consumer"
     ports:
@@ -115,16 +122,17 @@ services:
 
   tests:
     container_name: tests
+    network_mode:
+      host
     build:
       context: .
-      dockerfile: e2e/Dockerfile
+      dockerfile: Dockerfile
     depends_on:
       - aerospikedb
       - recency
       - frequency
       - kafka
       - membership-consumer
-    network_mode: host
     environment:
       ENVIRONMENT: docker
       SERVICE: membership-consumer
@@ -148,3 +156,7 @@ services:
         poetry run pytest -s test_membership_consumer.py
         echo "running TPA tests now"
         poetry run pytest -s test_tpa_consumer.py
+
+networks:
+  redis-net:
+      driver: bridge
