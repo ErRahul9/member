@@ -13,7 +13,7 @@ services:
       - aerospikedb
       - recency
       - frequency
-      - kafka
+#      - kafka
     environment:
       SPRING_PROFILES_ACTIVE: "docker"
       REDIS_RECENCY_CONNECTION: redis://127.0.0.1:40001
@@ -36,8 +36,6 @@ services:
   #      MEMBERSHIP_MEMBERSHIP_CONSUMER: true
   #      MEMBERSHIP_IMPRESSION_CONSUMER: false
   #      MEMBERSHIP_RECENCY_CONSUMER: false
-
-
 
   recency:
     image: steelhousedev/local-redis-cluster
