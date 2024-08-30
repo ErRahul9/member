@@ -81,7 +81,7 @@ jobs:
         uses: spicyparrot/kafka-kraft-action@v1.1.0
         with:
           kafka-version: "3.7.0"
-          kafka-topics: "membership-updates,sh-dw-generated-audiences"
+          kafka-topics: "membership-updates"
 
       - name: Set up JDK
         uses: actions/setup-java@v4
