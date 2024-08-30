@@ -7,8 +7,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    networks:
-      - redis-net
+    network_mode: host
     depends_on:
       - aerospikedb
       - recency
@@ -40,18 +39,22 @@ services:
   recency:
     image: steelhousedev/local-redis-cluster
     container_name: recencySettings
+    ports:
+      - "40001:40001"
     environment:
       REDIS_START_PORT: 40001
-    networks:
-      - redis-net
+    network_mode: host
 
   frequency:
     image: steelhousedev/local-redis-cluster
     container_name: frequency
+    ports:
+      - "40011:40011"
     environment:
       REDIS_START_PORT: 40011
     networks:
       - redis-net
+
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -63,6 +66,7 @@ services:
       - "2181:2181"
     networks:
       - redis-net
+
 
   kafka:
     image: confluentinc/cp-kafka:7.3.2
@@ -111,9 +115,6 @@ services:
       com.aerospike.description: "rtb_membership_consumer"
     ports:
       - "3000:3000"
-      - "3001:3001"
-      - "3002:3002"
-      - "3003:3003"
     volumes:
       - ./aero/data:/opt/aero/data/
     environment:

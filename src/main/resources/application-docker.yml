@@ -1,12 +1,12 @@
 spring:
   kafka:
     producer:
-      bootstrap-servers: [ '127.0.0.1:9092' ]
+      bootstrap-servers: [ 'localhost:9092' ]
       key-serializer: org.apache.kafkaConf.common.serialization.StringSerializer
       value-serializer: org.apache.kafkaConf.common.serialization.StringSerializer
       retries: 3
     consumer:
-      bootstrap-servers: ['127.0.0.1:9092']
+      bootstrap-servers: ['localhost:9092']
       group-id: membership-consumer
       auto-offset-reset: latest
       key-deserializer: org.apache.kafkaConf.common.serialization.StringDeserializer
@@ -17,14 +17,14 @@ logging:
     app: TRACE
 
 redis:
-  recencyConnection: redis://127.0.0.1:6399
-  frequencyCapConnection: redis://127.0.0.1:6398
+  recencyConnection: redis://localhost:6399
+  frequencyCapConnection: redis://localhost:6398
   topologyRefreshHours: 1
   clientShutdownSeconds: 60
   requestTimeoutSeconds: 10
 
 aerospike:
-  hostnames: 127.0.0.1
+  hostnames: localhost
   port: 3000
   namespace: rtb
   set-name: household-profile
