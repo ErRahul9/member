@@ -11,6 +11,7 @@ COPY poetry.lock /app/
 
 COPY pyproject.toml /app/
 
+
 RUN pip install psycopg2-binary
 
 # Install Poetry
@@ -26,7 +27,10 @@ RUN poetry add protobuf
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY .. .
+COPY . .
+
+#COPY .. . use this to run the tests in local docker container
+
 
 
 CMD ["poetry", "run", "pytest","test_membership_consumer.py","--html=report_regression.html"]
