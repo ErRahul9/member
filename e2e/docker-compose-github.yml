@@ -37,6 +37,8 @@ services:
   #      MEMBERSHIP_IMPRESSION_CONSUMER: false
   #      MEMBERSHIP_RECENCY_CONSUMER: false
 
+
+
   recency:
     image: steelhousedev/local-redis-cluster
     container_name: recencySettings
@@ -143,7 +145,7 @@ services:
       AEROSPIKE_HOST: 127.0.0.1
       AEROSPIKE_PORT: 3000
       KAFKA_HOST: 127.0.0.1
-      KAFKA_PORT: 9092
+      KAFKA_PORT: 29092
       KAFKA_TOPIC_MEMBERSHIP_UPDATES: membership-updates
       KAFKA_TOPIC_TPA: sh-dw-generated-audiences
     command:
