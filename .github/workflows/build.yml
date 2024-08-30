@@ -88,8 +88,8 @@ jobs:
         run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Run integration test
         run: |
-          docker compose --verbose -f docker-compose-github.yml up  --abort-on-container-exit --exit-code-from tests
+          docker compose --verbose -f ./docker-compose-github.yml up  --abort-on-container-exit --exit-code-from tests
       - name: docker compose down
         if: ${{ success() || failure() }}
         run: |
-          docker compose -f docker-compose-github.yml down -v --rmi all --remove-orphans
+          docker compose -f ./docker-compose-github.yml down -v --rmi all --remove-orphans

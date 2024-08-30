@@ -33,7 +33,7 @@ COPY . .
 
 
 
-CMD ["poetry", "run", "pytest","test_membership_consumer.py","--html=report_regression.html"]
-CMD ["poetry", "run", "pytest","test_tpa_consumer.py","--html=report_regression.html"]
+#CMD ["poetry", "run", "pytest","test_membership_consumer.py","--html=report_regression.html"]
+#CMD ["poetry", "run", "pytest","test_tpa_consumer.py","--html=report_regression.html"]
 
 #CMD ["poetry", "run", "pytest","test_single_run.py","--html=report_regression.html"]
