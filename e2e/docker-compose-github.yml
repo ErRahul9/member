@@ -7,8 +7,8 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    network_mode:
-      host
+    networks:
+      - redis-net
     depends_on:
       - aerospikedb
       - recency
