@@ -128,7 +128,7 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - aerospikedb
+#      - aerospikedb
       - recency
       - frequency
 #      - kafka
