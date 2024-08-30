@@ -102,22 +102,22 @@ services:
 #      echo -e 'Successfully created the following topics:'
 #      kafka-topics --bootstrap-server kafka:29092 --list
 #      "
-  aerospikedb:
-    image: aerospike/aerospike-server:latest
-    container_name: aero
-    networks:
-      - redis-net
-    labels:
-      com.aerospike.description: "rtb_membership_consumer"
-    ports:
-      - "3000:3000"
-      - "3001:3001"
-      - "3002:3002"
-      - "3003:3003"
-    volumes:
-      - ./aero/data:/opt/aero/data/
-    environment:
-      NAMESPACE: rtb
+#  aerospikedb:
+#    image: aerospike/aerospike-server:latest
+#    container_name: aero
+#    networks:
+#      - redis-net
+#    labels:
+#      com.aerospike.description: "rtb_membership_consumer"
+#    ports:
+#      - "3000:3000"
+#      - "3001:3001"
+#      - "3002:3002"
+#      - "3003:3003"
+#    volumes:
+#      - ./aero/data:/opt/aero/data/
+#    environment:
+#      NAMESPACE: rtb
 
 
   tests:
