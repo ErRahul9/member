@@ -10,10 +10,10 @@ services:
     networks:
       - redis-net
     depends_on:
-#      - aerospikedb
+      - aerospikedb
       - recency
       - frequency
-#      - kafka
+      - kafka
     environment:
       SPRING_PROFILES_ACTIVE: "docker"
       REDIS_RECENCY_CONNECTION: redis://127.0.0.1:40001
@@ -52,72 +52,72 @@ services:
       REDIS_START_PORT: 40011
     networks:
       - redis-net
-#
-#  zookeeper:
-#    image: confluentinc/cp-zookeeper:latest
-#    container_name: zookeeper
-#    environment:
-#      ZOOKEEPER_CLIENT_PORT: 2181
-#      ZOOKEEPER_TICK_TIME: 2000
-#    ports:
-#      - "2181:2181"
-#    networks:
-#      - redis-net
-#
-#  kafka:
-#    image: confluentinc/cp-kafka:7.3.2
-#    container_name: kafka
-#    ports:
-#      - "9092:9092"
-#      - "29092:29092"
-#    environment:
-#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092,PLAINTEXT_HOST://localhost:29092
-#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-#      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-#      KAFKA_ZOOKEEPER_CONNECT: "127.0.0.1:2181"
-#      KAFKA_BROKER_ID: 1
-#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-#      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-#      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-#    networks:
-#      - redis-net
-#    depends_on:
-#      - zookeeper
-#
-#  init-kafka:
-#    image: confluentinc/cp-kafka:7.3.2
-#    networks:
-#      - redis-net
-#    depends_on:
-#      - kafka
-#    entrypoint: [ "/bin/sh", "-c" ]
-#    command: |
-#      "
-#      # blocks until kafka is reachable
-#      kafka-topics --bootstrap-server kafka:29092 --list
-#
-#      echo -e 'Creating kafka topics'
-#      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic membership-updates-test --replication-factor 1 --partitions 1
-#
-#      echo -e 'Successfully created the following topics:'
-#      kafka-topics --bootstrap-server kafka:29092 --list
-#      "
-#  aerospikedb:
-#    image: aerospike/aerospike-server:latest
-#    container_name: aero
-#    networks:
-#      - redis-net
-#    labels:
-#      com.aerospike.description: "rtb_membership_consumer"
-#    ports:
-#      - "3000:3000"
-#      - "3001:3001"
-#      - "3002:3002"
-#      - "3003:3003"
-#    volumes:
-#      - ./aero/data:/opt/aero/data/
-#    environment:
-#      NAMESPACE: rtb
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - redis-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ZOOKEEPER_CONNECT: "127.0.0.1:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    networks:
+      - redis-net
+    depends_on:
+      - zookeeper
+
+  init-kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    networks:
+      - redis-net
+    depends_on:
+      - kafka
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:29092 --list
+
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic membership-updates-test --replication-factor 1 --partitions 1
+
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server kafka:29092 --list
+      "
+  aerospikedb:
+    image: aerospike/aerospike-server:latest
+    container_name: aero
+    networks:
+      - redis-net
+    labels:
+      com.aerospike.description: "rtb_membership_consumer"
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+      - "3002:3002"
+      - "3003:3003"
+    volumes:
+      - ./aero/data:/opt/aero/data/
+    environment:
+      NAMESPACE: rtb
 
 
   tests:
@@ -128,10 +128,10 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-#      - aerospikedb
+      - aerospikedb
       - recency
       - frequency
-#      - kafka
+      - kafka
       - membership-consumer
     environment:
       ENVIRONMENT: docker

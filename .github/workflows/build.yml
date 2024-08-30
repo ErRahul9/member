@@ -82,10 +82,10 @@ jobs:
         with:
           kafka-version: "3.7.0"
           kafka-topics: "membership-updates,1"
-      - name: Set up Aerospike Database
-        uses: reugn/github-action-aerospike@v1
-        with:
-          port: 3000
+#      - name: Set up Aerospike Database
+#        uses: reugn/github-action-aerospike@v1
+#        with:
+#          port: 3000
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
