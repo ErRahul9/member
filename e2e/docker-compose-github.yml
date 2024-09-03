@@ -13,7 +13,7 @@ services:
       - recency
       - frequency
 #      - kafka
-    restart: on-failure:3
+#    restart: on-failure:3
     environment:
       SPRING_PROFILES_ACTIVE: "docker"
       REDIS_RECENCY_CONNECTION: redis://127.0.0.1:40001
@@ -44,8 +44,8 @@ services:
       - "40001:40001"
     environment:
       REDIS_START_PORT: 40001
-    networks:
-      - redis-net
+    redis-net:
+      driver: bridge
 
   frequency:
     image: steelhousedev/local-redis-cluster
@@ -54,8 +54,8 @@ services:
       - "40011:40011"
     environment:
       REDIS_START_PORT: 40011
-    networks:
-      - redis-net
+    redis-net:
+      driver: bridge
 
 #
 #  zookeeper:
