@@ -1,4 +1,7 @@
 
+networks:
+  redis-net:
+      driver: bridge
 
 services:
 
@@ -44,8 +47,8 @@ services:
       - "40001:40001"
     environment:
       REDIS_START_PORT: 40001
-    redis-net:
-      driver: bridge
+    networks:
+      - redis-net
 
   frequency:
     image: steelhousedev/local-redis-cluster
@@ -54,8 +57,8 @@ services:
       - "40011:40011"
     environment:
       REDIS_START_PORT: 40011
-    redis-net:
-      driver: bridge
+    networks:
+      - redis-net
 
 #
 #  zookeeper:
@@ -159,7 +162,3 @@ services:
         poetry run pytest -s test_membership_consumer.py
         echo "running TPA tests now"
         poetry run pytest -s test_tpa_consumer.py
-
-networks:
-  redis-net:
-      driver: bridge
