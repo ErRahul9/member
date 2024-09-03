@@ -1,3 +1,6 @@
+networks:
+  redis-net:
+      driver: bridge
 
 services:
   membership-consumer:
@@ -5,17 +8,18 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    network_mode: host
+    network_mode:
+      host
     depends_on:
       - aerospikedb
-      - recency
-      - frequency
+      - recencyRedis
+      - frequencyRedis
       - kafka
 #    restart: on-failure:3
     environment:
       SPRING_PROFILES_ACTIVE: "docker"
-      REDIS_RECENCY_CONNECTION: redis://127.0.0.1:40001
-      REDIS_FREQUENCY_CAP_CONNECTION: redis://127.0.0.1:40011
+      REDIS_RECENCY_CONNECTION: redis://127.0.0.1:6381
+      REDIS_FREQUENCY_CAP_CONNECTION: redis://127.0.0.1:6387
       AEROSPIKE_HOST: 127.0.0.1
       AEROSPIKE_PORT: 3000
       AEROSPIKE_NAMESPACE: rtb
@@ -35,23 +39,32 @@ services:
   #      MEMBERSHIP_IMPRESSION_CONSUMER: false
   #      MEMBERSHIP_RECENCY_CONSUMER: false
 
-  recency:
-    image: steelhousedev/local-redis-cluster
-    container_name: recencySettings
+
+  recencyRedis:
+    image: redis:latest
+    container_name: recency
     ports:
-      - "40001:40001"
+      - "6381:6381"
     environment:
-      REDIS_START_PORT: 40001
+      REDIS_START_PORT: 6381
+    volumes:
+      - ./recency/data:/data
+      - ./redis-config/recency.conf:/redis-config/recency.conf
+    command: redis-server /redis-config/recency.conf
     networks:
       - redis-net
 
-  frequency:
-    image: steelhousedev/local-redis-cluster
+  frequencyRedis:
+    image: redis:latest
     container_name: frequency
     ports:
-      - "40011:40011"
+      - "6387:6387"
     environment:
-      REDIS_START_PORT: 40011
+      REDIS_START_PORT: 6387
+    volumes:
+      - ./frequency/data:/data
+      - ./redis-config/frequency.conf:/redis-config/frequency.conf
+    command: redis-server /redis-config/frequency.conf
     networks:
       - redis-net
 
@@ -76,7 +89,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_ZOOKEEPER_CONNECT: "127.0.0.1:2181"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_BROKER_ID: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -96,19 +109,20 @@ services:
     command: |
       "
       # blocks until kafka is reachable
-      kafka-topics --bootstrap-server kafka:29092 --list
+      kafka-topics --bootstrap-server kafka:9092 --list
 
       echo -e 'Creating kafka topics'
-      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic membership-updates-test --replication-factor 1 --partitions 1
-
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic membership-updates-test --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic sh-dw-generated-audiences --replication-factor 1 --partitions 1
       echo -e 'Successfully created the following topics:'
-      kafka-topics --bootstrap-server kafka:29092 --list
+      kafka-topics --bootstrap-server kafka:9092 --list
       "
 
   aerospikedb:
     image: aerospike/aerospike-server:latest
     container_name: aero
-    network_mode: host
+    networks:
+      - redis-net
     labels:
       com.aerospike.description: "rtb_membership_consumer"
     ports:
@@ -128,21 +142,21 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - aerospikedb
-      - recency
-      - frequency
+      - recencyRedis
+      - frequencyRedis
       - kafka
       - membership-consumer
     environment:
       ENVIRONMENT: docker
       SERVICE: membership-consumer
       RECENCY_HOST: 127.0.0.1
-      RECENCY_PORT: 40001
+      RECENCY_PORT: 6381
       FREQUENCY_HOST: 127.0.0.1
-      FREQUENCY_PORT: 40011
+      FREQUENCY_PORT: 6387
       AEROSPIKE_HOST: 127.0.0.1
       AEROSPIKE_PORT: 3000
       KAFKA_HOST: 127.0.0.1
-      KAFKA_PORT: 29092
+      KAFKA_PORT: 9092
       KAFKA_TOPIC_MEMBERSHIP_UPDATES: membership-updates
       KAFKA_TOPIC_TPA: sh-dw-generated-audiences
     command:
@@ -156,12 +170,3 @@ services:
         echo "running TPA tests now"
         poetry run pytest -s test_tpa_consumer.py
 
-
-networks:
-  aerospikenetwork:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 192.168.123.0/24
-  redis-net:
-      driver: bridge
