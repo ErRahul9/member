@@ -131,10 +131,10 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - aerospikedb
-      - recency
-      - frequency
-      - kafka
+#      - aerospikedb
+#      - recency
+#      - frequency
+#      - kafka
       - membership-consumer
     environment:
       ENVIRONMENT: docker
