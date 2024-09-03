@@ -12,7 +12,7 @@ services:
       - aerospikedb
       - recency
       - frequency
-      - kafka
+#      - kafka
     restart: on-failure:3
     environment:
       SPRING_PROFILES_ACTIVE: "docker"
