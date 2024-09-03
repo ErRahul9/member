@@ -82,6 +82,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 11
+      - name: Run Kafka KRaft Broker
+        uses: spicyparrot/kafka-kraft-action@v1.1.3
+        with:
+          kafka-version: "3.7.0"
+          kafka-topics: "membership-updates,1"
+
       - name: Execute Gradle assemble
         run: ./gradlew clean assemble -x test -x generateGitProperties
       - name: Docker hub Login
