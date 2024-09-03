@@ -8,10 +8,10 @@ services:
       context: ..
       dockerfile: Dockerfile
     network_mode: host
-    depends_on:
-      - aerospikedb
-      - recency
-      - frequency
+#    depends_on:
+#      - aerospikedb
+#      - recency
+#      - frequency
 #      - kafka
     restart: on-failure:3
     environment:
@@ -37,25 +37,25 @@ services:
   #      MEMBERSHIP_IMPRESSION_CONSUMER: false
   #      MEMBERSHIP_RECENCY_CONSUMER: false
 
-  recency:
-    image: steelhousedev/local-redis-cluster
-    container_name: recencySettings
-    ports:
-      - "40001:40001"
-    environment:
-      REDIS_START_PORT: 40001
-    network_mode: host
-
-  frequency:
-    image: steelhousedev/local-redis-cluster
-    container_name: frequency
-    ports:
-      - "40011:40011"
-    environment:
-      REDIS_START_PORT: 40011
-    networks:
-      - redis-net
-
+#  recency:
+#    image: steelhousedev/local-redis-cluster
+#    container_name: recencySettings
+#    ports:
+#      - "40001:40001"
+#    environment:
+#      REDIS_START_PORT: 40001
+#    network_mode: host
+#
+#  frequency:
+#    image: steelhousedev/local-redis-cluster
+#    container_name: frequency
+#    ports:
+#      - "40011:40011"
+#    environment:
+#      REDIS_START_PORT: 40011
+#    networks:
+#      - redis-net
+#
 #
 #  zookeeper:
 #    image: confluentinc/cp-zookeeper:latest
@@ -67,8 +67,8 @@ services:
 #      - "2181:2181"
 #    networks:
 #      - redis-net
-
-
+#
+#
 #  kafka:
 #    image: confluentinc/cp-kafka:7.3.2
 #    container_name: kafka
@@ -107,19 +107,20 @@ services:
 #      echo -e 'Successfully created the following topics:'
 #      kafka-topics --bootstrap-server kafka:29092 --list
 #      "
-  aerospikedb:
-    image: aerospike/aerospike-server:latest
-    container_name: aero
-    networks:
-      - redis-net
-    labels:
-      com.aerospike.description: "rtb_membership_consumer"
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./aero/data:/opt/aero/data/
-    environment:
-      NAMESPACE: rtb
+#
+#  aerospikedb:
+#    image: aerospike/aerospike-server:latest
+#    container_name: aero
+#    networks:
+#      - redis-net
+#    labels:
+#      com.aerospike.description: "rtb_membership_consumer"
+#    ports:
+#      - "3000:3000"
+#    volumes:
+#      - ./aero/data:/opt/aero/data/
+#    environment:
+#      NAMESPACE: rtb
 
 
   tests:
@@ -133,7 +134,7 @@ services:
       - aerospikedb
       - recency
       - frequency
-#      - kafka
+      - kafka
       - membership-consumer
     environment:
       ENVIRONMENT: docker
