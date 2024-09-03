@@ -61,7 +61,8 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
-    network_mode: host
+    networks:
+      - redis-network
 
   kafka:
     image: confluentinc/cp-kafka:7.3.2
@@ -78,13 +79,15 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-    network_mode: host
+    networks:
+      - redis-network
     depends_on:
       - zookeeper
 
   init-kafka:
     image: confluentinc/cp-kafka:7.3.2
-    network_mode: host
+    networks:
+      - redis-network
     depends_on:
       - kafka
     entrypoint: [ "/bin/sh", "-c" ]
@@ -150,3 +153,13 @@ services:
         poetry run pytest -s test_membership_consumer.py
         echo "running TPA tests now"
         poetry run pytest -s test_tpa_consumer.py
+
+
+networks:
+  aerospikenetwork:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.123.0/24
+  redis-net:
+      driver: bridge
