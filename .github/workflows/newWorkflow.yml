@@ -65,8 +65,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [ 14.x, 16.x ]
-        redis-version: [ 4, 5, 6 ]
+        node-version: [ 14.x]
+        redis-version: [ 6 ]
     container: ubuntu:latest
     steps:
       - name: Install docker & docker compose
@@ -100,11 +100,13 @@ jobs:
         with:
           redis-version: ${{ matrix.redis-version }}
           redis-port: 40001
+          redis-container-name: recency
       - name: frequency-redis-spinup
         uses: supercharge/redis-github-action@1.4.0
         with:
           redis-version: ${{ matrix.redis-version }}
           redis-port: 40011
+          redis-container-name: frequency
       - name: Execute Gradle assemble
         run: ./gradlew clean assemble -x test -x generateGitProperties
       - name: Docker hub Login
