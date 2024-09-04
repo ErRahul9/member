@@ -1,0 +1,101 @@
+services:
+  recency-redis:
+    image: steelhousedev/local-redis-cluster
+    restart: always
+    environment:
+      REDIS_START_PORT: 42000
+    network_mode: host
+
+  frequency-redis:
+    image: steelhousedev/local-redis-cluster
+    restart: always
+    environment:
+      REDIS_START_PORT: 43000
+    network_mode: host
+
+  aerospikedb:
+      image: aerospike/aerospike-server:latest
+      restart: always
+      container_name: aero
+      network_mode: host
+      labels:
+          com.aerospike.description: "rtb_membership_consumer"
+      ports:
+        - "3000:3000"
+        - "3001:3001"
+        - "3002:3002"
+        - "3003:3003"
+      volumes:
+      - ./aero/data:/opt/aero/data/
+      environment:
+        NAMESPACE: rtb
+
+  membership-consumer:
+    container_name: membership-consumer
+    restart: always
+    ports:
+      - 9090
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    network_mode:
+      host
+    depends_on:
+      - aerospikedb
+      - recency-redis
+      - frequency-redis
+    #    restart: on-failure:3
+    environment:
+      SPRING_PROFILES_ACTIVE: "docker"
+      REDIS_RECENCY_CONNECTION: "redis://127.0.0.1:42001"
+      REDIS_FREQUENCY_CAP_CONNECTION: "redis://127.0.0.1:43001"
+      AEROSPIKE_HOST: 127.0.0.1
+      AEROSPIKE_PORT: 3000
+      AEROSPIKE_NAMESPACE: rtb
+      AEROSPIKE_SET-NAME: household-profile
+      AEROSPIKE_TTL-SECONDS: 7776000
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "127.0.0.1:9092"
+      SPRING_KAFKA_CONSUMER_GROUP_ID: membership-consumer
+      SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
+      SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
+      SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
+      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+      SPRING_KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      SPRING_KAFKA_LISTENER_MISSING_TOPICS_FATAL: false
+
+  tests:
+    container_name: tests
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - aerospikedb
+      - recency-redis
+      - frequency-redis
+      - membership-consumer
+    network_mode: host
+    environment:
+      ENVIRONMENT: docker
+      SERVICE: membership-consumer
+      RECENCY_HOST: 127.0.0.1
+      RECENCY_PORT: 6381
+      FREQUENCY_HOST: 127.0.0.1
+      FREQUENCY_PORT: 6387
+      AEROSPIKE_HOST: 127.0.0.1
+      AEROSPIKE_PORT: 3000
+      KAFKA_HOST: 127.0.0.1
+      KAFKA_PORT: 9092
+      KAFKA_TOPIC_MEMBERSHIP_UPDATES: membership-updates
+      KAFKA_TOPIC_TPA: sh-dw-generated-audiences
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "waiting 30 sec for membership-consumer to boot up"
+        sleep 30
+        echo "running membership-updates tests now"
+        poetry run pytest -s test_membership_consumer.py
+        echo "running TPA tests now"
+        poetry run pytest -s test_tpa_consumer.py

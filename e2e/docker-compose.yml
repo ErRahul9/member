@@ -1,9 +1,4 @@
 networks:
-  aerospikenetwork:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 192.168.123.0/24
   redis-net:
       driver: bridge
 
@@ -23,8 +18,8 @@ services:
 #    restart: on-failure:3
     environment:
       SPRING_PROFILES_ACTIVE: "docker"
-      REDIS_RECENCY_CONNECTION: redis://127.0.0.1:6381
-      REDIS_FREQUENCY_CAP_CONNECTION: redis://127.0.0.1:6387
+      REDIS_RECENCY_CONNECTION: "redis://127.0.0.1:6381"
+      REDIS_FREQUENCY_CAP_CONNECTION: "redis://127.0.0.1:6387"
       AEROSPIKE_HOST: 127.0.0.1
       AEROSPIKE_PORT: 3000
       AEROSPIKE_NAMESPACE: rtb
@@ -33,13 +28,28 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: 127.0.0.1:9092
       SPRING_KAFKA_CONSUMER_GROUP_ID: membership-consumer
       SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
-      SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafkaConf.common.serialization.StringDeserializer
-      SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.apache.kafkaConf.common.serialization.StringDeserializer
-      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafkaConf.common.serialization.StringSerializer
-      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.apache.kafkaConf.common.serialization.StringSerializer
+      SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
+      SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
+      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+      SPRING_KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       SPRING_KAFKA_LISTENER_MISSING_TOPICS_FATAL: false
+#      MEMBERSHIP_ORACLE_CONSUMER: true
+#      MEMBERSHIP_MEMBERSHIP_CONSUMER: true
+#      MEMBERSHIP_IMPRESSION_CONSUMER: false
+#      MEMBERSHIP_RECENCY_CONSUMER: false
 
-
+#  recencyRedis:
+#    image: steelhousedev/local-redis-cluster
+#    environment:
+#      REDIS_START_PORT: 6381
+#    network_mode: host
+#
+#  frequencyRedis:
+#    image: steelhousedev/local-redis-cluster
+#    environment:
+#      REDIS_START_PORT: 6387
+#    network_mode: host
 
   recencyRedis:
     image: redis:latest
@@ -78,12 +88,12 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.3.2
-    container_name: kafkaConf
+    container_name: kafka
     ports:
       - "9092:9092"
       - "29092:29092"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafkaConf:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
@@ -101,16 +111,19 @@ services:
     depends_on:
       - kafka
     entrypoint: [ "/bin/sh", "-c" ]
+    networks:
+      - redis-net
     command: |
       "
       # blocks until kafka is reachable
-      kafka-topics --bootstrap-server kafka:29092 --list
+      kafka-topics --bootstrap-server kafka:9092 --list
 
       echo -e 'Creating kafka topics'
-      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic membership-consumer --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic membership-updates --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic sh-dw-generated-audiences --replication-factor 1 --partitions 1
 
       echo -e 'Successfully created the following topics:'
-      kafka-topics --bootstrap-server kafka:29092 --list
+      kafka-topics --bootstrap-server kafka:9092 --list
       "
 
   aerospikedb:
@@ -120,7 +133,6 @@ services:
       - redis-net
       labels:
           com.aerospike.description: "rtb_membership_consumer"
-      command: [ "--config-file","/run/secrets/aero.conf"]
       ports:
         - "3000:3000"
         - "3001:3001"
@@ -128,30 +140,41 @@ services:
         - "3003:3003"
       volumes:
       - ./aero/data:/opt/aero/data/
-      secrets:
-      - source: conffile
-        target: aero.conf
+      environment:
+        NAMESPACE: rtb
 
-  meshworker:
-      image: aerospike/aerospike-tools:3.15.0.3
-      networks:
-      - redis-net
-      depends_on:
+  tests:
+    container_name: tests
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
       - aerospikedb
-      entrypoint:
-      - /run/secrets/discovery
-      - "--servicename"
-      - aero
-      - "-i"
-      - "5"
-      - "-v"
-      secrets:
-      - source: discoveryfile
-        target: discovery
-#          mode: 0750
-
-secrets:
-    conffile:
-        file: aero/aerospike.conf
-    discoveryfile:
-        file: aero/discovery.py
+      - recencyRedis
+      - frequencyRedis
+      - kafka
+      - membership-consumer
+    network_mode: host
+    environment:
+      ENVIRONMENT: docker
+      SERVICE: membership-consumer
+      RECENCY_HOST: 127.0.0.1
+      RECENCY_PORT: 6381
+      FREQUENCY_HOST: 127.0.0.1
+      FREQUENCY_PORT: 6387
+      AEROSPIKE_HOST: 127.0.0.1
+      AEROSPIKE_PORT: 3000
+      KAFKA_HOST: 127.0.0.1
+      KAFKA_PORT: 9092
+      KAFKA_TOPIC_MEMBERSHIP_UPDATES: membership-updates
+      KAFKA_TOPIC_TPA: sh-dw-generated-audiences
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "waiting 30 sec for membership-consumer to boot up"
+        sleep 30
+        echo "running membership-updates tests now"
+        poetry run pytest -s test_membership_consumer.py
+        echo "running TPA tests now"
+        poetry run pytest -s test_tpa_consumer.py

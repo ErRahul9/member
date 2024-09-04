@@ -16,7 +16,7 @@ logging:
     app: DEBUG
 
 server:
-  port: 8080
+  port: 9090
   connection-timeout: 600000
 
 
