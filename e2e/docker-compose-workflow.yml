@@ -88,7 +88,7 @@ services:
       - aerospikedb
       - recencyRedis
       - frequencyRedis
-    #      - kafka
+      - kafka
     #    restart: on-failure:3
     environment:
       SPRING_PROFILES_ACTIVE: "docker"
@@ -99,7 +99,7 @@ services:
       AEROSPIKE_NAMESPACE: rtb
       AEROSPIKE_SET-NAME: household-profile
       AEROSPIKE_TTL-SECONDS: 7776000
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: 127.0.0.1:9092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "127.0.0.1:9092"
       SPRING_KAFKA_CONSUMER_GROUP_ID: membership-consumer
       SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
       SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
@@ -120,7 +120,7 @@ services:
         - aerospikedb
         - recencyRedis
         - frequencyRedis
-        #      - kafka
+        - kafka
         - membership-consumer
       network_mode: host
       environment:
