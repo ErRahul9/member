@@ -35,9 +35,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
-    networks:
-      - redis-net
-
+    network_mode: host
   kafka:
     image: confluentinc/cp-kafka:7.3.2
     container_name: kafka
@@ -53,8 +51,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-    networks:
-      - redis-net
+    network_mode: host
     depends_on:
       - zookeeper
 
@@ -63,8 +60,7 @@ services:
     depends_on:
       - kafka
     entrypoint: [ "/bin/sh", "-c" ]
-    networks:
-      - redis-net
+    network_mode: host
     command: |
       "
       # blocks until kafka is reachable
