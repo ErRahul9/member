@@ -14,7 +14,7 @@ services:
       - aerospikedb
       - recencyRedis
       - frequencyRedis
-      - kafka
+#      - kafka
 #    restart: on-failure:3
     environment:
       SPRING_PROFILES_ACTIVE: "docker"
@@ -152,7 +152,7 @@ services:
       - aerospikedb
       - recencyRedis
       - frequencyRedis
-      - kafka
+#      - kafka
       - membership-consumer
     network_mode: host
     environment:
