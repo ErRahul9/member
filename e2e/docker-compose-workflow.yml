@@ -111,38 +111,38 @@ services:
 
 
 
-    tests:
-      container_name: tests
-      build:
-        context: .
-        dockerfile: Dockerfile
-      depends_on:
-        - aerospikedb
-        - recencyRedis
-        - frequencyRedis
-        - kafka
-        - membership-consumer
-      network_mode: host
-      environment:
-        ENVIRONMENT: docker
-        SERVICE: membership-consumer
-        RECENCY_HOST: 127.0.0.1
-        RECENCY_PORT: 6381
-        FREQUENCY_HOST: 127.0.0.1
-        FREQUENCY_PORT: 6387
-        AEROSPIKE_HOST: 127.0.0.1
-        AEROSPIKE_PORT: 3000
-        KAFKA_HOST: 127.0.0.1
-        KAFKA_PORT: 9092
-        KAFKA_TOPIC_MEMBERSHIP_UPDATES: membership-updates
-        KAFKA_TOPIC_TPA: sh-dw-generated-audiences
-      command:
-        - /bin/sh
-        - -c
-        - |
-          echo "waiting 30 sec for membership-consumer to boot up"
-          sleep 30
-          echo "running membership-updates tests now"
-          poetry run pytest -s test_membership_consumer.py
-          echo "running TPA tests now"
-          poetry run pytest -s test_tpa_consumer.py
+  tests:
+    container_name: tests
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - aerospikedb
+      - recencyRedis
+      - frequencyRedis
+      - kafka
+      - membership-consumer
+    network_mode: host
+    environment:
+      ENVIRONMENT: docker
+      SERVICE: membership-consumer
+      RECENCY_HOST: 127.0.0.1
+      RECENCY_PORT: 6381
+      FREQUENCY_HOST: 127.0.0.1
+      FREQUENCY_PORT: 6387
+      AEROSPIKE_HOST: 127.0.0.1
+      AEROSPIKE_PORT: 3000
+      KAFKA_HOST: 127.0.0.1
+      KAFKA_PORT: 9092
+      KAFKA_TOPIC_MEMBERSHIP_UPDATES: membership-updates
+      KAFKA_TOPIC_TPA: sh-dw-generated-audiences
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "waiting 30 sec for membership-consumer to boot up"
+        sleep 30
+        echo "running membership-updates tests now"
+        poetry run pytest -s test_membership_consumer.py
+        echo "running TPA tests now"
+        poetry run pytest -s test_tpa_consumer.py
