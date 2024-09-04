@@ -1,12 +1,14 @@
 services:
   recency-redis:
     image: steelhousedev/local-redis-cluster
+    restart: always
     environment:
       REDIS_START_PORT: 42000
     network_mode: host
 
   frequency-redis:
     image: steelhousedev/local-redis-cluster
+    restart: always
     environment:
       REDIS_START_PORT: 43000
     network_mode: host
@@ -14,6 +16,7 @@ services:
 
   aerospikedb:
       image: aerospike/aerospike-server:latest
+      restart: always
       container_name: aero
       network_mode: host
       labels:
@@ -30,6 +33,7 @@ services:
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+    restart: always
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -40,6 +44,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.3.2
+    restart: always
     container_name: kafka
     ports:
       - "9092:9092"
@@ -59,6 +64,7 @@ services:
 
   init-kafka:
     image: confluentinc/cp-kafka:7.3.2
+    restart: always
     depends_on:
       - kafka
     entrypoint: [ "/bin/sh", "-c" ]
@@ -77,6 +83,7 @@ services:
       "
   membership-consumer:
     container_name: membership-consumer
+    restart: always
     build:
       context: ..
       dockerfile: Dockerfile
@@ -109,6 +116,7 @@ services:
 
   tests:
     container_name: tests
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile
