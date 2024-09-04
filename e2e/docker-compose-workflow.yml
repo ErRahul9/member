@@ -8,8 +8,9 @@ services:
   frequency-redis:
     image: steelhousedev/local-redis-cluster
     environment:
-      REDIS_START_PORT: 45800
+      REDIS_START_PORT: 43000
     network_mode: host
+
 
   aerospikedb:
       image: aerospike/aerospike-server:latest
@@ -36,6 +37,7 @@ services:
     ports:
       - "2181:2181"
     network_mode: host
+
   kafka:
     image: confluentinc/cp-kafka:7.3.2
     container_name: kafka
@@ -88,8 +90,8 @@ services:
     #    restart: on-failure:3
     environment:
       SPRING_PROFILES_ACTIVE: "docker"
-      REDIS_RECENCY_CONNECTION: "redis://127.0.0.1:6381"
-      REDIS_FREQUENCY_CAP_CONNECTION: "redis://127.0.0.1:6387"
+      REDIS_RECENCY_CONNECTION: "redis://127.0.0.1:42001"
+      REDIS_FREQUENCY_CAP_CONNECTION: "redis://127.0.0.1:43001"
       AEROSPIKE_HOST: 127.0.0.1
       AEROSPIKE_PORT: 3000
       AEROSPIKE_NAMESPACE: rtb
@@ -104,8 +106,6 @@ services:
       SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
       SPRING_KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       SPRING_KAFKA_LISTENER_MISSING_TOPICS_FATAL: false
-
-
 
   tests:
     container_name: tests

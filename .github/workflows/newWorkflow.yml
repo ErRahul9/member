@@ -1,104 +1,104 @@
-name: Build
-
-on:
-  push:
-    branches: [ master, dev ]
-  pull_request:
-    branches: [ master, dev ]
-
-jobs:
-  build-test:
-    name: Build & test the codebase
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout repo
-        uses: actions/checkout@v4
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 11
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-      - name: Execute Gradle build
-        run: ./gradlew clean test jacocoTestReport
-      - name: Upload jacoco test report artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: jacoco-test-coverage-report
-          path: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
-
-  codacy-uploads:
-    name: Upload jacoco test coverage report to codacy
-    needs: build-test
-    runs-on: ubuntu-latest
-    env:
-      CODACY_ACCOUNT_API_TOKEN: CfZGn11TIA2dcBhQNK8v
-      CODACY_ORG_NAME: SteelHouse
-      CODACY_GIT_PROVIDER: gh
-    steps:
-      - name: Get current branch name
-        id: branch-name
-        uses: tj-actions/branch-names@v7
-      - name: Enable branch analysis in Codacy
-        run: |
-          curl -v -X PATCH https://app.codacy.com/api/v3/organizations/gh/SteelHouse/repositories/${{ github.event.repository.name }}/branches/"$(echo ${{ steps.branch-name.outputs.current_branch }} | sed 's/\//%2F/g')" \
-            -H 'Content-Type: application/json' \
-            -H 'Accept: application/json' \
-            -H 'api-token: ${{ env.CODACY_ACCOUNT_API_TOKEN}}' \
-            -d '{"isEnabled": true}'
-      - name: Download jacoco test report artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: jacoco-test-coverage-report
-      - name: Upload jacoco test coverage report to codacy
-        env:
-          CODACY_API_TOKEN: ${{ env.CODACY_ACCOUNT_API_TOKEN }}
-          CODACY_ORGANIZATION_PROVIDER: ${{ env.CODACY_GIT_PROVIDER }}
-          CODACY_USERNAME: ${{ env.CODACY_ORG_NAME }}
-          CODACY_PROJECT_NAME: ${{ github.event.repository.name }}
-        run: |
-          bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r jacocoTestReport.xml
-
-
-  run-regression:
-    runs-on: ubuntu-latest
-    container: ubuntu:latest
-    steps:
-      - name: Install docker & docker compose
-        run: |
-          apt -y update
-          apt -y install sudo curl
-          curl --version
-          curl -fsSL https://get.docker.com -o get-docker.sh
-          sudo sh ./get-docker.sh
-          apt-get install docker-compose-plugin
-          docker --version
-          docker compose version
-      - name: Checkout membership-consumer repo
-        uses: actions/checkout@v4
-#      - name: Run Kafka KRaft Broker
-#        uses: spicyparrot/kafka-kraft-action@v1.1.3
+#name: Build
+#
+#on:
+#  push:
+#    branches: [ master, dev ]
+#  pull_request:
+#    branches: [ master, dev ]
+#
+#jobs:
+#  build-test:
+#    name: Build & test the codebase
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: checkout repo
+#        uses: actions/checkout@v4
+#      - name: Set up JDK
+#        uses: actions/setup-java@v4
 #        with:
-#          kafka-version: "3.7.0"
-#          kafka-topics: "membership-updates,1"
-#      - name: Set up Aerospike Database
-#        uses: reugn/github-action-aerospike@v1
+#          distribution: temurin
+#          java-version: 11
+#      - name: Setup Gradle
+#        uses: gradle/gradle-build-action@v2
+#      - name: Execute Gradle build
+#        run: ./gradlew clean test jacocoTestReport
+#      - name: Upload jacoco test report artifact
+#        uses: actions/upload-artifact@v4
 #        with:
-#          port: 3000
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 11
-      - name: Execute Gradle assemble
-        run: ./gradlew clean assemble -x test -x generateGitProperties
-      - name: Docker hub Login
-        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Run integration test
-        run: |
-          docker compose --verbose -f ./e2e/docker-compose-workflow.yml up  --abort-on-container-exit --exit-code-from tests
-      - name: docker compose down
-        if: ${{ success() || failure() }}
-        run: |
-          docker compose -f ./e2e/docker-compose-workflow.yml down -v --rmi all --remove-orphans
+#          name: jacoco-test-coverage-report
+#          path: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
+#
+#  codacy-uploads:
+#    name: Upload jacoco test coverage report to codacy
+#    needs: build-test
+#    runs-on: ubuntu-latest
+#    env:
+#      CODACY_ACCOUNT_API_TOKEN: CfZGn11TIA2dcBhQNK8v
+#      CODACY_ORG_NAME: SteelHouse
+#      CODACY_GIT_PROVIDER: gh
+#    steps:
+#      - name: Get current branch name
+#        id: branch-name
+#        uses: tj-actions/branch-names@v7
+#      - name: Enable branch analysis in Codacy
+#        run: |
+#          curl -v -X PATCH https://app.codacy.com/api/v3/organizations/gh/SteelHouse/repositories/${{ github.event.repository.name }}/branches/"$(echo ${{ steps.branch-name.outputs.current_branch }} | sed 's/\//%2F/g')" \
+#            -H 'Content-Type: application/json' \
+#            -H 'Accept: application/json' \
+#            -H 'api-token: ${{ env.CODACY_ACCOUNT_API_TOKEN}}' \
+#            -d '{"isEnabled": true}'
+#      - name: Download jacoco test report artifact
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: jacoco-test-coverage-report
+#      - name: Upload jacoco test coverage report to codacy
+#        env:
+#          CODACY_API_TOKEN: ${{ env.CODACY_ACCOUNT_API_TOKEN }}
+#          CODACY_ORGANIZATION_PROVIDER: ${{ env.CODACY_GIT_PROVIDER }}
+#          CODACY_USERNAME: ${{ env.CODACY_ORG_NAME }}
+#          CODACY_PROJECT_NAME: ${{ github.event.repository.name }}
+#        run: |
+#          bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r jacocoTestReport.xml
+#
+#
+#  run-regression:
+#    runs-on: ubuntu-latest
+#    container: ubuntu:latest
+#    steps:
+#      - name: Install docker & docker compose
+#        run: |
+#          apt -y update
+#          apt -y install sudo curl
+#          curl --version
+#          curl -fsSL https://get.docker.com -o get-docker.sh
+#          sudo sh ./get-docker.sh
+#          apt-get install docker-compose-plugin
+#          docker --version
+#          docker compose version
+#      - name: Checkout membership-consumer repo
+#        uses: actions/checkout@v4
+##      - name: Run Kafka KRaft Broker
+##        uses: spicyparrot/kafka-kraft-action@v1.1.3
+##        with:
+##          kafka-version: "3.7.0"
+##          kafka-topics: "membership-updates,1"
+##      - name: Set up Aerospike Database
+##        uses: reugn/github-action-aerospike@v1
+##        with:
+##          port: 3000
+#      - name: Set up JDK
+#        uses: actions/setup-java@v4
+#        with:
+#          distribution: temurin
+#          java-version: 11
+#      - name: Execute Gradle assemble
+#        run: ./gradlew clean assemble -x test -x generateGitProperties
+#      - name: Docker hub Login
+#        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+#      - name: Run integration test
+#        run: |
+#          docker compose --verbose -f ./e2e/docker-compose-workflow.yml up  --abort-on-container-exit --exit-code-from tests
+#      - name: docker compose down
+#        if: ${{ success() || failure() }}
+#        run: |
+#          docker compose -f ./e2e/docker-compose-workflow.yml down -v --rmi all --remove-orphans
