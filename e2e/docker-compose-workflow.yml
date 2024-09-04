@@ -114,8 +114,8 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - aerospikedb
-      - recencyRedis
-      - frequencyRedis
+      - recency-redis
+      - frequency-redis
       - kafka
       - membership-consumer
     network_mode: host
