@@ -33,6 +33,8 @@ services:
   membership-consumer:
     container_name: membership-consumer
     restart: always
+    ports:
+      - 9090
     build:
       context: ..
       dockerfile: Dockerfile
