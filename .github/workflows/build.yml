@@ -28,37 +28,37 @@ jobs:
           name: jacoco-test-coverage-report
           path: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
 
-  codacy-uploads:
-    name: Upload jacoco test coverage report to codacy
-    needs: build-test
-    runs-on: ubuntu-latest
-    env:
-      CODACY_ACCOUNT_API_TOKEN: CfZGn11TIA2dcBhQNK8v
-      CODACY_ORG_NAME: SteelHouse
-      CODACY_GIT_PROVIDER: gh
-    steps:
-      - name: Get current branch name
-        id: branch-name
-        uses: tj-actions/branch-names@v7
-      - name: Enable branch analysis in Codacy
-        run: |
-          curl -v -X PATCH https://app.codacy.com/api/v3/organizations/gh/SteelHouse/repositories/${{ github.event.repository.name }}/branches/"$(echo ${{ steps.branch-name.outputs.current_branch }} | sed 's/\//%2F/g')" \
-            -H 'Content-Type: application/json' \
-            -H 'Accept: application/json' \
-            -H 'api-token: ${{ env.CODACY_ACCOUNT_API_TOKEN}}' \
-            -d '{"isEnabled": true}'
-      - name: Download jacoco test report artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: jacoco-test-coverage-report
-      - name: Upload jacoco test coverage report to codacy
-        env:
-          CODACY_API_TOKEN: ${{ env.CODACY_ACCOUNT_API_TOKEN }}
-          CODACY_ORGANIZATION_PROVIDER: ${{ env.CODACY_GIT_PROVIDER }}
-          CODACY_USERNAME: ${{ env.CODACY_ORG_NAME }}
-          CODACY_PROJECT_NAME: ${{ github.event.repository.name }}
-        run: |
-          bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r jacocoTestReport.xml
+#  codacy-uploads:
+#    name: Upload jacoco test coverage report to codacy
+#    needs: build-test
+#    runs-on: ubuntu-latest
+#    env:
+#      CODACY_ACCOUNT_API_TOKEN: CfZGn11TIA2dcBhQNK8v
+#      CODACY_ORG_NAME: SteelHouse
+#      CODACY_GIT_PROVIDER: gh
+#    steps:
+#      - name: Get current branch name
+#        id: branch-name
+#        uses: tj-actions/branch-names@v7
+#      - name: Enable branch analysis in Codacy
+#        run: |
+#          curl -v -X PATCH https://app.codacy.com/api/v3/organizations/gh/SteelHouse/repositories/${{ github.event.repository.name }}/branches/"$(echo ${{ steps.branch-name.outputs.current_branch }} | sed 's/\//%2F/g')" \
+#            -H 'Content-Type: application/json' \
+#            -H 'Accept: application/json' \
+#            -H 'api-token: ${{ env.CODACY_ACCOUNT_API_TOKEN}}' \
+#            -d '{"isEnabled": true}'
+#      - name: Download jacoco test report artifact
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: jacoco-test-coverage-report
+#      - name: Upload jacoco test coverage report to codacy
+#        env:
+#          CODACY_API_TOKEN: ${{ env.CODACY_ACCOUNT_API_TOKEN }}
+#          CODACY_ORGANIZATION_PROVIDER: ${{ env.CODACY_GIT_PROVIDER }}
+#          CODACY_USERNAME: ${{ env.CODACY_ORG_NAME }}
+#          CODACY_PROJECT_NAME: ${{ github.event.repository.name }}
+#        run: |
+#          bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r jacocoTestReport.xml
 
 
   run-regression:
