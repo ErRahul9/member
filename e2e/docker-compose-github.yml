@@ -1,7 +1,3 @@
-networks:
-  redis-net:
-      driver: bridge
-
 services:
   membership-consumer:
     container_name: membership-consumer
@@ -12,8 +8,8 @@ services:
       host
     depends_on:
       - aerospikedb
-      - recencyRedis
-      - frequencyRedis
+      - recency
+      - frequency
       - kafka
 #    restart: on-failure:3
     environment:
@@ -34,39 +30,8 @@ services:
       SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
       SPRING_KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       SPRING_KAFKA_LISTENER_MISSING_TOPICS_FATAL: false
-  #      MEMBERSHIP_ORACLE_CONSUMER: true
-  #      MEMBERSHIP_MEMBERSHIP_CONSUMER: true
-  #      MEMBERSHIP_IMPRESSION_CONSUMER: false
-  #      MEMBERSHIP_RECENCY_CONSUMER: false
 
 
-  recencyRedis:
-    image: redis:latest
-    container_name: recency
-    ports:
-      - "6381:6381"
-    environment:
-      REDIS_START_PORT: 6381
-    volumes:
-      - ./recency/data:/data
-      - ./redis-config/recency.conf:/redis-config/recency.conf
-    command: redis-server /redis-config/recency.conf
-    networks:
-      - redis-net
-
-  frequencyRedis:
-    image: redis:latest
-    container_name: frequency
-    ports:
-      - "6387:6387"
-    environment:
-      REDIS_START_PORT: 6387
-    volumes:
-      - ./frequency/data:/data
-      - ./redis-config/frequency.conf:/redis-config/frequency.conf
-    command: redis-server /redis-config/frequency.conf
-    networks:
-      - redis-net
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -76,8 +41,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
-    networks:
-      - redis-net
+    network_mode: host
 
   kafka:
     image: confluentinc/cp-kafka:7.3.2
@@ -94,79 +58,64 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-    networks:
-      - redis-net
+    network_mode: host
     depends_on:
       - zookeeper
 
   init-kafka:
     image: confluentinc/cp-kafka:7.3.2
-    networks:
-      - redis-net
     depends_on:
       - kafka
     entrypoint: [ "/bin/sh", "-c" ]
+    network_mode: host
     command: |
       "
       # blocks until kafka is reachable
       kafka-topics --bootstrap-server kafka:9092 --list
 
       echo -e 'Creating kafka topics'
-      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic membership-updates-test --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic membership-updates --replication-factor 1 --partitions 1
       kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic sh-dw-generated-audiences --replication-factor 1 --partitions 1
+
       echo -e 'Successfully created the following topics:'
       kafka-topics --bootstrap-server kafka:9092 --list
       "
 
   aerospikedb:
-    image: aerospike/aerospike-server:latest
-    container_name: aero
-    networks:
-      - redis-net
-    labels:
-      com.aerospike.description: "rtb_membership_consumer"
-    ports:
-      - "3000:3000"
-    volumes:
+      image: aerospike/aerospike-server:latest
+      container_name: aero
+      network_mode: host
+      labels:
+          com.aerospike.description: "rtb_membership_consumer"
+      ports:
+        - "3000:3000"
+        - "3001:3001"
+        - "3002:3002"
+        - "3003:3003"
+      volumes:
       - ./aero/data:/opt/aero/data/
-    environment:
-      NAMESPACE: rtb
+      environment:
+        NAMESPACE: rtb
+
+  frequency:
+    image: redis:latest
+    container_name: frequency
+    ports:
+      - "6387:6387"
+    volumes:
+      - ./frequency/data:/data
+      - ./redis-config/frequency.conf:/redis-config/frequency.conf
+    command: redis-server /redis-config/frequency.conf
+    network_mode: host
 
 
-  tests:
-    container_name: tests
-    network_mode:
-      host
-    build:
-      context: .
-      dockerfile: Dockerfile
-    depends_on:
-      - aerospikedb
-      - recencyRedis
-      - frequencyRedis
-      - kafka
-      - membership-consumer
-    environment:
-      ENVIRONMENT: docker
-      SERVICE: membership-consumer
-      RECENCY_HOST: 127.0.0.1
-      RECENCY_PORT: 6381
-      FREQUENCY_HOST: 127.0.0.1
-      FREQUENCY_PORT: 6387
-      AEROSPIKE_HOST: 127.0.0.1
-      AEROSPIKE_PORT: 3000
-      KAFKA_HOST: 127.0.0.1
-      KAFKA_PORT: 9092
-      KAFKA_TOPIC_MEMBERSHIP_UPDATES: membership-updates
-      KAFKA_TOPIC_TPA: sh-dw-generated-audiences
-    command:
-      - /bin/sh
-      - -c
-      - |
-        echo "waiting 30 sec for membership-consumer to boot up"
-        sleep 30
-        echo "running membership-updates tests now"
-        poetry run pytest -s test_membership_consumer.py
-        echo "running TPA tests now"
-        poetry run pytest -s test_tpa_consumer.py
-
+  recency:
+    image: redis:latest
+    container_name: recency
+    ports:
+      - "6381:6381"
+    volumes:
+      - ./recency/data:/data
+      - ./redis-config/recency.conf:/redis-config/recency.conf
+    command: redis-server /redis-config/recency.conf
+    network_mode: host
