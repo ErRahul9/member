@@ -90,7 +90,7 @@ jobs:
         uses: spicyparrot/kafka-kraft-action@v1.1.3
         with:
           kafka-version: "3.7.0"
-          kafka-topics: "membership-updates,1","sh-dw-generated-audiences,1"
+          kafka-topics: "membership-updates,1"
       - name: Run integration test
         run: |
           docker compose --verbose -f ./e2e/docker-compose-workflow.yml up  --abort-on-container-exit --exit-code-from tests
